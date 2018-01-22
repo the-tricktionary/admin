@@ -20,7 +20,7 @@ angular.module('trick.levels', ['ngRoute'])
   .controller('LevelsCtrl', function ($scope, $sce, $firebaseArray,
     $firebaseObject,
     $anchorScroll, $location, Db, Auth) {
-    $scope.Subpage('Admin')
+    $scope.Subpage('Level')
     var messaging = firebase.messaging()
     Auth.$onAuthStateChanged(function () {
       if ($scope.admin) {

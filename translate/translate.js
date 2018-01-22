@@ -13,6 +13,7 @@ angular.module('trick.translate', ['ngRoute'])
 
   .controller('TranslateCtrl', function ($scope, $firebaseObject, $firebaseArray,
      $sce, $location, Db, Auth) {
+    $scope.Subpage('Translate')
     var ref = Db.child('i18n')
     $scope.trStrings = $firebaseArray(ref.child('translatable'))
     $scope.unTrStrings = $firebaseArray(ref.child('untranslatable'))
