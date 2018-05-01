@@ -27,8 +27,7 @@
             ng-hide="issue.resolved" ng-if="admin"><i class="fa fa-lock"></i> Resolve</button>
         <button ng-click="issue.resolved = false; person.$save(issue)" class="green inline"
             ng-show="issue.resolved" ng-if="admin"><i class="fa fa-unlock"></i> Reopen</button>
-        <button ng-click="issue.email = user.email; person.$save(issue)" class="green inline"
-            ng-hide="issue.email" ng-if="!admin"><i class="fa fa-envelope-o"></i> Subscribe to updates</button>
+        <span ng-if="issue.email" class="gray"><i class="fa fa-envelope-o"></i> Will get an email</span>
     </div>
 </div>
 
