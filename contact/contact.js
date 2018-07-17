@@ -121,7 +121,22 @@ angular.module('trick.contact', ['ngRoute'])
       $scope.person.$save(issue)
     }
 
-    $scope.keys = Object.keys
+    $scope.keys = function (obj) {
+      if (typeof obj === 'undefined' || obj === null) return []
+      return Object.keys(obj).filter(function (key) {
+        return !key.startsWith('$')
+      })
+    }
+
+    $scope.unresolved = function (obj) {
+      return $scope.keys(obj).filter(function (key) {
+        return !obj[key].resolved
+      }).length
+    }
+
+    $scope.issues = function (obj) {
+      return $scope.keys(obj).length
+    }
 
     $scope.$location = $location
   })

@@ -172,7 +172,7 @@ angular.module('trick.tricks', ['ngRoute'])
     $scope.save = function () {
       $scope.saving = true
       $scope.data.$save($scope.data[$scope.id0]).then(function () {
-        $location.path('/tricks')
+        $scope.saving = false
       })
     }
   })
