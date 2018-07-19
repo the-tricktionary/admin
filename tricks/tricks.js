@@ -75,9 +75,10 @@ angular.module('trick.tricks', ['ngRoute'])
       $scope.data.$loaded(function () {
         if (typeof $scope.data[$scope.id0] === 'undefined') {
           $scope.data[$scope.id0] = {
+            '$id': '' + $scope.id0,
             id0: $scope.id0,
             level: '' + ($scope.id0 + 1),
-            subs: {}
+            subs: []
           }
         }
         if (typeof $scope.data[$scope.id0].subs === 'undefined') $scope.data[$scope.id0].subs = {}
@@ -121,14 +122,13 @@ angular.module('trick.tricks', ['ngRoute'])
     let flat = function (data) {
       let flat = []
       let levs = data.forEach(function (level) {
-        let tricks = []
         level.subs.forEach(function (trick) {
           let mod = {
             id0: level.id0,
             id1: trick.id1
           }
           // mod.level = 'Level ' + level.level
-          flat.push(mod)
+          if ($scope.id0 !== level.id0 && $scope.id1 !== trick.id1) flat.push(mod)
         })
       })
       return flat
@@ -141,7 +141,7 @@ angular.module('trick.tricks', ['ngRoute'])
 
     $scope.newTrick = function () {
       if (typeof $scope.newid0 === 'undefined' || $scope.newid0 === '' || $scope.newid0 === null) return
-      $location.path('/tricks/' + $scope.newid0 + '/' + ($scope.data[$scope.newid0].subs.length || 0))
+      $location.path('/tricks/' + $scope.newid0 + '/' + (($scope.data[$scope.newid0] || {subs: []}).subs.length || 0))
     }
 
     $scope.unverify = function (fed) {
@@ -171,7 +171,7 @@ angular.module('trick.tricks', ['ngRoute'])
 
     $scope.save = function () {
       $scope.saving = true
-      $scope.data.$save($scope.data[$scope.id0]).then(function () {
+      $scope.data.$save(Number($scope.id0)).then(function () {
         $scope.saving = false
       })
     }
