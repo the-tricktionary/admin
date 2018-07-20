@@ -125,7 +125,8 @@ angular.module('trick.tricks', ['ngRoute'])
         level.subs.forEach(function (trick) {
           let mod = {
             id0: level.id0,
-            id1: trick.id1
+            id1: trick.id1,
+            name: trick.name
           }
           // mod.level = 'Level ' + level.level
           if ($scope.id0 !== level.id0 && $scope.id1 !== trick.id1) flat.push(mod)
