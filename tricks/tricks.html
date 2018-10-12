@@ -137,6 +137,16 @@
       ng-model="data[id0].subs[id1].slowMoStart"/>
   </div>
   <div class="center">
+    <label for="ijrulevel">ijru level:</label>
+    <input
+      id="ijrulevel"
+      type="text"
+      placeholder="ijru level"
+      ng-model="data[id0].subs[id1].levels.ijru.level"
+      ng-change="unverify('ijru')"
+      required="required"/>
+  </div>
+  <div class="center">
     <label for="fisaclevel">fisac-irsf level:</label>
     <input
       id="fisaclevel"
