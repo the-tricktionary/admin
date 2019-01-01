@@ -10,6 +10,10 @@ var config = {
 }
 firebase.initializeApp(config)
 
+const firestore = firebase.firestore()
+const settings = { timestampsInSnapshots: true }
+firestore.settings(settings)
+
 function toggleNav () { // eslint-disable-line
   document.getElementsByClassName('topnav')[0].classList.toggle('responsive')
   document.getElementsByTagName('nav')[0].classList.toggle('responsive')
@@ -22,6 +26,7 @@ angular.module('trick', [
   'trick.translate',
   'trick.levels',
   'trick.tricks',
+  'trick.shop',
   'firebase',
   'hc.marked'
 ])

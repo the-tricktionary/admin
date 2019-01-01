@@ -1,0 +1,126 @@
+<h1>Shop</h1>
+<div class="article">
+  <label>
+    <input type="checkbox" ng-model="livemode"> Show Only Live Transactions
+  </label>
+  <label>
+    <input type="checkbox" ng-model="shipped"> Show Only Shipped
+  </label>
+</div>
+
+<div class="article" ng-repeat="(id, order) in orders" ng-if="(livemode ? order.livemode : !order.livemode) && (shipped ? order.shipped : !order.shipped)">
+  <span ng-class="(order.paid ? 'green' : 'red')" class="button pr" disabled>{{ order.paid ? 'PAID' : 'NOT PAID' }}</span>
+  <span ng-if="!order.livemode" class="button pr red" disabled>TEST</span>
+  <p class="date">Received Date: {{ order.received.toDate() | date : 'yyyy-MM-dd HH:mm:ss' }}</p>
+  <p class="date">Receipt ID: <span class="mono">{{ id }}</span></p>
+  <div class="table">
+    <table>
+      <tr>
+        <td>Name</td>
+        <td>{{ order.customerDetails.name }}</td>
+      </tr>
+      <tr>
+        <td>Email</td>
+        <td>{{ order.customerDetails.email }}</td>
+      </tr>
+      <tr>
+        <td>Phone</td>
+        <td>{{ order.customerDetails.phone }}</td>
+      </tr>
+      <tr>
+        <td>Address 1</td>
+        <td>{{ order.customerDetails.address1 }}</td>
+      </tr>
+      <tr>
+        <td>Address2</td>
+        <td>{{ order.customerDetails.address2 }}</td>
+      </tr>
+      <tr>
+        <td>Postal Code, State, City</td>
+        <td>{{ order.customerDetails.postalCode }} :: {{ order.customerDetails.state }} :: {{
+          order.customerDetails.city }}</td>
+      </tr>
+      <tr>
+        <td>Country</td>
+        <td>{{ order.customerDetails.countryCode }}</td>
+      </tr>
+      <tr>
+        <td>Company</td>
+        <td>{{ order.customerDetails.company }}</td>
+      </tr>
+      <tr>
+        <td>VAT number</td>
+        <td>
+          {{ order.customerDetails.vatnumber }}
+          <span class="icon" ng-if="order.customerDetails.vatnumber && order.customerDetails.vatValid"><i class="fa fa-check"></i></span>
+          <span class="icon" ng-if="order.customerDetails.vatnumber && !order.customerDetails.vatValid"><i class="fa fa-times"></i></span>
+        </td>
+      </tr>
+      <tr>
+        <td>Payment Intent</td>
+        <td><a ng-href="https://dashboard.stripe.com/payments/{{ order.paymentIntent }}" target="_blank" rel="noopener">{{
+            order.paymentIntent }}</a></td>
+      </tr>
+      <tr>
+        <td>Coupon</td>
+        <td>
+          {{ order.coupon }}
+          <span class="icon" ng-if="order.coupon && order.couponValid"><i class="fa fa-check"></i></span>
+          <span class="icon" ng-if="order.coupon && !order.couponValid"><i class="fa fa-times"></i></span>
+        </td>
+      </tr>
+      <tr>
+        <td>Shipping/Tracking ID</td>
+        <td>
+          {{ order.tracking }}
+        </td>
+      </tr>
+    </table>
+  </div>
+  <h3>Items</h3>
+  <div class="table">
+    <table>
+      <tr>
+        <th>QTY</th>
+        <th>Product</th>
+        <th colspan="2">Unit Cost</th>
+        <th colspan="2">VAT</th>
+        <th colspan="2">Total</th>
+      </tr>
+      <tr ng-repeat="product in resolved[id]">
+        <td class="right">{{ product.product.quantity }}</td>
+        <td>{{ product.resolved.name }}</td>
+
+        <td class="right">{{ product.resolved.prices[order.currency] / 100 }}</td>
+        <td>{{ order.currency }}/{{ product.resolved.unit || 'pcs' }}</td>
+
+        <td class="right">{{ product.resolved.vatPaid ? product.resolved.vat * 100 : 0 }}</td>
+        <td>%</td>
+
+        <td class="right">{{ product.product.amount * product.product.quantity / 100 }}</td>
+        <td>{{ order.currency }}</td>
+      </tr>
+      <tr>
+        <td colspan="6" clss="right">Subtotal</td>
+        <td class="right">{{ totals[id].subtotal / 100 }}</td>
+        <td>{{ order.currency }}</td>
+      </tr>
+      <tr v-if="(selectedCountryMeta.euMemberState && !$store.state.shop.customerDetails.vatValid) || $store.state.shop.customerDetails.countryCode === 'SE'">
+        <td colspan="6" clss="right">VAT</td>
+        <td class="right">{{ totals[id].vat / 100 }}</td>
+        <td>{{ order.currency }}</td>
+      </tr>
+      <tr>
+        <td colspan="6" clss="right">Total</td>
+        <td class="right">{{ totals[id].total / 100 }}</td>
+        <td>{{ order.currency }}</td>
+      </tr>
+    </table>
+  </div>
+  <form ng-submit="ship(id)" ng-if="!order.shipped">
+    <input type="text" placeholder="Shipping/Tracking ID" ng-model="orders[id].tracking">
+    <button type="submit">Ship</button>
+  </form>
+</div>
+
+<!-- <pre>{{ totals | json }}</pre> -->

@@ -43,6 +43,7 @@
     <script src="/levels/levels.js"></script>
     <script src="/contact/contact.js"></script>
     <script src="/tricks/tricks.js"></script>
+    <script src="/shop/shop.js"></script>
     <!-- END DEPLOY -->
 </head>
 
@@ -56,6 +57,7 @@
             <li><a ng-href="/translate" onclick="toggleNav()">Translate</a></li>
             <li><a ng-href="/levels" onclick="toggleNav()">Levels</a></li>
             <li><a ng-href="/tricks" onclick="toggleNav()">Tricks</a></li>
+            <li><a ng-href="/shop" onclick="toggleNav()">Shop</a></li>
             <li ng-if="user && !user.isAnonymous"><a ng-click="signOut()" onclick="toggleNav()">Sign Out</a></li>
             <li ng-if="!user || user.isAnonymous"><a ng-click="signIn()" onclick="toggleNav()">Sign In</a></li>
             <li class="icon" onclick="toggleNav()">&#9776;</li>
