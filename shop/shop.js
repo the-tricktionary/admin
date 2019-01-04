@@ -70,7 +70,7 @@ angular.module('trick.shop', ['ngRoute'])
         console.log(id)
         firebase.firestore().collection('orders').doc(id).update({
           shipped: new Date(),
-          tracking: $scope.orders[id].tracking
+          tracking: $scope.orders[id].tracking || ''
         })
       }
 
