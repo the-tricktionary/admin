@@ -68,7 +68,8 @@ angular.module('trick.shop', ['ngRoute'])
 
       $scope.ship = (id) => {
         console.log(id)
-        firebase.functions().httpsCallable('shipped')({ tracking: $scope.orders[id].tracking || '', order: id })
+        let shippedCallable = firebase.functions().httpsCallable('shipped')
+        shippedCallable({ tracking: $scope.orders[id].tracking || '', id: id })
       }
 
       if ($scope.admin) {
