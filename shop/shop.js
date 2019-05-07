@@ -68,10 +68,7 @@ angular.module('trick.shop', ['ngRoute'])
 
       $scope.ship = (id) => {
         console.log(id)
-        firebase.firestore().collection('orders').doc(id).update({
-          shipped: new Date(),
-          tracking: $scope.orders[id].tracking || ''
-        })
+        firebase.functions().httpsCallable('shipped')({ tracking: $scope.orders[id].tracking || '', order: id })
       }
 
       if ($scope.admin) {
@@ -84,16 +81,29 @@ angular.module('trick.shop', ['ngRoute'])
         firebase.firestore().collection('orders').onSnapshot(qSnap => {
           qSnap.forEach(dSnap => {
             $scope.orders[dSnap.id] = dSnap.data()
-            $scope.resolved[dSnap.id] = $scope.orders[dSnap.id].paidItems.map(product => ({ product, resolved: $scope.findBySku($scope.products, product.sku, dSnap.id) }))
-            $scope.totals[dSnap.id] = $scope.resolved[dSnap.id].map(product => ({
-              subtotal: product.product.quantity * product.resolved.prices[$scope.orders[dSnap.id].currency],
-              vat: product.product.quantity * product.resolved.prices[$scope.orders[dSnap.id].currency] * (product.resolved.vatPaid ? product.resolved.vat : 0),
-              total: product.product.quantity * product.product.amount
-            })).reduce((curr, acc) => ({
-              subtotal: curr.subtotal + acc.subtotal,
-              vat: curr.vat + acc.vat,
-              total: curr.total + acc.total
-            }))
+            if ($scope.orders[dSnap.id].paid) {
+              $scope.resolved[dSnap.id] = $scope.orders[dSnap.id].paidItems.map(product => ({ product, resolved: $scope.findBySku($scope.products, (typeof product.sku === 'string' ? products.sku : product.sku.id), dSnap.id) }))
+              $scope.totals[dSnap.id] = $scope.resolved[dSnap.id].map(product => ({
+                subtotal: product.product.quantity * product.resolved.prices[$scope.orders[dSnap.id].currency],
+                vat: product.product.quantity * product.resolved.prices[$scope.orders[dSnap.id].currency] * (product.resolved.vatPaid ? product.resolved.vat : 0),
+                total: product.product.quantity * product.product.amount
+              })).reduce((curr, acc) => ({
+                subtotal: curr.subtotal + acc.subtotal,
+                vat: curr.vat + acc.vat,
+                total: curr.total + acc.total
+              }))
+            } else {
+              $scope.resolved[dSnap.id] = $scope.orders[dSnap.id].requestedItems.map(product => ({ product, resolved: $scope.findBySku($scope.products, (typeof product.sku === 'string' ? products.sku : product.sku.id), dSnap.id) }))
+              $scope.totals[dSnap.id] = $scope.resolved[dSnap.id].map(product => ({
+                subtotal: product.product.quantity * product.resolved.prices[$scope.orders[dSnap.id].currency],
+                vat: product.product.quantity * product.resolved.prices[$scope.orders[dSnap.id].currency] * (product.resolved.vatPaid ? product.resolved.vat : 0),
+                total: product.product.quantity * product.resolved.prices[$scope.orders[dSnap.id].currency] * (product.resolved.vatPaid ? 1 + product.resolved.vat : 1)
+              })).reduce((curr, acc) => ({
+                subtotal: curr.subtotal + acc.subtotal,
+                vat: curr.vat + acc.vat,
+                total: curr.total + acc.total
+              }))
+            }
             console.log($scope.orders[dSnap.id], dSnap.id)
           })
           $scope.$apply()

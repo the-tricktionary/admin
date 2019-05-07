@@ -36,9 +36,16 @@
         <td>{{ order.customerDetails.address2 }}</td>
       </tr>
       <tr>
-        <td>Postal Code, State, City</td>
-        <td>{{ order.customerDetails.postalCode }} :: {{ order.customerDetails.state }} :: {{
-          order.customerDetails.city }}</td>
+        <td>Postal Code</td>
+        <td>{{ order.customerDetails.postalCode }}</td>
+      </tr>
+      <tr>
+        <td>City</td>
+        <td>{{ order.customerDetails.city }}</td>
+      </tr>
+      <tr>
+        <td>State</td>
+        <td>{{ order.customerDetails.state }}</td>
       </tr>
       <tr>
         <td>Country</td>
@@ -58,7 +65,8 @@
       </tr>
       <tr>
         <td>Payment Intent</td>
-        <td><a ng-href="https://dashboard.stripe.com/{{ order.livemode ? '' : 'test/' }}payments/{{ order.paymentIntent }}" target="_blank" rel="noopener">{{
+        <td><a ng-href="https://dashboard.stripe.com/{{ order.livemode ? '' : 'test/' }}payments/{{ order.paymentIntent }}"
+            target="_blank" rel="noopener">{{
             order.paymentIntent }}</a></td>
       </tr>
       <tr>
