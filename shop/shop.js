@@ -82,7 +82,7 @@ angular.module('trick.shop', ['ngRoute'])
           qSnap.forEach(dSnap => {
             $scope.orders[dSnap.id] = dSnap.data()
             if ($scope.orders[dSnap.id].paid) {
-              $scope.resolved[dSnap.id] = $scope.orders[dSnap.id].paidItems.map(product => ({ product, resolved: $scope.findBySku($scope.products, (typeof product.sku === 'string' ? products.sku : product.sku.id), dSnap.id) }))
+              $scope.resolved[dSnap.id] = $scope.orders[dSnap.id].paidItems.map(product => ({ product, resolved: $scope.findBySku($scope.products, (typeof product.sku === 'string' ? product.sku : product.sku.id), dSnap.id) }))
               $scope.totals[dSnap.id] = $scope.resolved[dSnap.id].map(product => ({
                 subtotal: product.product.quantity * product.resolved.prices[$scope.orders[dSnap.id].currency],
                 vat: product.product.quantity * product.resolved.prices[$scope.orders[dSnap.id].currency] * (product.resolved.vatPaid ? product.resolved.vat : 0),
@@ -93,7 +93,7 @@ angular.module('trick.shop', ['ngRoute'])
                 total: curr.total + acc.total
               }))
             } else {
-              $scope.resolved[dSnap.id] = $scope.orders[dSnap.id].requestedItems.map(product => ({ product, resolved: $scope.findBySku($scope.products, (typeof product.sku === 'string' ? products.sku : product.sku.id), dSnap.id) }))
+              $scope.resolved[dSnap.id] = $scope.orders[dSnap.id].requestedItems.map(product => ({ product, resolved: $scope.findBySku($scope.products, (typeof product.sku === 'string' ? product.sku : product.sku.id), dSnap.id) }))
               $scope.totals[dSnap.id] = $scope.resolved[dSnap.id].map(product => ({
                 subtotal: product.product.quantity * product.resolved.prices[$scope.orders[dSnap.id].currency],
                 vat: product.product.quantity * product.resolved.prices[$scope.orders[dSnap.id].currency] * (product.resolved.vatPaid ? product.resolved.vat : 0),
