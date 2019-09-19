@@ -84,15 +84,17 @@ angular.module('trick.shop', ['ngRoute'])
             $scope.orders[dSnap.id] = dSnap.data()
             if ($scope.orders[dSnap.id].paid) {
               $scope.resolved[dSnap.id] = $scope.orders[dSnap.id].paidItems.map(product => ({ product, resolved: $scope.findBySku($scope.products, (typeof product.sku === 'string' ? product.sku : product.sku.id), dSnap.id) }))
+              console.log(dSnap.id, $scope.resolved[dSnap.id])
               $scope.totals[dSnap.id] = $scope.resolved[dSnap.id].map(product => ({
                 subtotal: product.product.quantity * product.resolved.prices[$scope.orders[dSnap.id].currency],
-                vat: product.product.quantity * product.resolved.prices[$scope.orders[dSnap.id].currency] * (product.resolved.vatPaid ? product.resolved.vat : 0),
+                vat: Math.round(product.product.quantity * product.resolved.prices[$scope.orders[dSnap.id].currency] * (1 - (1 / (1 + (product.resolved.vatPaid ? product.resolved.vat : 0))))),
                 total: product.product.quantity * product.product.amount
               })).reduce((curr, acc) => ({
                 subtotal: curr.subtotal + acc.subtotal,
                 vat: curr.vat + acc.vat,
                 total: curr.total + acc.total
               }))
+              console.log(dSnap.id, $scope.totals[dSnap.id])
             } else {
               $scope.resolved[dSnap.id] = $scope.orders[dSnap.id].requestedItems.map(product => ({ product, resolved: $scope.findBySku($scope.products, (typeof product.sku === 'string' ? product.sku : product.sku.id), dSnap.id) }))
               $scope.totals[dSnap.id] = $scope.resolved[dSnap.id].map(product => ({

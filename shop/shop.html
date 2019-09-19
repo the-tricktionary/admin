@@ -8,8 +8,10 @@
   </label>
 </div>
 
-<div class="article" ng-repeat="(id, order) in orders" ng-if="(livemode ? order.livemode : !order.livemode) && (shipped ? order.shipped : !order.shipped)">
-  <span ng-class="(order.paid ? 'green' : 'red')" class="button pr" disabled>{{ order.paid ? 'PAID' : 'NOT PAID' }}</span>
+<div class="article" ng-repeat="(id, order) in orders"
+  ng-if="(livemode ? order.livemode : !order.livemode) && (shipped ? order.shipped : !order.shipped)">
+  <span ng-class="(order.paid ? 'green' : 'red')" class="button pr"
+    disabled>{{ order.paid ? 'PAID' : 'NOT PAID' }}</span>
   <span ng-if="!order.livemode" class="button pr red" disabled>TEST</span>
   <p class="date">Received Date: {{ order.received.toDate() | date : 'yyyy-MM-dd HH:mm:ss' }}</p>
   <p class="date">Receipt ID: <span class="mono">{{ id }}</span></p>
@@ -59,13 +61,16 @@
         <td>VAT number</td>
         <td>
           {{ order.customerDetails.vatnumber }}
-          <span class="icon" ng-if="order.customerDetails.vatnumber && order.customerDetails.vatValid"><i class="fa fa-check"></i></span>
-          <span class="icon" ng-if="order.customerDetails.vatnumber && !order.customerDetails.vatValid"><i class="fa fa-times"></i></span>
+          <span class="icon" ng-if="order.customerDetails.vatnumber && order.customerDetails.vatValid"><i
+              class="fa fa-check"></i></span>
+          <span class="icon" ng-if="order.customerDetails.vatnumber && !order.customerDetails.vatValid"><i
+              class="fa fa-times"></i></span>
         </td>
       </tr>
       <tr>
         <td>Payment Intent</td>
-        <td><a ng-href="https://dashboard.stripe.com/{{ order.livemode ? '' : 'test/' }}payments/{{ order.paymentIntent }}"
+        <td><a
+            ng-href="https://dashboard.stripe.com/{{ order.livemode ? '' : 'test/' }}payments/{{ order.paymentIntent }}"
             target="_blank" rel="noopener">{{
             order.paymentIntent }}</a></td>
       </tr>
@@ -102,7 +107,8 @@
         <td class="right">{{ product.resolved.prices[order.currency] / 100 }}</td>
         <td>{{ order.currency }}/{{ product.resolved.unit || 'pcs' }}</td>
 
-        <td class="right">{{ product.resolved.vatPaid ? product.resolved.vat * 100 : 0 }}</td>
+        <td class="right">{{ product.resolved.vatPaid ? product.resolved.vat * 100 : 0 }}
+        </td>
         <td>%</td>
 
         <td class="right">{{ product.product.amount * product.product.quantity / 100 }}</td>
@@ -113,7 +119,8 @@
         <td class="right">{{ totals[id].subtotal / 100 }}</td>
         <td>{{ order.currency }}</td>
       </tr>
-      <tr v-if="(selectedCountryMeta.euMemberState && !$store.state.shop.customerDetails.vatValid) || $store.state.shop.customerDetails.countryCode === 'SE'">
+      <tr
+        v-if="(selectedCountryMeta.euMemberState && !$store.state.shop.customerDetails.vatValid) || $store.state.shop.customerDetails.countryCode === 'SE'">
         <td colspan="6" clss="right">VAT</td>
         <td class="right">{{ totals[id].vat / 100 }}</td>
         <td>{{ order.currency }}</td>
