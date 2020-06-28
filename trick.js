@@ -25,7 +25,6 @@ angular.module('trick', [
   'trick.contact',
   'trick.translate',
   'trick.levels',
-  'trick.tricks',
   'trick.shop',
   'firebase',
   'hc.marked'

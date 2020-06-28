@@ -1,179 +1,214 @@
-/* global angular */
-'use strict'
-/**
- * @class trick.tricks
- * @memberOf trick
- * @requires ngRoute
- */
-angular.module('trick.tricks', ['ngRoute'])
+/* globals Vue, Vuetify, firebase */
 
-  .config([
-    '$routeProvider',
-    function ($routeProvider) {
-      $routeProvider.when('/tricks/:id0?/:id1?', {
-        templateUrl: '/tricks/tricks.html',
-        controller: 'TricksCtrl'
-      })
-    }
-  ])
+const gAuthProvider = new firebase.auth.GoogleAuthProvider()
+const admins = [
+  'Kpz3afszjBR0qwZYUrKURRJx2cm2', // Dylan
+  'g0G3A7FxieN333lZ2RKclkmv9Uw1' // Svante
+]
 
-  .controller('TricksCtrl', function ($scope, $firebaseArray, $firebaseObject,
-    $location, $anchorScroll, $routeParams, $filter, Db, Auth) {
-    $scope.Subpage('Tricks')
+firebase.firestore().enablePersistence()
 
-    /**
-     * @name $scope.id0
-     * @type {string}
-     * @memberOf trick.details.DetailsCtrl
-     */
-    $scope.id0 = ($routeParams.id0 ? Number($routeParams.id0) : undefined)
-    /**
-     * @name $scope.id1
-     * @type {string}
-     * @memberOf trick.details.DetailsCtrl
-     */
-    $scope.id1 = ($routeParams.id1 ? Number($routeParams.id1) : undefined)
-
-    var trickRef = Db.child('tricks')
-    /**
-     * @name $scope.data
-     * @function
-     * @memberOf trick.dash.DashCtrl
-     * @description create a synchronized array stored in scope
-     */
-    $scope.data = $firebaseArray(trickRef)
-    $scope.typeifs = {}
-    var langsRef = Db.child('langs')
-    /**
-     * @name $scope.langs
-     * @function
-     * @memberOf trick.dash.DashCtrl
-     * @description create a syncronised object stored in scope
-     */
-    $scope.langs = $firebaseObject(langsRef)
-    /** Create reference to database path */
-    var translationRef = Db.child('i18n').child('translated')
-    /**
-     * @name $scope.i18n
-     * @function
-     * @memberOf trick.dash.DashCtrl
-     * @description create a syncronised object stored in scope
-     */
-    $scope.i18n = $firebaseObject(translationRef)
-    $scope.typeifs = {}
-    var langsRef = Db.child('langs')
-    /**
-     * @name $scope.langs
-     * @function
-     * @memberOf trick.dash.DashCtrl
-     * @description create a syncronised object stored in scope
-     */
-    $scope.langs = $firebaseObject(langsRef)
-
-    if (typeof $scope.id0 !== 'undefined' && typeof $scope.id1 !== 'undefined') {
-      $scope.editing = true
-      $scope.data.$loaded(function () {
-        if (typeof $scope.data[$scope.id0] === 'undefined') {
-          $scope.data[$scope.id0] = {
-            '$id': '' + $scope.id0,
-            id0: $scope.id0,
-            level: '' + ($scope.id0 + 1),
-            subs: []
-          }
+new Vue({
+  el: '#app',
+  vuetify: new Vuetify({
+    theme: {
+      themes: {
+        light: {
+          primary: '#fe3500',
+          secondary: '#ffc107',
+          accent: '#ffeb3b',
+          error: '#fe3500',
+          warning: '#ff9800',
+          info: '#3f51b5',
+          success: '#4caf50'
         }
-        if (typeof $scope.data[$scope.id0].subs === 'undefined') $scope.data[$scope.id0].subs = {}
-        if (typeof $scope.data[$scope.id0].subs[$scope.id1] === 'undefined') {
-          $scope.data[$scope.id0].subs[$scope.id1] = {
-            id1: $scope.id1,
-            prerequisites: [],
-            alternativeNames: []
-          }
-        }
-        if (typeof $scope.data[$scope.id0].subs[$scope.id1].prerequisites === 'undefined') $scope.data[$scope.id0].subs[$scope.id1].prerequisites = []
-        if (typeof $scope.data[$scope.id0].subs[$scope.id1].alternativeNames === 'undefined') $scope.data[$scope.id0].subs[$scope.id1].alternativeNames = []
-      })
-    }
-
-    /**
-     * @name $scope.anchor
-     * @function
-     * @memberOf trick.dash.DashCtrl
-     * @description Store URL's anchor value (`#disclaimer` for example) in the scope
-     */
-    var anchor = $location.hash()
-    /** Configure $anchorScroll to take the navbar into consideration */
-    $anchorScroll.yOffset = 200
-    /** Scroll To anchor */
-    setTimeout(function () {
-      $anchorScroll()
-    }, 100)
-    /**
-     * return a list of classes to apply
-     * @param  {int} id0
-     * @param  {int} id1
-     * @return {string}
-     */
-    $scope.class = function (id0, id1) {
-      var x = ''
-      x += (id0 + '' + id1 === anchor ? 'pop ' : '')
-      return x
-    }
-
-    let flat = function (data) {
-      let flat = []
-      let levs = data.forEach(function (level) {
-        level.subs.forEach(function (trick) {
-          let mod = {
-            id0: level.id0,
-            id1: trick.id1,
-            name: trick.name
-          }
-          // mod.level = 'Level ' + level.level
-          if ($scope.id0 !== level.id0 && $scope.id1 !== trick.id1) flat.push(mod)
-        })
-      })
-      return flat
-    }
-
-    $scope.flat = []
-    $scope.data.$loaded(function (data) {
-      $scope.flat = flat(data)
-    })
-
-    $scope.newTrick = function () {
-      if (typeof $scope.newid0 === 'undefined' || $scope.newid0 === '' || $scope.newid0 === null) return
-      $location.path('/tricks/' + $scope.newid0 + '/' + (($scope.data[$scope.newid0] || {subs: []}).subs.length || 0))
-    }
-
-    $scope.unverify = function (fed) {
-      $scope.data[$scope.id0].subs[$scope.id1].levels[fed].verified = {
-        date: $filter('date')((new Date()), 'yyyy-MM-dd'),
-        vLevel: 0,
-        verified: false,
-        verifier: $scope.user.uid
       }
     }
+  }),
+  data: () => ({
+    authDialog: 'unchecked',
+    uid: null,
+    discipline: 'sr',
+    tab: null,
+    trick: null,
+    search: '',
+    tricks: {
+      sr: [],
+      dd: [],
+      wh: []
+    },
+    loaded: {
+      sr: false,
+      dd: false,
+      wh: false
+    },
+    types: [],
+    saving: false,
+    valid: false,
+    reqRule: [v => !!v || 'Required'],
+    error: false,
+    newPrereqId: null
+  }),
 
-    $scope.newPrereq = function () {
-      $scope.data[$scope.id0].subs[$scope.id1].prerequisites.push({})
+  computed: {
+    levelArrays () {
+      const out = {}
+      for (const trick of this.tricks[this.discipline]) {
+        if (!Object.prototype.hasOwnProperty.call(out, trick.level)) out[trick.level] = []
+        out[trick.level].push(trick)
+      }
+      return out
+    },
+
+    tricksWithoutCurrent () {
+      return this.tricks[this.discipline].filter(trick => trick.id !== this.trick.id)
     }
+  },
 
-    $scope.delPrereq = function (index) {
-      $scope.data[$scope.id0].subs[$scope.id1].prerequisites.splice(index, 1)
-    }
+  created () {
+    firebase.auth().onAuthStateChanged(user => {
+      if (user) {
+        if (admins.includes(user.uid)) {
+          this.authDialog = false
 
-    $scope.newAltName = function () {
-      $scope.data[$scope.id0].subs[$scope.id1].alternativeNames.push('')
-    }
+          this.uid = user.uid
+          this.load()
+        } else {
+          this.uid = null
+          this.authDialog = 'notadmin'
+        }
+      } else {
+        this.authDialog = 'unauthed'
+        this.uid = null
+      }
+    })
+  },
 
-    $scope.delAltName = function (index) {
-      $scope.data[$scope.id0].subs[$scope.id1].alternativeNames.splice(index, 1)
-    }
+  methods: {
+    login () {
+      firebase.auth().signInWithPopup(gAuthProvider)
+    },
+    logout () {
+      firebase.auth().signOut()
+    },
 
-    $scope.save = function () {
-      $scope.saving = true
-      $scope.data.$save(Number($scope.id0)).then(function () {
-        $scope.saving = false
+    changeDiscipline (discipline) {
+      this.discipline = discipline
+      this.load()
+    },
+    getTrick (id) {
+      return this.tricks[this.discipline].find(trick => trick.id === id)
+    },
+
+    load () {
+      const discipline = `${this.discipline}`
+
+      firebase.firestore().collection('tricks' + discipline.toUpperCase()).get().then(qSnap => {
+        this.loaded[discipline] = true
+        qSnap.forEach(dSnap => {
+          const trickIdx = this.tricks[discipline].findIndex(trick => trick.id === dSnap.id)
+
+          if (trickIdx !== -1) {
+            this.tricks[discipline].splice(trickIdx, 1, {
+              id: dSnap.id,
+              ...dSnap.data()
+            })
+          } else {
+            this.tricks[discipline].push({
+              id: dSnap.id,
+              ...dSnap.data()
+            })
+          }
+        })
       })
+
+      firebase.firestore().collection('i18n').doc('en').collection('tricktypes').doc('translated').get().then(dSnap => {
+        const keys = Object.keys(dSnap.data())
+        this.$set(this, 'types', keys)
+      })
+    },
+
+    edit (trick) {
+      if (!trick.videos) this.$set(trick, 'videos', {})
+      this.$set(this, 'trick', trick)
+    },
+    close () {
+      this.$set(this, 'trick', null)
+      this.$set(this, 'newPrereqId', null)
+    },
+    save () {
+      const discipline = `${this.discipline}`
+      const { id, ...trick } = this.trick
+
+      this.$refs.form.validate()
+
+      if (!this.valid || !trick.name || !trick.level || !trick.type) {
+        this.error = 'From is missing required fields'
+        return
+      }
+
+      this.saving = true
+
+      const baseRef = firebase.firestore().collection('tricks' + discipline.toUpperCase())
+      const promise = id
+        ? baseRef.doc(id).set(trick, { merge: true })
+        : baseRef.add(trick)
+
+      promise.then(dSnap => {
+        this.saving = false
+
+        if (!dSnap) return this.close()
+
+        const trickIdx = this.tricks[discipline].findIndex(trick => trick.id === dSnap.id)
+
+        if (trickIdx !== -1) {
+          this.tricks[discipline].splice(trickIdx, 1, {
+            id: dSnap.id,
+            ...trick
+          })
+        } else {
+          this.tricks[discipline].push({
+            id: dSnap.id,
+            ...trick
+          })
+        }
+
+        this.close()
+      })
+      .catch(err => {
+        this.error = err.message
+      })
+    },
+
+    generateSlug () {
+      this.$set(this.trick, 'slug', this.trick.name.toLocaleLowerCase().replace(/[^a-z]/g, '-').replace(/-{2,}/g, '-'))
+    },
+
+    newAlternativeName () {
+      if (!this.trick.alternativeNames) this.$set(this.trick, 'alternativeNames', [])
+      this.trick.alternativeNames.push('')
+    },
+    removeAlternativeName (idx) {
+      this.trick.alternativeNames.splice(idx, 1)
+    },
+    setAlternativeName (idx, name) {
+      this.trick.alternativeNames.splice(idx, 1, name)
+    },
+
+    addPrereq (newPrereqId) {
+      console.log(newPrereqId)
+      if (!this.trick.prerequisites) this.$set(this.trick, 'prerequisites', [])
+      const discipline = `${this.discipline}`
+
+      this.trick.prerequisites.push({
+        id: newPrereqId,
+        ref: firebase.firestore().collection('tricks' + discipline.toUpperCase()).doc(newPrereqId)
+      })
+
+      this.newPrereqId = null
+    },
+    removePrereq (idx) {
+      this.trick.prerequisites.splice(idx, 1)
     }
-  })
+  }
+})

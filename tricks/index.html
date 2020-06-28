@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta content="IE=edge" http-equiv="X-UA-Compatible">
+  <meta content="width=device-width, initial-scale=1" name="viewport">
+
+  <title>Edit Tricks - Tricktionary Admin</title>
+  <meta name="robots" content="noindex, nofollow">
+
+  <meta name="theme-color" content="#fe3500">
+
+  <link rel="icon" href="https://v1.the-tricktionary.com/static/img/icon.png">
+  <link rel="apple-touch-icon" href="https://v1.the-tricktionary.com/static/img/icon-ios.png">
+
+  <link href="https://fonts.googleapis.com/css?family=Roboto:100,300,400,500,700,900" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/@mdi/font@5.x/css/materialdesignicons.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/vuetify@2.x/dist/vuetify.min.css" rel="stylesheet">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, minimal-ui">
+
+  <script defer src="https://cdn.jsdelivr.net/npm/vue@2.x/dist/vue.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/vuetify@2.x/dist/vuetify.js"></script>
+  <!-- The core Firebase JS SDK is always required and must be listed first -->
+  <script defer src="https://the-tricktionary.com/__/firebase/7.15.5/firebase-app.js"></script>
+  <script defer src="https://the-tricktionary.com/__/firebase/7.15.5/firebase-auth.js"></script>
+  <script defer src="https://the-tricktionary.com/__/firebase/7.15.5/firebase-firestore.js"></script>
+  <!-- Initialize Firebase -->
+  <script defer src="https://the-tricktionary.com/__/firebase/init.js"></script>
+  <script defer src="/tricks/tricks.js"></script>
+
+</head>
+
+<body>
+  <v-app id="app">
+    <v-app-bar
+      app
+      color="primary"
+      dark
+    >
+      <v-toolbar-title>the Tricktionary Admin</v-toolbar-title>
+    </v-app-bar>
+
+    <v-dialog v-model="authDialog" persistent max-width="290">
+      <v-card :loading="authDialog === 'unchecked'">
+        <v-card-title class="headline">Auth</v-card-title>
+
+        <v-card-text v-if="authDialog === 'notadmin'">
+          You don't have permissions to view this page
+        </v-card-text>
+
+        <v-card-actions v-if="authDialog !== 'notadmin' && authDialog === 'unchecked'">
+          <v-spacer></v-spacer>
+          <v-btn @click="login()" text><v-icon left>mdi-google</v-icon>Log In With Google</v-btn>
+        </v-card-actions>
+
+        <v-card-actions v-if="authDialog === 'notadmin'">
+          <v-spacer></v-spacer>
+          <v-btn @click="logout()" text>Log Out</v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+
+    <v-main>
+      <v-container v-if="!trick">
+        <v-tabs
+          fixed-tabs
+          class="mb-12"
+          v-model="tab"
+        >
+          <v-tab @click="changeDiscipline('sr')">Single Rope</v-tab>
+          <v-tab @click="changeDiscipline('dd')">Double Dutch</v-tab>
+          <v-tab @click="changeDiscipline('wh')">Wheel</v-tab>
+        </v-tabs>
+
+        <v-row>
+          <v-col>
+            <v-text-field v-model="search" prepend-inner-icon="mdi-magnify" placeholder="Search"></v-text-field>
+          </v-col>
+          <v-col cols="2">
+            <v-btn color="primary" block @click="edit({})"><v-icon left>mdi-plus</v-icon>New Trick</v-btn>
+          </v-col>
+        </v-row>
+
+        <v-data-iterator :loading="!loaded[discipline]" disable-pagination hide-default-footer :items="tricks[discipline]" group-by="level" :search="search">
+          <template v-slot:loading>
+            <div class="text-center">
+              <v-progress-circular indeterminate :size="64"></v-progress-circular>
+            </div>
+          </template>
+          <template v-slot:default="{ groupedItems }">
+            <template v-for="group in groupedItems">
+              <h2 :key="'lev' + group.name">Level {{ group.name }}</h2>
+              <v-row :key="'lev' + group.name + 'tricks'">
+                <v-col v-for="trick in group.items" cols="3" :key="'lev' + group.name + 'trick' + trick.id">
+                  <v-card @click="edit(trick)" outlined>
+                    <v-card-title>
+                      {{ trick.name }}
+                    </v-card-title>
+                  </v-card>
+                </v-col>
+              </v-row>
+            </template>
+          </template>
+        </v-data-iterator>
+      </v-container>
+
+      <v-container v-else-if="trick">
+        <v-form ref="form" v-model="valid">
+          <v-btn @click="save()" color="primary" :loading="saving" :disabled="!valid" class="mr-2">Save</v-btn>
+          <v-btn @click="close()" :disabeld="saving">Close</v-btn>
+
+          <v-alert type="error" v-model="error" dismissible class="mt-4">
+            {{ error }}
+          </v-alert>
+
+          <p class="mt-2">
+            There is no "cancel", if you don't save the changes will stay in your browser until you reload the page.
+            Why? because deep-cloning an object with circular references is too much work.
+          </p>
+
+          <v-text-field v-model="trick.name" label="Name" required :rules="reqRule"></v-text-field>
+
+          <v-row>
+            <v-col cols="10"><v-text-field v-model="trick.slug" label="URL Slug" required :rules="reqRule"></v-text-field></v-col>
+            <v-col cols="2" class="text-end"><v-btn text @click="generateSlug()">Generate</v-btn></v-col>
+          </v-row>
+
+          <v-text-field v-model="trick.level" label="Tricktionary Level" type="number" required :rules="reqRule"></v-text-field>
+
+          <v-select v-model="trick.type" label="Type" :items="types" required :rules="reqRule"></v-select>
+
+          <v-textarea label="description" v-model="trick.description" rows="1" auto-grow></v-textarea>
+
+          <v-row>
+            <v-col cols="10"><v-text-field v-model="trick.by" label="Submitted By (user id or username)"></v-text-field></v-col>
+            <v-col cols="2" class="text-end"><v-btn text @click="trick.by = uid">Me</v-btn></v-col>
+          </v-row>
+
+          <h2>Videos</h2>
+          <v-text-field v-model="trick.videos.youtube" label="YouTube video ID"></v-text-field>
+          <v-text-field v-model="trick.slowMoStart" label="Slow-mo start (whole seconds)" type="number"></v-text-field>
+
+
+          <v-row justify="space-between">
+            <v-col><h2>Alternative Names</h2></v-col>
+            <v-col class="text-end"><v-btn text @click="newAlternativeName()">New Alternative Name</v-btn></v-col>
+          </v-row>
+
+          <v-row v-for="(name, idx) in trick.alternativeNames">
+            <v-col cols="10"><v-text-field :value="name" @input="setAlternativeName(idx, $event)"></v-text-field></v-col>
+            <v-col cols="2" class="text-end"><v-btn text @click="removeAlternativeName(idx)">Remove</v-btn></v-col>
+          </v-row>
+
+          <h2>Prerequisites</h2>
+          <v-row>
+            <v-col cols="10">
+              <v-autocomplete :items="tricksWithoutCurrent" label="Trick" item-value="id" item-text="name" v-model="newPrereqId"></v-autocomplete>
+            </v-col>
+            <v-col cols="2" class="text-end"><v-btn text @click="addPrereq(newPrereqId)" :disabled="!newPrereqId">Add</v-btn></v-col>
+          </v-row>
+
+          <v-row v-for="(prereq, idx) in trick.prerequisites">
+            <v-col cols="10"><v-text-field :value="getTrick(prereq.id).name" readonly></v-text-field></v-col>
+            <v-col cols="2" class="text-end"><v-btn text @click="removePrereq(idx)">Remove</v-btn></v-col>
+          </v-row>
+
+          <h2>Levels</h2>
+        </v-form>
+      </v-container>
+    </v-main>
+  </v-app>
