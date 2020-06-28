@@ -146,7 +146,7 @@
             <v-col class="text-end"><v-btn text @click="newAlternativeName()">New Alternative Name</v-btn></v-col>
           </v-row>
 
-          <v-row v-for="(name, idx) in trick.alternativeNames">
+          <v-row v-for="(name, idx) in trick.alternativeNames" :key="'altName' + idx">
             <v-col cols="10"><v-text-field :value="name" @input="setAlternativeName(idx, $event)"></v-text-field></v-col>
             <v-col cols="2" class="text-end"><v-btn text @click="removeAlternativeName(idx)">Remove</v-btn></v-col>
           </v-row>
@@ -159,7 +159,7 @@
             <v-col cols="2" class="text-end"><v-btn text @click="addPrereq(newPrereqId)" :disabled="!newPrereqId">Add</v-btn></v-col>
           </v-row>
 
-          <v-row v-for="(prereq, idx) in trick.prerequisites">
+          <v-row v-for="(prereq, idx) in trick.prerequisites" :key="'prereq' + prereq.id">
             <v-col cols="10"><v-text-field :value="getTrick(prereq.id).name" readonly></v-text-field></v-col>
             <v-col cols="2" class="text-end"><v-btn text @click="removePrereq(idx)">Remove</v-btn></v-col>
           </v-row>
