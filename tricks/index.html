@@ -96,6 +96,8 @@
                     <v-card-title>
                       {{ trick.name }}
                     </v-card-title>
+                    <v-card-subtitle v-if="trick.updatedAt">last Updated: {{ trick.updatedAt | timestamp }}</v-card-subtitle>
+                    <v-card-text v-if="trick && trick.levels && trick.levels.ijru && trick.levels.ijru.verified">Last verified: {{ trick.levels.ijru.verified.date | timestamp }} {{ trick.levels.ijru.verified.version ? `(${trick.levels.ijru.verified.version})` : '' }}</v-card-text>
                   </v-card>
                 </v-col>
               </v-row>

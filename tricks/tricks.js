@@ -8,6 +8,8 @@ const admins = [
 
 firebase.firestore().enablePersistence()
 
+const dateFormatter = new Intl.DateTimeFormat()
+
 new Vue({
   el: '#app',
   vuetify: new Vuetify({
@@ -152,13 +154,14 @@ new Vue({
 
       this.saving = true
 
+      if (!id || !trick.createdAt) trick.createdAt = firebase.firestore.FieldValue.serverTimestamp()
+      trick.updatedAt = firebase.firestore.FieldValue.serverTimestamp()
+
       const baseRef = firebase.firestore().collection('tricks' + discipline.toUpperCase())
       const promise = id
         ? baseRef.doc(id).set(trick, { merge: true })
         : baseRef.add(trick)
 
-      if (!id) trick.createdAt = firebase.firestore.FieldValue.serverTimestamp()
-      trick.updatedAt = firebase.firestore.FieldValue.serverTimestamp()
 
       promise.then(dSnap => {
         this.saving = false
@@ -222,6 +225,15 @@ new Vue({
       this.$set(trick.levels.ijru.verified, 'vLevel', vLevel)
       this.$set(trick.levels.ijru.verified, 'verified', verified)
       this.$set(trick.levels.ijru.verified, 'verifier', this.uid)
+    }
+  },
+  filters: {
+    timestamp (value) {
+      if (!value) return ''
+      if (!(value instanceof firebase.firestore.Timestamp)) return value
+      const date = dateFormatter.format(value.toDate())
+
+      return date
     }
   }
 })
