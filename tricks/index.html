@@ -76,7 +76,7 @@
           <v-col>
             <v-text-field v-model="search" prepend-inner-icon="mdi-magnify" placeholder="Search"></v-text-field>
           </v-col>
-          <v-col cols="2">
+          <v-col>
             <v-btn color="primary" block @click="edit({})"><v-icon left>mdi-plus</v-icon>New Trick</v-btn>
           </v-col>
         </v-row>
@@ -91,7 +91,7 @@
             <template v-for="group in groupedItems">
               <h2 :key="'lev' + group.name">Level {{ group.name }}</h2>
               <v-row :key="'lev' + group.name + 'tricks'">
-                <v-col v-for="trick in group.items" cols="3" :key="'lev' + group.name + 'trick' + trick.id">
+                <v-col v-for="trick in group.items" cols="12" sm="6" md="4" lg="3" :key="'lev' + group.name + 'trick' + trick.id">
                   <v-card @click="edit(trick)" outlined>
                     <v-card-title>
                       {{ trick.name }}
@@ -118,11 +118,13 @@
             Why? because deep-cloning an object with circular references is too much work.
           </p>
 
+          <p v-if="trick.id">Document ID: <a :href="`https://console.firebase.google.com/u/0/project/project-5641153190345267944/database/firestore/data~2Ftricks${discipline.toUpperCase()}~2F${trick.id}`" target="_blank" rel="noopener"><code>{{ trick.id }}</code> (open in firebase console)</a></p>
+
           <v-text-field v-model="trick.name" label="Name" required :rules="reqRule"></v-text-field>
 
           <v-row>
-            <v-col cols="10"><v-text-field v-model="trick.slug" label="URL Slug" required :rules="reqRule"></v-text-field></v-col>
-            <v-col cols="2" class="text-end"><v-btn text @click="generateSlug()">Generate</v-btn></v-col>
+            <v-col cols="8" sm="10"><v-text-field v-model="trick.slug" label="URL Slug" required :rules="reqRule"></v-text-field></v-col>
+            <v-col cols="4" sm="2" class="text-end"><v-btn text @click="generateSlug()">Generate</v-btn></v-col>
           </v-row>
 
           <v-text-field v-model="trick.level" label="Tricktionary Level" type="number" required :rules="reqRule"></v-text-field>
@@ -136,6 +138,7 @@
             <v-col cols="2" class="text-end"><v-btn text @click="trick.by = uid">Me</v-btn></v-col>
           </v-row>
 
+
           <h2>Videos</h2>
           <v-text-field v-model="trick.videos.youtube" label="YouTube video ID"></v-text-field>
           <v-text-field v-model="trick.slowMoStart" label="Slow-mo start (whole seconds)" type="number"></v-text-field>
@@ -147,24 +150,31 @@
           </v-row>
 
           <v-row v-for="(name, idx) in trick.alternativeNames" :key="'altName' + idx">
-            <v-col cols="10"><v-text-field :value="name" @input="setAlternativeName(idx, $event)"></v-text-field></v-col>
-            <v-col cols="2" class="text-end"><v-btn text @click="removeAlternativeName(idx)">Remove</v-btn></v-col>
+            <v-col cols="8" sm="10"><v-text-field :value="name" @input="setAlternativeName(idx, $event)"></v-text-field></v-col>
+            <v-col cols="4" sm="2" class="text-end"><v-btn text @click="removeAlternativeName(idx)">Remove</v-btn></v-col>
           </v-row>
+
 
           <h2>Prerequisites</h2>
           <v-row>
-            <v-col cols="10">
+            <v-col cols="8" sm="10">
               <v-autocomplete :items="tricksWithoutCurrent" label="Trick" item-value="id" item-text="name" v-model="newPrereqId"></v-autocomplete>
             </v-col>
-            <v-col cols="2" class="text-end"><v-btn text @click="addPrereq(newPrereqId)" :disabled="!newPrereqId">Add</v-btn></v-col>
+            <v-col cols="4" sm="2" class="text-end"><v-btn text @click="addPrereq(newPrereqId)" :disabled="!newPrereqId">Add</v-btn></v-col>
           </v-row>
 
           <v-row v-for="(prereq, idx) in trick.prerequisites" :key="'prereq' + prereq.id">
-            <v-col cols="10"><v-text-field :value="getTrick(prereq.id).name" readonly></v-text-field></v-col>
-            <v-col cols="2" class="text-end"><v-btn text @click="removePrereq(idx)">Remove</v-btn></v-col>
+            <v-col cols="8" sm="10"><v-text-field :value="getTrick(prereq.id).name" readonly></v-text-field></v-col>
+            <v-col cols="4" sm="2" class="text-end"><v-btn text @click="removePrereq(idx)">Remove</v-btn></v-col>
           </v-row>
 
+
           <h2>Levels</h2>
+          <v-text-field v-model="trick.levels.ijru.level" label="IJRU Level"></v-text-field>
+
+          <v-text-field v-model="trick.levels.ijru.verified.version" label="IJRU Rule Book Version"></v-text-field>
+          <v-btn text @click="verifyTrick(trick, 1, true)">Verify As Judge</v-btn>
+          <v-btn text @click="verifyTrick(trick, 2, true)">Verify As Official</v-btn>
         </v-form>
       </v-container>
     </v-main>

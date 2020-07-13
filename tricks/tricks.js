@@ -130,6 +130,9 @@ new Vue({
 
     edit (trick) {
       if (!trick.videos) this.$set(trick, 'videos', {})
+      if (!trick.levels) this.$set(trick, 'levels', {})
+      if (!trick.levels.ijru) this.$set(trick.levels, 'ijru', {})
+      if (!trick.levels.ijru.verified) this.$set(trick.levels.ijru, 'verified', {})
       this.$set(this, 'trick', trick)
     },
     close () {
@@ -153,6 +156,9 @@ new Vue({
       const promise = id
         ? baseRef.doc(id).set(trick, { merge: true })
         : baseRef.add(trick)
+
+      if (!id) trick.createdAt = firebase.firestore.FieldValue.serverTimestamp()
+      trick.updatedAt = firebase.firestore.FieldValue.serverTimestamp()
 
       promise.then(dSnap => {
         this.saving = false
@@ -209,6 +215,13 @@ new Vue({
     },
     removePrereq (idx) {
       this.trick.prerequisites.splice(idx, 1)
+    },
+
+    verifyTrick (trick, vLevel, verified) {
+      this.$set(trick.levels.ijru.verified, 'date', firebase.firestore.Timestamp.now())
+      this.$set(trick.levels.ijru.verified, 'vLevel', vLevel)
+      this.$set(trick.levels.ijru.verified, 'verified', verified)
+      this.$set(trick.levels.ijru.verified, 'verifier', this.uid)
     }
   }
 })
