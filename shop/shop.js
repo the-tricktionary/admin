@@ -1,118 +1,211 @@
-'use strict'
-/* global angular, firebase */
-/**
- * @class trick.contact
- * @memberOf trick
- * @requires ngRoute
- */
+/* globals Vue, Vuetify, firebase */
 
-angular.module('trick.shop', ['ngRoute'])
+const gAuthProvider = new firebase.auth.GoogleAuthProvider()
+const admins = [
+  'Kpz3afszjBR0qwZYUrKURRJx2cm2', // Dylan
+  'g0G3A7FxieN333lZ2RKclkmv9Uw1' // Svante
+]
 
-  .config([
-    '$routeProvider',
-    function ($routeProvider) {
-      $routeProvider.when('/shop', {
-        templateUrl: '/shop/shop.html',
-        controller: 'ShopCtrl'
-      })
-    }
-  ])
+firebase.firestore().enablePersistence()
 
-  /**
-   * @class trick.contact.ContactCtrl
-   * @param {service} $scope
-   * @param {service} $firebaseArray
-   * @param {service} $location
-   * @param {service} $anchorScroll
-   * @param {service} Auth
-   * @param {service} Db
-   */
-  .controller('ShopCtrl', function ($scope, $firebaseArray, $location,
-    $anchorScroll, Auth, Db) {
-    Auth.$onAuthStateChanged(function () {
-      $scope.Subpage('Shop')
+const dateFormatter = new Intl.DateTimeFormat()
+const shippedCallable = firebase.functions().httpsCallable('shipped')
 
-      /** Configure $anchorScroll to take the navbar into consideration */
-      $anchorScroll.yOffset = 200
-
-      /** Create reference to database path */
-      $scope.livemode = true
-      $scope.shipped = false
-      $scope.orders = {}
-      $scope.products = {}
-      $scope.resolved = {}
-      $scope.totals = {}
-
-      $scope.findBySku = (products, sku, receipt) => {
-        let vatPaid = false
-        let id = Object.keys(products).filter((id) => {
-          let skus = Object.keys(products[id].skus)
-            .map(key => ({ sku: products[id].skus[key], currency: key.split('-')[0], vat: key.split('-').length === 2, key }))
-            .concat(Object.keys(products[id]['test-skus'])
-              .map(key => ({ sku: products[id]['test-skus'][key], currency: key.split('-')[0], vat: key.split('-').length === 2, key })))
-          let idx = skus.findIndex(obj => obj.sku === sku)
-          if (idx >= 0) {
-            vatPaid = skus[idx].vat
-            return true
-          }
-          return false
-        })[0]
-        let output = {
-          ...products[id]
+new Vue({
+  el: '#app',
+  vuetify: new Vuetify({
+    theme: {
+      themes: {
+        light: {
+          primary: '#fe3500',
+          secondary: '#ffc107',
+          accent: '#ffeb3b',
+          error: '#fe3500',
+          warning: '#ff9800',
+          info: '#3f51b5',
+          success: '#4caf50'
         }
-        output.vatPaid = vatPaid
-        output.id = id
-        output.receipt = receipt
-        return output
+      }
+    }
+  }),
+  data: () => ({
+    authDialog: 'unchecked',
+    uid: null,
+    drawer: false,
+
+    loaded: {
+      orders: true,
+      products: true
+    },
+
+    orders: [],
+    products: [],
+    livemode: true,
+    showShipped: false,
+    printId: null
+  }),
+
+  computed: {
+    resolved () {
+      const output = {}
+
+      for (const order of this.orders) {
+        const productRows = []
+
+        if (order.paid) {
+          for (const productRow of order.paidItems) {
+            const resolvedProductInfo = this.productInfoBySku(typeof productRow.sku === 'string' ? productRow.sku : productRow.sku.id)
+            productRows.push({
+              qty: productRow.quantity,
+              name: resolvedProductInfo.name,
+              vatTotal: Math.round(productRow.quantity * productRow.amount * (1 - (1 / (1 + resolvedProductInfo.vat)))),
+              vatPercentage: resolvedProductInfo.vat,
+              total: productRow.quantity * productRow.amount,
+              currency: resolvedProductInfo.currency,
+              unit: resolvedProductInfo.unit,
+              unitPrice: resolvedProductInfo.price
+            })
+          }
+        } else {
+          for (const productRow of order.requestedItems) {
+            const resolvedProductInfo = this.productInfoBySku(typeof productRow.sku === 'string' ? productRow.sku : productRow.sku.id)
+            productRows.push({
+              qty: productRow.quantity,
+              name: resolvedProductInfo.name,
+              vatTotal: Math.round(productRow.quantity * resolvedProductInfo.price * (1 - (1 / (1 + resolvedProductInfo.vat)))),
+              vatPercentage: resolvedProductInfo.vat,
+              total: productRow.quantity * resolvedProductInfo.price,
+              currency: resolvedProductInfo.currency,
+              unit: resolvedProductInfo.unit,
+              unitPrice: resolvedProductInfo.price
+            })
+          }
+        }
+
+
+        resolvedOrder = {
+          productRows,
+          ...productRows.reduce((acc, curr) => {
+            acc.subtotal += curr.total - curr.vatTotal,
+            acc.vatTotal += curr.vatTotal,
+            acc.total += curr.total
+            acc.currency = curr.currency
+            return acc
+          }, { subtotal: 0, vatTotal: 0, total: 0 })
+        }
+
+        output[order.id] = resolvedOrder
       }
 
-      $scope.ship = (id) => {
-        console.log(id)
-        let shippedCallable = firebase.functions().httpsCallable('shipped')
-        shippedCallable({ tracking: $scope.orders[id].tracking || '', id: id })
-      }
+      return output
+    }
+  },
 
-      if ($scope.admin) {
-        firebase.firestore().collection('products').onSnapshot(qSnap => {
-          qSnap.forEach(dSnap => {
-            $scope.products[dSnap.id] = dSnap.data()
-          })
-          $scope.$apply()
-        })
-        firebase.firestore().collection('orders').onSnapshot(qSnap => {
-          qSnap.forEach(dSnap => {
-            $scope.orders[dSnap.id] = dSnap.data()
-            if ($scope.orders[dSnap.id].paid) {
-              $scope.resolved[dSnap.id] = $scope.orders[dSnap.id].paidItems.map(product => ({ product, resolved: $scope.findBySku($scope.products, (typeof product.sku === 'string' ? product.sku : product.sku.id), dSnap.id) }))
-              console.log(dSnap.id, $scope.resolved[dSnap.id])
-              $scope.totals[dSnap.id] = $scope.resolved[dSnap.id].map(product => ({
-                subtotal: product.product.quantity * product.resolved.prices[$scope.orders[dSnap.id].currency],
-                vat: Math.round(product.product.quantity * product.resolved.prices[$scope.orders[dSnap.id].currency] * (1 - (1 / (1 + (product.resolved.vatPaid ? product.resolved.vat : 0))))),
-                total: product.product.quantity * product.product.amount
-              })).reduce((curr, acc) => ({
-                subtotal: curr.subtotal + acc.subtotal,
-                vat: curr.vat + acc.vat,
-                total: curr.total + acc.total
-              }))
-              console.log(dSnap.id, $scope.totals[dSnap.id])
-            } else {
-              $scope.resolved[dSnap.id] = $scope.orders[dSnap.id].requestedItems.map(product => ({ product, resolved: $scope.findBySku($scope.products, (typeof product.sku === 'string' ? product.sku : product.sku.id), dSnap.id) }))
-              $scope.totals[dSnap.id] = $scope.resolved[dSnap.id].map(product => ({
-                subtotal: product.product.quantity * product.resolved.prices[$scope.orders[dSnap.id].currency],
-                vat: product.product.quantity * product.resolved.prices[$scope.orders[dSnap.id].currency] * (product.resolved.vatPaid ? product.resolved.vat : 0),
-                total: product.product.quantity * product.resolved.prices[$scope.orders[dSnap.id].currency] * (product.resolved.vatPaid ? 1 + product.resolved.vat : 1)
-              })).reduce((curr, acc) => ({
-                subtotal: curr.subtotal + acc.subtotal,
-                vat: curr.vat + acc.vat,
-                total: curr.total + acc.total
-              }))
-            }
-            console.log($scope.orders[dSnap.id], dSnap.id)
-          })
-          $scope.$apply()
-        })
+  created () {
+    firebase.auth().onAuthStateChanged(user => {
+      if (user) {
+        if (admins.includes(user.uid)) {
+          this.authDialog = 'authed'
+          this.uid = user.uid
+          this.load()
+        } else {
+          this.uid = null
+          this.authDialog = 'notadmin'
+        }
       } else {
-        $location.path('/')
+        this.authDialog = 'unchecked'
+        this.uid = null
       }
     })
-  })
+  },
+
+  methods: {
+    login () {
+      firebase.auth().signInWithPopup(gAuthProvider)
+    },
+    logout () {
+      firebase.auth().signOut()
+    },
+
+    insertDSnaps (qSnap, arrName) {
+      qSnap.forEach(dSnap => {
+        const idx = this[arrName].findIndex(item => item.id === dSnap.id)
+
+        if (idx !== -1) {
+          this[arrName].splice(idx, 1, {
+            id: dSnap.id,
+            ...dSnap.data()
+          })
+        } else {
+          this[arrName].push({
+            id: dSnap.id,
+            ...dSnap.data()
+          })
+        }
+      })
+    },
+
+    load () {
+      firebase.firestore().collection('products').get().then(qSnap => {
+        this.loaded.products = true
+        this.insertDSnaps(qSnap, 'products')
+      })
+
+      firebase.firestore().collection('orders').get().then(qSnap => {
+        this.loaded.orders = true
+        this.insertDSnaps(qSnap, 'orders')
+      })
+    },
+    ship (order) {
+      shippedCallable({ tracking: order.tracking || '', id: order.id })
+    },
+
+    filterOrders (items, search) {
+      return items.filter(item => {
+        if (this.livemode && !item.livemode) return false
+        if (!this.livemode && item.livemode) return false
+
+        if (!this.showShipped && item.shipped) return false
+
+        return true
+      })
+    },
+
+    productInfoBySku (sku) {
+      const product = this.products.find(product => {
+        const skus = [...Object.values(product.skus), ...Object.values(product['test-skus'])]
+        return skus.includes(sku)
+      })
+
+      const skuEntries = [...Object.entries(product.skus), ...Object.entries(product['test-skus'])]
+      const skuName = skuEntries.find(entry => entry[1] === sku)[0]
+      const [currency, withVat] = skuName.split('-')
+
+      return {
+        name: product.name,
+        currency,
+        vat: !!withVat ? product.vat : 0,
+        unit: product.unit,
+        price: product.prices[currency]
+      }
+    },
+
+    print (order) {
+      this.printId = order.id
+      this.drawer = false
+      setTimeout(() => {
+        window.print()
+        this.printId = null
+      }, 500)
+    }
+  },
+  filters: {
+    timestamp (value) {
+      if (!value) return ''
+      if (!(value instanceof firebase.firestore.Timestamp)) return value
+      const date = dateFormatter.format(value.toDate())
+
+      return date
+    }
+  }
+})

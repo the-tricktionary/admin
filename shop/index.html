@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta content="IE=edge" http-equiv="X-UA-Compatible">
+  <meta content="width=device-width, initial-scale=1" name="viewport">
+
+  <title>Shop - Tricktionary Admin</title>
+  <meta name="robots" content="noindex, nofollow">
+
+  <meta name="theme-color" content="#fe3500">
+
+  <link rel="icon" href="https://v1.the-tricktionary.com/static/img/icon.png">
+  <link rel="apple-touch-icon" href="https://v1.the-tricktionary.com/static/img/icon-ios.png">
+
+  <link href="https://fonts.googleapis.com/css?family=Roboto:100,300,400,500,700,900" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/@mdi/font@5.x/css/materialdesignicons.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/vuetify@2.x/dist/vuetify.min.css" rel="stylesheet">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, minimal-ui">
+
+  <script defer src="https://cdn.jsdelivr.net/npm/vue@2.x/dist/vue.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/vuetify@2.x/dist/vuetify.js"></script>
+  <!-- The core Firebase JS SDK is always required and must be listed first -->
+  <script defer src="https://the-tricktionary.com/__/firebase/7.15.5/firebase-app.js"></script>
+  <script defer src="https://the-tricktionary.com/__/firebase/7.15.5/firebase-auth.js"></script>
+  <script defer src="https://the-tricktionary.com/__/firebase/7.15.5/firebase-firestore.js"></script>
+  <script defer src="https://the-tricktionary.com/__/firebase/7.15.5/firebase-functions.js"></script>
+  <!-- Initialize Firebase -->
+  <script defer src="https://the-tricktionary.com/__/firebase/init.js"></script>
+  <script defer src="/shop/shop.js"></script>
+
+  <style>
+    @media print {
+      .print-hide {
+        display: none;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <v-app id="app">
+    <v-navigation-drawer
+      v-model="drawer"
+      app
+    >
+      <v-list>
+        <v-list-item link href="/">
+          <v-list-item-icon>
+            <v-icon>mdi-home</v-icon>
+          </v-list-item-icon>
+          <v-list-item-content>
+            <v-list-item-title>Home</v-list-item-title>
+          </v-list-item-content>
+        </v-list-item>
+
+        <v-list-item link href="/tricks">
+          <v-list-item-icon>
+            <v-icon>mdi-jump-rope</v-icon>
+          </v-list-item-icon>
+          <v-list-item-content>
+            <v-list-item-title>Edit Tricks</v-list-item-title>
+          </v-list-item-content>
+        </v-list-item>
+
+        <v-list-item link href="/shop" :input-value="true">
+          <v-list-item-icon>
+            <v-icon>mdi-cart</v-icon>
+          </v-list-item-icon>
+          <v-list-item-content>
+            <v-list-item-title>Shop</v-list-item-title>
+          </v-list-item-content>
+        </v-list-item>
+      </v-list>
+
+      <template v-slot:append>
+        <v-divider></v-divider>
+        <v-list>
+          <v-list-item link @click="logout()">
+            <v-list-item-icon>
+              <v-icon>mdi-logout</v-icon>
+            </v-list-item-icon>
+            <v-list-item-content>
+              <v-list-item-title>Log Out</v-list-item-title>
+            </v-list-item-content>
+          </v-list-item>
+        </v-list>
+      </template>
+    </v-navigation-drawer>
+
+    <v-app-bar
+      app
+      color="primary"
+      dark
+      class="print-hide"
+    >
+      <v-app-bar-nav-icon @click.stop="drawer = !drawer"></v-app-bar-nav-icon>
+      <v-toolbar-title>the Tricktionary Admin</v-toolbar-title>
+    </v-app-bar>
+
+    <v-dialog :value="authDialog !== 'authed'" persistent max-width="290">
+      <v-card :loading="authDialog === 'unchecked'">
+        <v-card-title class="headline">Auth</v-card-title>
+
+        <v-card-text v-if="authDialog === 'notadmin'">
+          You don't have permissions to view this page
+        </v-card-text>
+
+        <v-card-actions v-if="authDialog !== 'notadmin' && authDialog === 'unchecked'">
+          <v-spacer></v-spacer>
+          <v-btn @click="login()" text><v-icon left>mdi-google</v-icon>Log In With Google</v-btn>
+        </v-card-actions>
+
+        <v-card-actions v-if="authDialog === 'notadmin'">
+          <v-spacer></v-spacer>
+          <v-btn @click="logout()" text>Log Out</v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+
+    <v-main>
+      <v-container>
+        <v-row class="mb-2 print-hide">
+          <v-switch v-model="livemode" label="Live Mode" class="mr-4"></v-switch>
+          <v-switch v-model="showShipped" label="Show Shipped"></v-switch>
+        </v-row>
+
+        <v-data-iterator :loading="!loaded.orders || !loaded.products" disable-pagination hide-default-footer :items="orders" sort-by="received" :sort-desc="true" :custom-filter="filterOrders" item-key="id">
+          <template v-slot:loading>
+            <div class="text-center">
+              <v-progress-circular indeterminate :size="64"></v-progress-circular>
+            </div>
+          </template>
+          <template v-slot:default="{ items, isExpanded, expand }">
+            <v-row>
+              <v-col cols="12" v-for="order in items" :key="order.id" v-show="!printId || printId === order.id">
+                <v-card outlined class="mb-4">
+                  <v-list-item three-line>
+                    <v-list-item-content>
+                      <v-list-item-title>Recieved at: {{ order.received | timestamp }}</v-list-item-title>
+                      <v-list-item-subtitle>Receipt ID: <code>{{ order.id }}</code> <a class="print-hide" :href="`https://console.firebase.google.com/u/0/project/project-5641153190345267944/database/firestore/data~2Forders~2F${order.id}`" target="_blank" rel="noopener">(open in firebase console)</a></v-list-item-subtitle>
+                    </v-list-item-content>
+
+                    <v-list-item-avatar tile size="80" color="red" v-if="!order.livemode">
+                      <span class="white--text headline">TEST</span>
+                    </v-list-item-avatar>
+                    <v-list-item-avatar tile size="80" :color="order.paid ? 'green' : 'red'">
+                      <span class="white--text headline">{{ order.paid ? 'PAID' : 'UNPAID' }}</span>
+                    </v-list-item-avatar>
+                  </v-list-item>
+
+                  <v-expand-transition>
+                    <div v-show="isExpanded(order)">
+                      <v-simple-table dense class="mb-2">
+                        <template v-slot:default>
+                          <tbody>
+                            <tr>
+                              <td class="text-right">Name</td>
+                              <td>{{ order.customerDetails.name }}</td>
+                            </tr>
+                            <tr>
+                              <td class="text-right">Email</td>
+                              <td>{{ order.customerDetails.email }}</td>
+                            </tr>
+                            <tr>
+                              <td class="text-right">Phone</td>
+                              <td>{{ order.customerDetails.phone }}</td>
+                            </tr>
+                            <tr>
+                              <td class="text-right">Address 1</td>
+                              <td>{{ order.customerDetails.address1 }}</td>
+                            </tr>
+                            <tr>
+                              <td class="text-right">Address2</td>
+                              <td>{{ order.customerDetails.address2 }}</td>
+                            </tr>
+                            <tr>
+                              <td class="text-right">Postal Code</td>
+                              <td>{{ order.customerDetails.postalCode }}</td>
+                            </tr>
+                            <tr>
+                              <td class="text-right">City</td>
+                              <td>{{ order.customerDetails.city }}</td>
+                            </tr>
+                            <tr>
+                              <td class="text-right">State</td>
+                              <td>{{ order.customerDetails.state }}</td>
+                            </tr>
+                            <tr>
+                              <td class="text-right">Country</td>
+                              <td>{{ order.customerDetails.countryCode }}</td>
+                            </tr>
+                            <tr>
+                              <td class="text-right">Company</td>
+                              <td>{{ order.customerDetails.company }}</td>
+                            </tr>
+                            <tr>
+                              <td class="text-right">VAT number</td>
+                              <td>
+                                {{ order.customerDetails.vatnumber }}
+                                <span v-if="order.customerDetails.vatnumber && order.customerDetails.vatValid">
+                                  <v-icon>mdi-check</v-icon>
+                                </span>
+                                <span v-if="order.customerDetails.vatnumber && !order.customerDetails.vatValid">
+                                  <v-icon>mdi-close</v-icon>
+                                </span>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td class="text-right">Payment Intent</td>
+                              <td><a
+                                  :href="`https://dashboard.stripe.com/${order.livemode ? '' : 'test/'}payments/${order.paymentIntent}`"
+                                  target="_blank" rel="noopener">{{
+                                  order.paymentIntent }}</a></td>
+                            </tr>
+                            <tr>
+                              <td class="text-right">Coupon</td>
+                              <td>
+                                {{ order.coupon }}
+                                <span v-if="order.coupon && order.couponValid"><v-icon>mdi-check</v-icon></span>
+                                <span v-if="order.coupon && !order.couponValid"><v-icon>mdi-close</v-icon></span>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td class="text-right">Shipping/Tracking ID</td>
+                              <td>
+                                {{ order.tracking }}
+                              </td>
+                            </tr>
+                          </tbody>
+                        </template>
+                      </v-simple-table>
+
+                      <v-card-title>Items</v-card-title>
+
+                      <v-simple-table dense>
+                        <template v-slot:default>
+                          <thead>
+                            <tr>
+                              <th class="text-center">QTY</th>
+                              <th class="text-center">Product</th>
+                              <th colspan="2" class="text-center">Unit Cost</th>
+                              <th colspan="2" class="text-center">VAT</th>
+                              <th colspan="2" class="text-center">Total</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            <tr v-for="productRow in resolved[order.id].productRows">
+                              <td class="text-right">{{ productRow.qty }}</td>
+                              <td>{{ productRow.name }}</td>
+                              <td class="text-right">{{ productRow.unitPrice / 100 }}</td>
+                              <td>{{ productRow.currency }}{{ productRow.unit ? ' / ' : '' }}{{ productRow.unit }}</td>
+                              <td class="text-right">{{ productRow.vatPercentage * 100 }}</td>
+                              <td>%</td>
+                              <td class="text-right">{{ productRow.total / 100 }}</td>
+                              <td>{{ productRow.currency }}</td>
+                            </tr>
+                          </tbody>
+                          <tfoot>
+                            <tr>
+                              <td colspan="6" class="text-right">Subtotal</td>
+                              <td class="text-right">{{ resolved[order.id].subtotal / 100 }}</td>
+                              <td>{{ resolved[order.id].currency }}</td>
+                            </tr>
+                            <tr>
+                              <td colspan="6" class="text-right">VAT</td>
+                              <td class="text-right">{{ resolved[order.id].vatTotal / 100 }}</td>
+                              <td>{{ resolved[order.id].currency }}</td>
+                            </tr>
+                            <tr>
+                              <td colspan="6" class="text-right">Total</td>
+                              <td class="text-right">{{ resolved[order.id].total / 100 }}</td>
+                              <td>{{ resolved[order.id].currency }}</td>
+                            </tr>
+                          </tfoot>
+                        </template>
+                      </v-simple-table>
+
+                      <v-card-text>
+                        <v-text-field v-if="!order.shipped" label="Tracking ID" class="print-hide" v-model="order.tracking"></v-text-field>
+                        <v-btn class="print-hide" @click="ship(order)" color="primary">Ship</v-btn>
+                      </v-card-text>
+                    </div>
+                  </v-expand-transition>
+
+                  <v-card-actions class="print-hide">
+                    <v-btn v-if="isExpanded(order)" text @click="print(order)">Print</v-btn>
+                    <v-spacer></v-spacer>
+                    <v-btn icon @click="expand(order, !isExpanded(order))">
+                      <v-icon>{{ isExpanded(order) ? 'mdi-chevron-up' : 'mdi-chevron-down' }}</v-icon>
+                    </v-btn>
+                  </v-card-actions>
+                </v-card>
+              </v-col>
+            </v-row>
+          </template>
+        </v-data-iterator>
+      </v-container>
+    </v-main>
+  </v-app>

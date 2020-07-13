@@ -27,20 +27,68 @@
   <!-- Initialize Firebase -->
   <script defer src="https://the-tricktionary.com/__/firebase/init.js"></script>
   <script defer src="/tricks/tricks.js"></script>
-
 </head>
 
 <body>
   <v-app id="app">
+    <v-navigation-drawer
+      v-model="drawer"
+      app
+    >
+      <v-list>
+        <v-list-item link href="/">
+          <v-list-item-icon>
+            <v-icon>mdi-home</v-icon>
+          </v-list-item-icon>
+          <v-list-item-content>
+            <v-list-item-title>Home</v-list-item-title>
+          </v-list-item-content>
+        </v-list-item>
+
+        <v-list-item link href="/tricks" :input-value="true">
+          <v-list-item-icon>
+            <v-icon>mdi-jump-rope</v-icon>
+          </v-list-item-icon>
+          <v-list-item-content>
+            <v-list-item-title>Edit Tricks</v-list-item-title>
+          </v-list-item-content>
+        </v-list-item>
+
+        <v-list-item link href="/shop">
+          <v-list-item-icon>
+            <v-icon>mdi-cart</v-icon>
+          </v-list-item-icon>
+          <v-list-item-content>
+            <v-list-item-title>Shop</v-list-item-title>
+          </v-list-item-content>
+        </v-list-item>
+      </v-list>
+
+      <template v-slot:append>
+        <v-divider></v-divider>
+        <v-list>
+          <v-list-item link @click="logout()">
+            <v-list-item-icon>
+              <v-icon>mdi-logout</v-icon>
+            </v-list-item-icon>
+            <v-list-item-content>
+              <v-list-item-title>Log Out</v-list-item-title>
+            </v-list-item-content>
+          </v-list-item>
+        </v-list>
+      </template>
+    </v-navigation-drawer>
+
     <v-app-bar
       app
       color="primary"
       dark
     >
+      <v-app-bar-nav-icon @click.stop="drawer = !drawer"></v-app-bar-nav-icon>
       <v-toolbar-title>the Tricktionary Admin</v-toolbar-title>
     </v-app-bar>
 
-    <v-dialog v-model="authDialog" persistent max-width="290">
+    <v-dialog :value="authDialog !== 'authed'" persistent max-width="290">
       <v-card :loading="authDialog === 'unchecked'">
         <v-card-title class="headline">Auth</v-card-title>
 
@@ -120,7 +168,7 @@
             Why? because deep-cloning an object with circular references is too much work.
           </p>
 
-          <p v-if="trick.id">Document ID: <a :href="`https://console.firebase.google.com/u/0/project/project-5641153190345267944/database/firestore/data~2Ftricks${discipline.toUpperCase()}~2F${trick.id}`" target="_blank" rel="noopener"><code>{{ trick.id }}</code> (open in firebase console)</a></p>
+          <p v-if="trick.id">Document ID:<code>{{ trick.id }}</code> <a :href="`https://console.firebase.google.com/u/0/project/project-5641153190345267944/database/firestore/data~2Ftricks${discipline.toUpperCase()}~2F${trick.id}`" target="_blank" rel="noopener">(open in firebase console)</a></p>
 
           <v-text-field v-model="trick.name" label="Name" required :rules="reqRule"></v-text-field>
 

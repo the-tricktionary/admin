@@ -30,6 +30,8 @@ new Vue({
   data: () => ({
     authDialog: 'unchecked',
     uid: null,
+    drawer: false,
+
     discipline: 'sr',
     tab: null,
     trick: null,
@@ -71,8 +73,7 @@ new Vue({
     firebase.auth().onAuthStateChanged(user => {
       if (user) {
         if (admins.includes(user.uid)) {
-          this.authDialog = false
-
+          this.authDialog = 'authed'
           this.uid = user.uid
           this.load()
         } else {
@@ -80,7 +81,7 @@ new Vue({
           this.authDialog = 'notadmin'
         }
       } else {
-        this.authDialog = 'unauthed'
+        this.authDialog = 'unchecked'
         this.uid = null
       }
     })
