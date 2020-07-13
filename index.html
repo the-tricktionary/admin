@@ -1,72 +1,160 @@
 <!DOCTYPE html>
-<html ng-app="trick">
-<base href="/">
-
+<html lang="en">
 <head>
-    <meta charset="utf-8">
-    <meta content="IE=edge" http-equiv="X-UA-Compatible">
-    <meta content="width=device-width, initial-scale=1" name="viewport">
-    <!-- The above 3 meta tags *must* come first in the head; any other head content must come *after* these tags -->
+  <meta charset="UTF-8">
+  <meta content="IE=edge" http-equiv="X-UA-Compatible">
+  <meta content="width=device-width, initial-scale=1" name="viewport">
 
-    <meta name="robots" content="noindex, nofollow">
+  <title>Tricktionary Admin</title>
+  <meta name="robots" content="noindex, nofollow">
 
-    <meta name="theme-color" content="#fe3500">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black">
-    <meta name="mobile-web-app-capable" content="yes">
-    <meta name="description" content="A dictionary of jumprope tricks">
-    <meta name="keywords" content="Jumprope,Ropeskipping,jump,rope,skipping,tricks">
-    <meta name="google-site-verification" content="xAU96Y3b_An5qAtS5Xu6fBbH2CwmuSSHoWpVnXc73Ps" />
-    <link rel="manifest" href="/static/manifest.json">
-    <link rel="icon" href="https://v1.the-tricktionary.com/static/img/icon.png">
-    <link rel="apple-touch-icon" href="https://v1.the-tricktionary.com/static/img/icon-ios.png">
-    <title ng-if="!subpage">the Tricktionary Admin</title>
-    <title ng-if="subpage">the Tricktionary Admin{{ (subpage ? " - " + subpage : "") }}</title>
-    <!-- Resources -->
-    <script src="https://v1.the-tricktionary.com/static/js/angular.min.js"></script>
-    <script src="https://v1.the-tricktionary.com/static/js/angular-resource.min.js"></script>
-    <script src="https://v1.the-tricktionary.com/static/js/angular-route.min.js"></script>
-    <script src="https://v1.the-tricktionary.com/static/js/angular-sanitize.min.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/5.7.0/firebase.js"></script>
-    <script src="https://v1.the-tricktionary.com/static/js/angularfire.min.js"></script>
-    <script src="https://v1.the-tricktionary.com/static/js/marked.min.js"></script>
-    <script src="https://v1.the-tricktionary.com/static/js/angular-marked.js"></script>
-    <!-- DEPLOY -->
-    <!-- Stylesheets -->
-    <link rel="stylesheet" href="https://v1.the-tricktionary.com/static/css/style.css">
-    <link rel="stylesheet" href="https://v1.the-tricktionary.com/static/css/font-awesome.css">
-    <link rel="stylesheet" href="https://v1.the-tricktionary.com/static/css/pt-sans.css">
-    <!-- Local angular modules -->
-    <script src="/trick.js"></script>
-    <script src="/dash/dash.js"></script>
-    <script src="/translate/translate.js"></script>
-    <script src="/levels/levels.js"></script>
-    <script src="/contact/contact.js"></script>
-    <!-- END DEPLOY -->
+  <meta name="theme-color" content="#fe3500">
+
+  <link rel="icon" href="https://v1.the-tricktionary.com/static/img/icon.png">
+  <link rel="apple-touch-icon" href="https://v1.the-tricktionary.com/static/img/icon-ios.png">
+
+  <link href="https://fonts.googleapis.com/css?family=Roboto:100,300,400,500,700,900" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/@mdi/font@5.x/css/materialdesignicons.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/vuetify@2.x/dist/vuetify.min.css" rel="stylesheet">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, minimal-ui">
+
+  <script defer src="https://cdn.jsdelivr.net/npm/vue@2.x/dist/vue.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/vuetify@2.x/dist/vuetify.js"></script>
+  <!-- The core Firebase JS SDK is always required and must be listed first -->
+  <script defer src="https://the-tricktionary.com/__/firebase/7.15.5/firebase-app.js"></script>
+  <script defer src="https://the-tricktionary.com/__/firebase/7.15.5/firebase-auth.js"></script>
+  <script defer src="https://the-tricktionary.com/__/firebase/7.15.5/firebase-firestore.js"></script>
+  <!-- Initialize Firebase -->
+  <script defer src="https://the-tricktionary.com/__/firebase/init.js"></script>
+  <script defer src="/index.js"></script>
 </head>
 
 <body>
-    <nav>
-        <ul class="topnav">
-            <li ng-click="goHome()" class="pointer"><img src="https://the-tricktionary.com/static/img/tricktionary2.svg" />
-                <div>&nbsp;<span class="small">the</span>Tricktionary Admin</div>
-            </li>
-            <li><a ng-href="/contact" onclick="toggleNav()">Contact</a></li>
-            <li><a ng-href="/translate" onclick="toggleNav()">Translate</a></li>
-            <li><a ng-href="/levels" onclick="toggleNav()">Levels</a></li>
-            <li><a ng-href="/tricks" onclick="toggleNav()">Tricks</a></li>
-            <li><a ng-href="/shop" onclick="toggleNav()">Shop</a></li>
-            <li ng-if="user && !user.isAnonymous"><a ng-click="signOut()" onclick="toggleNav()">Sign Out</a></li>
-            <li ng-if="!user || user.isAnonymous"><a ng-click="signIn()" onclick="toggleNav()">Sign In</a></li>
-            <li class="icon" onclick="toggleNav()">&#9776;</li>
-        </ul>
-    </nav>
+  <v-app id="app">
+    <v-navigation-drawer
+      v-model="drawer"
+      app
+    >
+      <v-list>
+        <v-list-item link href="/">
+          <v-list-item-icon>
+            <v-icon>mdi-home</v-icon>
+          </v-list-item-icon>
+          <v-list-item-content>
+            <v-list-item-title>Home</v-list-item-title>
+          </v-list-item-content>
+        </v-list-item>
 
-    <div ng-view>
-        <i class="fa fa-spinner fa-spin fa-4x fa-fw"></i> Loading... Enable javascript
-        and/or clear cache.
-    </div>
+        <v-list-item link href="/tricks" :input-value="true">
+          <v-list-item-icon>
+            <v-icon>mdi-jump-rope</v-icon>
+          </v-list-item-icon>
+          <v-list-item-content>
+            <v-list-item-title>Edit Tricks</v-list-item-title>
+          </v-list-item-content>
+        </v-list-item>
 
-    <div class="foot" class="mt">
-        <a ng-href="https://the-tricktionary.com/about">Privacy Policy</a>
-    </div>
+        <v-list-item link href="/shop">
+          <v-list-item-icon>
+            <v-icon>mdi-cart</v-icon>
+          </v-list-item-icon>
+          <v-list-item-content>
+            <v-list-item-title>Shop</v-list-item-title>
+          </v-list-item-content>
+        </v-list-item>
+
+        <v-list-item></v-list-item>
+        <v-subheader>DEPRECATED</v-subheader>
+
+        <v-list-item link href="/translate">
+          <v-list-item-icon>
+            <v-icon>mdi-translate</v-icon>
+          </v-list-item-icon>
+          <v-list-item-content>
+            <v-list-item-title>Translate</v-list-item-title>
+          </v-list-item-content>
+        </v-list-item>
+        <v-list-item link href="/contact">
+          <v-list-item-icon>
+            <v-icon>mdi-forum</v-icon>
+          </v-list-item-icon>
+          <v-list-item-content>
+            <v-list-item-title>Contact</v-list-item-title>
+          </v-list-item-content>
+        </v-list-item>
+      </v-list>
+
+      <template v-slot:append>
+        <v-divider></v-divider>
+        <v-list>
+          <v-list-item link @click="logout()">
+            <v-list-item-icon>
+              <v-icon>mdi-logout</v-icon>
+            </v-list-item-icon>
+            <v-list-item-content>
+              <v-list-item-title>Log Out</v-list-item-title>
+            </v-list-item-content>
+          </v-list-item>
+        </v-list>
+      </template>
+    </v-navigation-drawer>
+
+    <v-app-bar
+      app
+      color="primary"
+      dark
+    >
+      <v-app-bar-nav-icon @click.stop="drawer = !drawer"></v-app-bar-nav-icon>
+      <v-toolbar-title>the Tricktionary Admin</v-toolbar-title>
+    </v-app-bar>
+
+    <v-dialog :value="authDialog !== 'authed'" persistent max-width="290">
+      <v-card :loading="authDialog === 'unchecked'">
+        <v-card-title class="headline">Auth</v-card-title>
+
+        <v-card-text v-if="authDialog === 'notadmin'">
+          You don't have permissions to view this page
+        </v-card-text>
+
+        <v-card-actions v-if="authDialog !== 'notadmin' && authDialog === 'unchecked'">
+          <v-spacer></v-spacer>
+          <v-btn @click="login()" text><v-icon left>mdi-google</v-icon>Log In With Google</v-btn>
+        </v-card-actions>
+
+        <v-card-actions v-if="authDialog === 'notadmin'">
+          <v-spacer></v-spacer>
+          <v-btn @click="logout()" text>Log Out</v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+
+    <v-main>
+      <v-container>
+        <v-row>
+          <v-col cols="12" sm="6">
+            <v-card link href="/tricks">
+              <v-card-title>Edit Tricks</v-card-title>
+            </v-card>
+          </v-col>
+          <v-col cols="12" sm="6" class="mb-12">
+            <v-card link href="/shop">
+              <v-card-title>Shop</v-card-title>
+            </v-card>
+          </v-col>
+
+          <v-col cols="12" sm="6">
+            <v-card link href="/translate">
+              <v-card-title>v1 Translations</v-card-title>
+              <v-card-subtitle>Deprecated, kept because android</v-card-subtitle>
+            </v-card>
+          </v-col>
+          <v-col cols="12" sm="6">
+            <v-card link href="/contact">
+              <v-card-title>v1 Contact</v-card-title>
+              <v-card-subtitle>Deprecated, kept because not yet in v2</v-card-subtitle>
+            </v-card>
+          </v-col>
+        </v-row>
+      </v-container>
+    </v-main>
+  </v-app>

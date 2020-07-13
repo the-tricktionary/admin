@@ -38,11 +38,9 @@
     <link rel="stylesheet" href="https://v1.the-tricktionary.com/static/css/pt-sans.css">
     <!-- Local angular modules -->
     <script src="/trick.js"></script>
-    <script src="/dash/dash.js"></script>
     <script src="/translate/translate.js"></script>
     <script src="/levels/levels.js"></script>
     <script src="/contact/contact.js"></script>
-    <script src="/shop/shop.js"></script>
     <!-- END DEPLOY -->
 </head>
 
@@ -55,8 +53,8 @@
             <li><a ng-href="/contact" onclick="toggleNav()">Contact</a></li>
             <li><a ng-href="/translate" onclick="toggleNav()">Translate</a></li>
             <li><a ng-href="/levels" onclick="toggleNav()">Levels</a></li>
-            <li><a ng-href="/tricks" onclick="toggleNav()">Tricks</a></li>
-            <li><a ng-href="/shop" onclick="toggleNav()">Shop</a></li>
+            <li><a ng-href="/tricks" target="_self">Tricks</a></li>
+            <li><a ng-href="/shop" target="_self">Shop</a></li>
             <li ng-if="user && !user.isAnonymous"><a ng-click="signOut()" onclick="toggleNav()">Sign Out</a></li>
             <li ng-if="!user || user.isAnonymous"><a ng-click="signIn()" onclick="toggleNav()">Sign In</a></li>
             <li class="icon" onclick="toggleNav()">&#9776;</li>

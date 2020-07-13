@@ -21,7 +21,6 @@ function toggleNav () { // eslint-disable-line
 
 angular.module('trick', [
   'ngRoute',
-  'trick.dash',
   'trick.contact',
   'trick.translate',
   'trick.levels',
