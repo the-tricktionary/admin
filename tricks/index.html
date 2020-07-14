@@ -243,8 +243,8 @@
           <v-text-field v-model="trick.levels.ijru.level" label="IJRU Level"></v-text-field>
 
           <v-text-field v-model="trick.levels.ijru.verified.version" label="IJRU Rule Book Version"></v-text-field>
-          <v-btn text @click="verifyTrick(trick, 1, true)">Verify As Judge</v-btn>
-          <v-btn text @click="verifyTrick(trick, 2, true)">Verify As Official</v-btn>
+          <v-btn text @click="verifyTrick(trick, 0, true)">Verify As Judge</v-btn>
+          <v-btn text @click="verifyTrick(trick, 1, true)">Verify As Official</v-btn>
         </v-form>
       </v-container>
     </v-main>
