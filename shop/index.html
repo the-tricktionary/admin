@@ -140,6 +140,8 @@
 
     <v-main>
       <v-container>
+        <h1 class="print-hide">Orders</h1>
+
         <v-row class="mb-2 print-hide">
           <v-switch v-model="livemode" label="Live Mode" class="ml-4 mr-4"></v-switch>
           <v-switch v-model="showShipped" label="Show Shipped"></v-switch>
@@ -308,6 +310,51 @@
                     <v-spacer></v-spacer>
                     <v-btn icon @click="expand(order, !isExpanded(order))">
                       <v-icon>{{ isExpanded(order) ? 'mdi-chevron-up' : 'mdi-chevron-down' }}</v-icon>
+                    </v-btn>
+                  </v-card-actions>
+                </v-card>
+              </v-col>
+            </v-row>
+          </template>
+        </v-data-iterator>
+
+        <v-divider class="mt-12 mb-12 print-hide"></v-divider>
+
+        <h1 class="print-hide">Products</h1>
+
+        <v-data-iterator :loading="!loaded.products" disable-pagination hide-default-footer :items="products" sort-by="name" item-key="id">
+          <template v-slot:loading>
+            <div class="text-center print-hide">
+              <v-progress-circular indeterminate :size="64"></v-progress-circular>
+            </div>
+          </template>
+          <template v-slot:default="{ items, isExpanded, expand }">
+            <v-row class="print-hide">
+              <v-col cols="12" v-for="product in items" :key="product.id">
+                <v-card outlined class="mb-4">
+                  <v-card-title>{{ product.name }}</v-card-title>
+                  <v-card-subtitle>{{ product.qty }} in stock. <code>{{ product.id }}</code> <a :href="`https://console.firebase.google.com/u/0/project/project-5641153190345267944/database/firestore/data~2Fproducts~2F${product.id}`" target="_blank" rel="noopener">(open in firebase console)</a></v-card-subtitle>
+
+                  <v-expand-transition>
+                    <div v-show="isExpanded(product)">
+                      <v-card-text>
+                        <v-text-field v-model="product.name" label="Product Name"></v-text-field>
+                        <v-text-field v-model="product.image" label="Product Image URL" type="url"></v-text-field>
+                        <v-text-field v-model="product.qty" label="Quantity in Stock" type="number"></v-text-field>
+                        <v-textarea v-model="product.description" label="Description" rows="1" auto-grow></v-textarea>
+                        <!-- <v-text-field v-model="product.unit" label="Unit name (pcs, kg...)"></v-text-field> -->
+                        <!-- <v-select clearable label="EU VAT" :items="vatValues" v-model="product.vat"></v-select> -->
+                        <!-- <v-text-field v-model="product.tollCode" label="Toll Code"></v-text-field> -->
+
+                        <v-btn color="primary" :loading="!loaded.product" @click="saveProduct(product)">Save</v-btn>
+                      </v-card-text>
+                    </div>
+                  </v-expand-transition>
+
+                  <v-card-actions class="print-hide">
+                    <v-spacer></v-spacer>
+                    <v-btn icon @click="expand(product, !isExpanded(product))">
+                      <v-icon>{{ isExpanded(product) ? 'mdi-chevron-up' : 'mdi-chevron-down' }}</v-icon>
                     </v-btn>
                   </v-card-actions>
                 </v-card>

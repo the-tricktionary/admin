@@ -36,14 +36,23 @@ new Vue({
     loaded: {
       orders: false,
       products: false,
-      shipped: true
+
+      product: true, // used to know if currently saving one entry
+      shipped: true // ^^^
     },
 
     orders: [],
     products: [],
     livemode: true,
     showShipped: false,
-    printId: null
+    printId: null,
+
+    vatValues: [
+      { text: '25%', value: 0.25 },
+      { text: '12%', value: 0.12 },
+      { text: '6%', value: 0.06 },
+      { text: '0%', value: 0 }
+    ]
   }),
 
   computed: {
@@ -157,11 +166,21 @@ new Vue({
         this.insertDSnaps(qSnap, 'orders')
       })
     },
-    ship (order) {
+    async ship (order) {
       this.loaded.shipped = false
-      const response = shippedCallable({ tracking: order.tracking || '', id: order.id })
+      const response = await shippedCallable({ tracking: order.tracking || '', id: order.id })
       if (response.shipped) this.insertDSnaps([{ ...order, ...response }])
       this.loaded.shipped = true
+    },
+    async saveProduct ({ id, ...product}) {
+      this.loaded.product = false
+      await firebase.firestore().collection('products').doc(id).update({
+        qty: parseInt(product.qty, 10),
+        name: product.name || '',
+        description: product.description || '',
+        image: product.image || '',
+      })
+      this.loaded.product = true
     },
 
     filterOrders (items, search) {
