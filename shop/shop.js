@@ -34,8 +34,9 @@ new Vue({
     drawer: false,
 
     loaded: {
-      orders: true,
-      products: true
+      orders: false,
+      products: false,
+      shipped: true
     },
 
     orders: [],
@@ -157,7 +158,10 @@ new Vue({
       })
     },
     ship (order) {
-      shippedCallable({ tracking: order.tracking || '', id: order.id })
+      this.loaded.shipped = false
+      const response = shippedCallable({ tracking: order.tracking || '', id: order.id })
+      if (response.shipped) this.insertDSnaps([{ ...order, ...response }])
+      this.loaded.shipped = true
     },
 
     filterOrders (items, search) {
@@ -195,7 +199,9 @@ new Vue({
       this.drawer = false
       setTimeout(() => {
         window.print()
-        this.printId = null
+        setTimeout(() => {
+          this.printId = null
+        }, 500)
       }, 500)
     }
   },

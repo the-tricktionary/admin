@@ -54,7 +54,7 @@
           </v-list-item-content>
         </v-list-item>
 
-        <v-list-item link href="/tricks" :input-value="true">
+        <v-list-item link href="/tricks">
           <v-list-item-icon>
             <v-icon>mdi-jump-rope</v-icon>
           </v-list-item-icon>
@@ -63,7 +63,7 @@
           </v-list-item-content>
         </v-list-item>
 
-        <v-list-item link href="/shop">
+        <v-list-item link href="/shop" :input-value="true">
           <v-list-item-icon>
             <v-icon>mdi-cart</v-icon>
           </v-list-item-icon>
@@ -298,7 +298,7 @@
 
                       <v-card-text>
                         <v-text-field v-if="!order.shipped" label="Tracking ID" class="print-hide" v-model="order.tracking"></v-text-field>
-                        <v-btn class="print-hide" @click="ship(order)" color="primary">Ship</v-btn>
+                        <v-btn v-if="!order.shipped" class="print-hide" @click="ship(order)" color="primary" :loading="!loaded.shipped">Ship</v-btn>
                       </v-card-text>
                     </div>
                   </v-expand-transition>
