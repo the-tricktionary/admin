@@ -1,0 +1,7 @@
+mutation SetTrickLevelVerification ($trickId: ID!, $rulesId: ID!, $verificationLevel: VerificationLevel) {
+  setTrickLevelVerification (trickId: $trickId, rulesId: $rulesId, verificationLevel: $verificationLevel) {
+    id
+    verificationLevel
+    verifiedAt
+  }
+}

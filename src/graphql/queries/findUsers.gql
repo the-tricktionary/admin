@@ -1,0 +1,7 @@
+#import "../fragments/userWithGrants.gql"
+
+query FindUsers ($query: String!) {
+  findUsers (query: $query) {
+    ...UserWithGrants
+  }
+}

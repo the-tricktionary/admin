@@ -1,0 +1,49 @@
+name: Deploy to Production
+
+'on':
+  push:
+    branches:
+      - main
+
+jobs:
+  build_and_deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: production
+      url: https://admin.the-tricktionary.com
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          # the Sentry release lists the commits since the previous release
+          fetch-depth: 0
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci --prefer-offline
+      - run: npm run codegen
+      - run: npm run build
+        env:
+          VITE_COMMIT_REF: ${{ github.sha }}
+          VITE_CONTEXT: production
+          VITE_GRAPHQL_URL: https://api.the-tricktionary.com
+          VITE_SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
+
+      - uses: FirebaseExtended/action-hosting-deploy@v0
+        with:
+          repoToken: '${{ secrets.GITHUB_TOKEN }}'
+          firebaseServiceAccount: '${{ secrets.FIREBASE_SERVICE_ACCOUNT_PROJECT_5641153190345267944 }}'
+          channelId: live
+          projectId: project-5641153190345267944
+      - name: Create Sentry release
+        uses: getsentry/action-release@v3
+        env:
+          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+          SENTRY_ORG: ${{ secrets.SENTRY_ORG }}
+          SENTRY_PROJECT: ${{ secrets.SENTRY_PROJECT }}
+        with:
+          environment: production
+          sourcemaps: ./dist
+          release_prefix: tricktionary-admin@
+          # the previous release may point at a commit this repository no longer has
+          ignore_missing: true

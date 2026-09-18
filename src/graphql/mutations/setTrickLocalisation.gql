@@ -1,0 +1,8 @@
+mutation SetTrickLocalisation ($trickId: ID!, $lang: String!, $data: TrickLocalisationInput!) {
+  setTrickLocalisation (trickId: $trickId, lang: $lang, data: $data) {
+    id
+    name
+    alternativeNames
+    description
+  }
+}

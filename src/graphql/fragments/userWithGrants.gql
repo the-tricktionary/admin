@@ -1,0 +1,13 @@
+fragment UserWithGrants on User {
+  id
+  name
+  email
+  username
+  photo
+  grants {
+    type
+    lang
+    rulesId
+    verificationLevel
+  }
+}

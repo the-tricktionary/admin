@@ -1,0 +1,11 @@
+mutation AddTrickVideo ($trickId: ID!, $data: YouTubeVideoInput!) {
+  addTrickVideo (trickId: $trickId, data: $data) {
+    id
+    videos {
+      host
+      videoId
+      type
+      slowMoStart
+    }
+  }
+}

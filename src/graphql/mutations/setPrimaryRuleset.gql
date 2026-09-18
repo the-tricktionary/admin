@@ -1,0 +1,6 @@
+mutation SetPrimaryRuleset ($rulesId: ID!) {
+  setPrimaryRuleset (rulesId: $rulesId) {
+    id
+    isPrimary
+  }
+}

@@ -1,0 +1,13 @@
+mutation AddTrickPrerequisite ($trickId: ID!, $prerequisiteId: ID!) {
+  addTrickPrerequisite (trickId: $trickId, prerequisiteId: $prerequisiteId) {
+    id
+    prerequisites {
+      id
+      slug
+      en: localisation {
+        id
+        name
+      }
+    }
+  }
+}

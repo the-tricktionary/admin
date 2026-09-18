@@ -1,0 +1,7 @@
+query Rulesets {
+  rulesets {
+    id
+    name
+    isPrimary
+  }
+}

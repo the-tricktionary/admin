@@ -1,0 +1,8 @@
+mutation UpdateTrickDetails ($trickId: ID!, $data: UpdateTrickDetailsInput!) {
+  updateTrickDetails (trickId: $trickId, data: $data) {
+    id
+    slug
+    discipline
+    trickType
+  }
+}

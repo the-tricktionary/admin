@@ -1,0 +1,6 @@
+mutation CreateTrickVideoUpload ($trickId: ID!, $data: VideoUploadInput!) {
+  createTrickVideoUpload (trickId: $trickId, data: $data) {
+    id
+    url
+  }
+}

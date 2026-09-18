@@ -1,0 +1,7 @@
+#import "../fragments/userWithGrants.gql"
+
+query UsersWithGrants {
+  usersWithGrants {
+    ...UserWithGrants
+  }
+}

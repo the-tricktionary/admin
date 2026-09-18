@@ -1,0 +1,48 @@
+query Trick ($id: ID!) {
+  trick (id: $id) {
+    id
+    slug
+    discipline
+    trickType
+    en: localisation {
+      id
+      name
+      alternativeNames
+      description
+    }
+    levels {
+      id
+      rulesId
+      level
+      verificationLevel
+    }
+    prerequisites {
+      id
+      slug
+      en: localisation {
+        id
+        name
+      }
+    }
+    prerequisiteFor {
+      id
+      slug
+      en: localisation {
+        id
+        name
+      }
+    }
+    videos {
+      host
+      videoId
+      type
+      slowMoStart
+    }
+    pendingVideoUploads {
+      id
+      type
+      status
+      error
+    }
+  }
+}

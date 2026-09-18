@@ -1,0 +1,30 @@
+{
+  "hosting": {
+    "public": "dist",
+    "site": "tricktionary-admin",
+    "cleanUrls": true,
+    "trailingSlash": false,
+    "rewrites": [
+      {
+        "source": "**",
+        "destination": "/index.html"
+      }
+    ],
+    "ignore": [],
+    "headers": [
+      {
+        "source": "**/*.@(css|js|png|svg|woff|woff2|eot|ttf|otf)",
+        "headers": [
+          {
+            "key": "Cache-Control",
+            "value": "max-age=86400"
+          },
+          {
+            "key": "Access-Control-Allow-Origin",
+            "value": "*"
+          }
+        ]
+      }
+    ]
+  }
+}

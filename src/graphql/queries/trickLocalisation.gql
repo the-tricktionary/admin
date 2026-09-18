@@ -1,0 +1,11 @@
+query TrickLocalisation ($id: ID!, $lang: String!) {
+  trick (id: $id) {
+    id
+    localisation (lang: $lang) {
+      id
+      name
+      alternativeNames
+      description
+    }
+  }
+}

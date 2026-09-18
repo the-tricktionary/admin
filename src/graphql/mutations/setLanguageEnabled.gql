@@ -1,0 +1,6 @@
+mutation SetLanguageEnabled ($lang: String!, $enabled: Boolean!) {
+  setLanguageEnabled (lang: $lang, enabled: $enabled) {
+    id
+    enabled
+  }
+}
