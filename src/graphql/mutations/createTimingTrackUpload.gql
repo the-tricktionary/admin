@@ -1,0 +1,7 @@
+mutation CreateTimingTrackUpload ($eventDefinitionId: ID!, $contentType: String!) {
+  createTimingTrackUpload (eventDefinitionId: $eventDefinitionId, contentType: $contentType) {
+    url
+    audioUrl
+    expiresAt
+  }
+}
