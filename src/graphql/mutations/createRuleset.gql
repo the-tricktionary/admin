@@ -1,0 +1,11 @@
+mutation CreateRuleset ($rulesId: ID!, $names: [LocalisedStringInput!]!) {
+  createRuleset (rulesId: $rulesId, names: $names) {
+    id
+    name
+    isPrimary
+    names {
+      lang
+      value
+    }
+  }
+}

@@ -1,0 +1,12 @@
+mutation CreateTrick ($data: CreateTrickInput!) {
+  createTrick (data: $data) {
+    id
+    slug
+    discipline
+    trickType
+    en: localisation {
+      id
+      name
+    }
+  }
+}

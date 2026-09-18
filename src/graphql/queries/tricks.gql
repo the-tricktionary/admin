@@ -1,0 +1,16 @@
+query Tricks ($discipline: Discipline, $searchQuery: String) {
+  tricks (discipline: $discipline, searchQuery: $searchQuery) {
+    id
+    slug
+    discipline
+    trickType
+    en: localisation {
+      id
+      name
+    }
+    ttLevels: levels (rulesId: "tricktionary") {
+      id
+      level
+    }
+  }
+}

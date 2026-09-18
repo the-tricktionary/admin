@@ -9,13 +9,15 @@ declare module 'vue-router' {
     public?: boolean
     /** Only reachable with a super admin grant */
     superAdmin?: boolean
+    /** Only reachable with a grant that allows editing tricks */
+    trickEditor?: boolean
   }
 }
 
 export const routes: RouteRecordRaw[] = [
   { name: 'auth', path: '/auth', component: async () => await import('./views/Auth.vue'), meta: { public: true } },
   { name: 'tricks', path: '/', component: async () => await import('./views/Tricks.vue') },
-  { name: 'trick-new', path: '/trick/new', component: async () => await import('./views/Trick.vue') },
+  { name: 'trick-new', path: '/trick/new', component: async () => await import('./views/TrickNew.vue'), meta: { trickEditor: true } },
   { name: 'trick', path: '/trick/:id', component: async () => await import('./views/Trick.vue') },
   { name: 'users', path: '/users', component: async () => await import('./views/Users.vue'), meta: { superAdmin: true } },
   { name: 'rulesets', path: '/rulesets', component: async () => await import('./views/Rulesets.vue'), meta: { superAdmin: true } },
@@ -33,7 +35,7 @@ router.beforeEach(async to => {
   await whenAuthKnown()
 
   const { firebaseUser } = useAuth()
-  const { isSuperAdmin, hasAnyAccess } = useGrants()
+  const { isSuperAdmin, canEditTricks, hasAnyAccess } = useGrants()
 
   // the sign in page is the one place a visitor without a session belongs
   if (to.meta.public) return true
@@ -47,6 +49,8 @@ router.beforeEach(async to => {
   }
 
   if (to.meta.superAdmin && !isSuperAdmin.value) return { path: '/' }
+
+  if (to.meta.trickEditor && !canEditTricks.value) return { path: '/' }
 
   return true
 })

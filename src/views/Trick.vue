@@ -1,7 +1,7 @@
 <template>
   <div class="container mx-auto pt-4 px-2">
-    <h1>{{ isNew ? 'New trick' : 'Trick' }}</h1>
-    <p v-if="!isNew">
+    <h1>Trick</h1>
+    <p>
       Editing <code>{{ route.params.id }}</code>.
     </p>
     <p>
@@ -12,10 +12,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
 import { useRoute } from 'vue-router'
 
 const route = useRoute()
-
-const isNew = computed(() => route.name === 'trick-new')
 </script>

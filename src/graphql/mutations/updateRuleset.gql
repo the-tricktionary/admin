@@ -1,0 +1,11 @@
+mutation UpdateRuleset ($rulesId: ID!, $names: [LocalisedStringInput!]!) {
+  updateRuleset (rulesId: $rulesId, names: $names) {
+    id
+    name
+    isPrimary
+    names {
+      lang
+      value
+    }
+  }
+}

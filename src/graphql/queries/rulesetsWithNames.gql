@@ -1,0 +1,13 @@
+query RulesetsWithNames {
+  rulesets {
+    id
+    name
+    isPrimary
+    names {
+      lang
+      value
+    }
+    createdAt
+    updatedAt
+  }
+}
