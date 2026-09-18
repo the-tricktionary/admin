@@ -59,6 +59,7 @@
 </template>
 
 <script setup lang="ts">
+import { useHead } from '@unhead/vue'
 import { computed, ref } from 'vue'
 import { refDebounced } from '@vueuse/core'
 import { useRoute, useRouter } from 'vue-router'
@@ -131,4 +132,6 @@ const levelGroups = computed(() => {
         .map(([trickType, typeTricks]) => ({ trickType, tricks: typeTricks }))
     }))
 })
+
+useHead({ title: 'Tricks' })
 </script>

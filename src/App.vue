@@ -7,10 +7,13 @@
 </template>
 
 <script setup lang="ts">
+import { useHead } from '@unhead/vue'
 import { provide } from 'vue'
 import { DefaultApolloClient } from '@vue/apollo-composable'
 import { apolloClient } from './apollo'
 import NavHeader from './components/NavHeader.vue'
 
 provide(DefaultApolloClient, apolloClient)
+
+useHead({ titleTemplate: title => title ? `${title} | Tricktionary Admin` : 'Tricktionary Admin' })
 </script>

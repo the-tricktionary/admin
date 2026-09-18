@@ -11,7 +11,7 @@
 
 <script setup lang="ts">
 import { GrantType } from '../graphql/generated/graphql'
-import { grantTypeNames } from '../helpers'
+import { grantTypeNames, languageLabel } from '../helpers'
 
 import type { FindUsersQuery } from '../graphql/generated/graphql'
 
@@ -23,7 +23,7 @@ function label (grant: Grant) {
   const name = grantTypeNames[grant.type]
   switch (grant.type) {
     case GrantType.Translator:
-      return `${name}: ${grant.lang ?? '?'}`
+      return `${name}: ${grant.lang == null ? '?' : languageLabel(grant.lang)}`
     case GrantType.LevelEditor: {
       const level = grant.verificationLevel == null ? '' : ` (${grant.verificationLevel})`
       return `${name}: ${grant.rulesId ?? '?'}${level}`

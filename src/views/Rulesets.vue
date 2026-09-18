@@ -79,6 +79,7 @@
 </template>
 
 <script setup lang="ts">
+import { useHead } from '@unhead/vue'
 import { computed, ref } from 'vue'
 import RulesetDialog from '../components/RulesetDialog.vue'
 import { useRulesetsWithNamesQuery, useSetPrimaryRulesetMutation } from '../graphql/generated/graphql'
@@ -113,4 +114,6 @@ async function setPrimary (ruleset: Ruleset) {
   if (!confirmed) return
   await setPrimaryRuleset({ rulesId: ruleset.id })
 }
+
+useHead({ title: 'Rulesets' })
 </script>

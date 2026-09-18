@@ -14,6 +14,7 @@
 </template>
 
 <script setup lang="ts">
+import { useHead } from '@unhead/vue'
 import { getAuth, signOut } from 'firebase/auth'
 import { useRouter } from 'vue-router'
 
@@ -23,4 +24,6 @@ async function signOutAndLeave () {
   await signOut(getAuth())
   await router.push('/auth')
 }
+
+useHead({ title: 'No access' })
 </script>

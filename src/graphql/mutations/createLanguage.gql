@@ -1,0 +1,6 @@
+mutation CreateLanguage ($lang: String!) {
+  createLanguage (lang: $lang) {
+    id
+    enabled
+  }
+}

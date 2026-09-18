@@ -148,7 +148,7 @@
                   class="w-max block rounded border-line"
                 >
                   <option v-for="option of translationLangs" :key="option" :value="option">
-                    {{ option }}
+                    {{ languageLabel(option) }}
                   </option>
                 </select>
               </div>
@@ -297,6 +297,7 @@
 
 <script setup lang="ts">
 import { ApolloError } from '@apollo/client/core'
+import { useHead } from '@unhead/vue'
 import { useEventListener } from '@vueuse/core'
 import { computed, ref, watch } from 'vue'
 import { onBeforeRouteLeave, useRoute } from 'vue-router'
@@ -320,8 +321,9 @@ import {
   useUpdateTrickDetailsMutation,
   VerificationLevel
 } from '../graphql/generated/graphql'
-import { disciplineNames, disciplineToSlug, trickSorter } from '../helpers'
+import { disciplineNames, disciplineToSlug, languageLabel, trickSorter } from '../helpers'
 import useGrants, { verificationLevelRank } from '../hooks/useGrants'
+import useLanguages from '../hooks/useLanguages'
 
 import IconLoading from '~icons/mdi/loading'
 
@@ -349,7 +351,8 @@ const trickTypes = Object.values(TrickType).sort((a, b) => a.localeCompare(b))
 const verificationNames = ['Not verified', 'Judge', 'Official']
 
 const route = useRoute()
-const { canEditTricks, canEditLevels, levelEditorRank, translatorLangs } = useGrants()
+const { isSuperAdmin, canEditTricks, canEditLevels, levelEditorRank, translatorLangs } = useGrants()
+const { translatableLangs } = useLanguages(() => isSuperAdmin.value)
 
 const trickId = computed(() => String(route.params.id))
 
@@ -357,6 +360,8 @@ const trickQuery = useTrickQuery(() => ({ id: trickId.value }), { fetchPolicy: '
 const trick = computed(() => trickQuery.result.value?.trick ?? null)
 const loading = trickQuery.loading
 const error = trickQuery.error
+
+useHead({ title: computed(() => trick.value ? `Edit: ${trick.value.en?.name ?? trick.value.slug}` : 'Edit trick') })
 
 const { result: rulesetsResult } = useRulesetsQuery()
 const rulesets = computed(() => rulesetsResult.value?.rulesets ?? [])
@@ -418,7 +423,11 @@ watch(trickId, () => {
   slugError.value = null
 })
 
-const translationLangs = computed(() => translatorLangs.value.filter(other => other !== 'en').sort((a, b) => a.localeCompare(b)))
+/** A super admin may translate into any language, everyone else into the ones they are granted */
+const translationLangs = computed(() => {
+  const langs = isSuperAdmin.value ? translatableLangs.value : translatorLangs.value.filter(other => other !== 'en')
+  return [...langs].sort((a, b) => a.localeCompare(b))
+})
 const lang = ref('')
 
 watch(translationLangs, langs => {

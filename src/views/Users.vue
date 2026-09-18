@@ -11,7 +11,6 @@
           id="user-search"
           v-model="term"
           type="search"
-          required
           placeholder="someone@example.com"
           class="w-full rounded"
         >
@@ -19,14 +18,17 @@
       <button type="submit" class="btn-primary w-max">
         Search
       </button>
+      <button v-if="searched !== ''" type="button" class="btn w-max" @click="showAll()">
+        Show all
+      </button>
     </form>
 
     <p v-if="error" role="alert" class="text-ttred-900">
-      The search failed: {{ error.message }}
+      The users could not be loaded: {{ error.message }}
     </p>
 
-    <p v-if="loading">
-      Searching…
+    <p v-if="loading && !users">
+      Loading users…
     </p>
     <template v-else-if="users">
       <div v-if="users.length" class="overflow-x-auto">
@@ -94,7 +96,7 @@
         </table>
       </div>
       <p v-else>
-        No users found
+        {{ searched === '' ? 'Nobody has any grants yet' : 'No users found' }}
       </p>
     </template>
 
@@ -108,6 +110,7 @@
 </template>
 
 <script setup lang="ts">
+import { useHead } from '@unhead/vue'
 import { computed, ref } from 'vue'
 import GrantSummary from '../components/GrantSummary.vue'
 import UserGrantsEditor from '../components/UserGrantsEditor.vue'
@@ -118,8 +121,8 @@ const searched = ref('')
 const editingId = ref<string | null>(null)
 
 const { result, loading, error, restart } = useFindUsersQuery(
-  () => ({ query: searched.value }),
-  () => ({ enabled: searched.value !== '', fetchPolicy: 'cache-and-network' })
+  () => ({ query: searched.value === '' ? null : searched.value }),
+  { fetchPolicy: 'cache-and-network' }
 )
 
 const users = computed(() => result.value?.findUsers)
@@ -132,4 +135,12 @@ function search () {
   if (next === searched.value) restart()
   else searched.value = next
 }
+
+/** Back to every user that has a grant */
+function showAll () {
+  term.value = ''
+  search()
+}
+
+useHead({ title: 'Users' })
 </script>

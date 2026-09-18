@@ -54,6 +54,7 @@
 </template>
 
 <script setup lang="ts">
+import { useHead } from '@unhead/vue'
 import { computed, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import FormField from '../components/FormField.vue'
@@ -104,4 +105,6 @@ async function createTrick () {
   const id = result?.data?.createTrick.id
   if (id != null) await router.push({ name: 'trick', params: { id } })
 }
+
+useHead({ title: 'New trick' })
 </script>

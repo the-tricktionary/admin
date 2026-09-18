@@ -18,6 +18,22 @@ export const grantTypeNames: Record<GrantType, string> = {
   [GrantType.LevelEditor]: 'Level editor'
 }
 
+const languageDisplayNames = new Intl.DisplayNames(['en'], { type: 'language' })
+
+/** The English name of a language tag, the tag itself when it names no language we can put a name to */
+export function languageName (tag: string) {
+  try {
+    return languageDisplayNames.of(tag) ?? tag
+  } catch {
+    return tag
+  }
+}
+
+/** A language tag as `Swedish (sv)`, for anywhere an admin picks or reads one */
+export function languageLabel (tag: string) {
+  return `${languageName(tag)} (${tag})`
+}
+
 const disciplineSlugs: Record<Discipline, string> = {
   [Discipline.SingleRope]: 'sr',
   [Discipline.DoubleDutch]: 'dd',

@@ -31,15 +31,14 @@
             <label :for="`grant-lang-${row.key}`" class="block text-sm text-muted">
               Language
             </label>
-            <input
-              :id="`grant-lang-${row.key}`"
-              v-model="row.lang"
-              type="text"
-              required
-              pattern="[a-z]{2,3}(-[a-z0-9]{2,8})*"
-              placeholder="sv"
-              class="w-full rounded"
-            >
+            <select :id="`grant-lang-${row.key}`" v-model="row.lang" required class="w-full rounded">
+              <option v-if="row.lang !== '' && !translatableLangs.includes(row.lang)" :value="row.lang">
+                {{ languageLabel(row.lang) }}
+              </option>
+              <option v-for="tag of translatableLangs" :key="tag" :value="tag">
+                {{ languageLabel(tag) }}
+              </option>
+            </select>
           </div>
 
           <template v-if="row.type === GrantType.LevelEditor">
@@ -115,8 +114,9 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, useId, useTemplateRef, watch } from 'vue'
 import { GrantType, useRulesetsQuery, useSetUserGrantsMutation, VerificationLevel } from '../graphql/generated/graphql'
-import { grantTypeNames } from '../helpers'
+import { grantTypeNames, languageLabel } from '../helpers'
 import useAuth from '../hooks/useAuth'
+import useLanguages from '../hooks/useLanguages'
 
 import type { FindUsersQuery, GrantInput } from '../graphql/generated/graphql'
 
@@ -151,21 +151,25 @@ const { result: rulesetsResult } = useRulesetsQuery()
 const rulesets = computed(() => rulesetsResult.value?.rulesets ?? [])
 const defaultRulesId = computed(() => (rulesets.value.find(ruleset => ruleset.isPrimary) ?? rulesets.value[0])?.id ?? '')
 
+const { translatableLangs } = useLanguages()
+const defaultLang = computed(() => translatableLangs.value[0] ?? '')
+
 /**
- * A level editor grant is meaningless without a ruleset, so one is picked for
- * a row that has just taken that type, and for a row that was waiting on the
- * rulesets to arrive.
+ * A level editor grant is meaningless without a ruleset, and a translator
+ * grant without a language, so one is picked for a row that has just taken
+ * that type, and for a row that was waiting on the options to arrive.
  */
-watch([rows, defaultRulesId], () => {
+watch([rows, defaultRulesId, defaultLang], () => {
   for (const row of rows.value) {
     if (row.type === GrantType.LevelEditor && row.rulesId === '') row.rulesId = defaultRulesId.value
+    if (row.type === GrantType.Translator && row.lang === '') row.lang = defaultLang.value
   }
 }, { deep: true })
 
 const { user: me } = useAuth()
 const wouldLockOut = computed(() => me.value?.id === user.id && !rows.value.some(row => row.type === GrantType.SuperAdmin))
 
-const { mutate, loading: saving, error } = useSetUserGrantsMutation({ throws: 'never' })
+const { mutate, loading: saving, error } = useSetUserGrantsMutation({ throws: 'never', refetchQueries: ['FindUsers'] })
 
 function add () {
   rows.value.push({

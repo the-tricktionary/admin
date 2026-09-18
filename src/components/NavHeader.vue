@@ -32,6 +32,9 @@
       <router-link v-if="isSuperAdmin" active-class="active" class="nav-link" to="/rulesets">
         Rulesets
       </router-link>
+      <router-link v-if="isSuperAdmin" active-class="active" class="nav-link" to="/languages">
+        Languages
+      </router-link>
       <button v-if="user" type="button" class="nav-link" @click="signOutAndLeave()">
         Sign out
       </button>

@@ -1,4 +1,4 @@
-query FindUsers ($query: String!) {
+query FindUsers ($query: String) {
   findUsers (query: $query) {
     id
     name

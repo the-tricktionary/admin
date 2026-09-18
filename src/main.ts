@@ -1,3 +1,4 @@
+import { createHead } from '@unhead/vue/client'
 import { initSentry } from './config'
 import { type Component, createApp } from 'vue'
 
@@ -11,4 +12,5 @@ export const app = createApp(App as Component)
 initSentry({ app, router })
 
 app.use(router)
+  .use(createHead())
   .mount('#app')
