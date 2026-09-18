@@ -15,11 +15,11 @@
         <form-field id="video-source" label="Source">
           <template #default="field">
             <select v-bind="field" v-model="source" class="w-full block rounded border-line">
-              <option value="youtube">
-                YouTube
-              </option>
               <option value="mux">
                 Upload to Mux
+              </option>
+              <option value="youtube">
+                YouTube
               </option>
             </select>
           </template>
@@ -68,14 +68,18 @@
 
         <form-field v-else id="video-file" label="Video file">
           <template #default="field">
-            <input
-              v-bind="field"
-              type="file"
-              accept="video/*"
-              required
-              class="w-full block"
-              @change="file = ($event.target as HTMLInputElement).files?.[0] ?? null"
-            >
+            <div class="flex flex-wrap items-center gap-2">
+              <input
+                v-bind="field"
+                type="file"
+                accept="video/*"
+                required
+                class="sr-only"
+                @change="file = ($event.target as HTMLInputElement).files?.[0] ?? null"
+              >
+              <label :for="field.id" class="file-picker">Choose a video file</label>
+              <span :class="file ? '' : 'text-muted'">{{ file?.name ?? 'No file chosen' }}</span>
+            </div>
           </template>
         </form-field>
       </fieldset>
@@ -118,7 +122,7 @@ const emit = defineEmits<{
 const dialog = useTemplateRef('dialog')
 const titleId = useId()
 
-const source = ref<'mux' | 'youtube'>('youtube')
+const source = ref<'mux' | 'youtube'>('mux')
 const type = ref<VideoType>(VideoType.SlowMo)
 const slowMoStart = ref('')
 const youTubeInput = ref('')
@@ -218,3 +222,15 @@ onMounted(() => {
   dialog.value?.showModal()
 })
 </script>
+
+<style scoped>
+/* not the btn class itself, an empty required file input makes the form invalid and form:invalid greys those out */
+.file-picker {
+  @apply btn w-max;
+}
+
+/* the sr-only input is what takes focus, so its label has to show the ring */
+input:focus-visible + .file-picker {
+  @apply outline-2 outline-solid outline-ttred-900 outline-offset-2;
+}
+</style>

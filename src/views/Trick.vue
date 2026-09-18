@@ -130,38 +130,34 @@
           </h2>
 
           <div class="grid lg:grid-cols-2 gap-x-8">
-            <div>
-              <h3 class="mb-2 font-semibold">
-                English
-              </h3>
-              <localisation-fields v-model="form.en" id-prefix="en" :readonly="!canEditTricks" />
-            </div>
+            <h3 class="mb-2 font-semibold lg:col-start-1 lg:row-start-1">
+              English
+            </h3>
+            <localisation-fields v-model="form.en" id-prefix="en" :readonly="!canEditTricks" :column="1" />
 
-            <div v-if="translationLangs.length">
-              <h3 class="mb-2 font-semibold">
-                Translation
-              </h3>
+            <template v-if="translationLangs.length">
+              <div class="flex flex-wrap items-center gap-x-4 mb-2 lg:col-start-2 lg:row-start-1">
+                <h3 class="font-semibold">
+                  Translation
+                </h3>
+                <label for="translation-lang" class="sr-only">Language</label>
+                <select
+                  id="translation-lang"
+                  v-model="lang"
+                  :disabled="translationLangs.length === 1"
+                  class="w-max block rounded border-line"
+                >
+                  <option v-for="option of translationLangs" :key="option" :value="option">
+                    {{ option }}
+                  </option>
+                </select>
+              </div>
 
-              <form-field id="translation-lang" label="Language">
-                <template #default="field">
-                  <select
-                    v-bind="field"
-                    v-model="lang"
-                    :disabled="translationLangs.length === 1"
-                    class="w-full block rounded border-line"
-                  >
-                    <option v-for="option of translationLangs" :key="option" :value="option">
-                      {{ option }}
-                    </option>
-                  </select>
-                </template>
-              </form-field>
-
-              <localisation-fields v-if="translations[lang]" v-model="translations[lang]" :id-prefix="lang" />
-              <p v-else role="status">
+              <localisation-fields v-if="translations[lang]" v-model="translations[lang]" :id-prefix="lang" :column="2" />
+              <p v-else role="status" class="lg:col-start-2 lg:row-start-2">
                 Loading the {{ lang }} translation...
               </p>
-            </div>
+            </template>
           </div>
         </section>
 
@@ -467,7 +463,7 @@ function optionsFor (linked: string[]) {
   return candidates.value
     .filter(other => other.id !== trickId.value && !linked.includes(other.id))
     .sort(trickSorter)
-    .map(other => ({ id: other.id, name: other.en?.name ?? other.slug }))
+    .map(other => ({ id: other.id, name: other.en?.name ?? other.slug, level: other.ttLevels[0]?.level ?? null }))
 }
 
 const previousRows = computed(() => rowsFor(form.value.prerequisites))

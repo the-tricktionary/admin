@@ -40,9 +40,11 @@
               <option value="">
                 Pick a trick
               </option>
-              <option v-for="option of options" :key="option.id" :value="option.id">
-                {{ option.name }}
-              </option>
+              <optgroup v-for="group of optionGroups" :key="group.label" :label="group.label">
+                <option v-for="option of group.options" :key="option.id" :value="option.id">
+                  {{ option.name }}
+                </option>
+              </optgroup>
             </select>
           </td>
           <td class="py-2">
@@ -62,11 +64,16 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 
 interface TrickRow {
   id: string
   name: string
+}
+
+interface TrickOption extends TrickRow {
+  /** The trick's tricktionary level, absent when it has none */
+  level?: string | null
 }
 
 const { title, hint, empty, addLabel, idPrefix, rows, options, editable } = defineProps<{
@@ -76,7 +83,7 @@ const { title, hint, empty, addLabel, idPrefix, rows, options, editable } = defi
   addLabel: string
   idPrefix: string
   rows: TrickRow[]
-  options: TrickRow[]
+  options: TrickOption[]
   editable?: boolean
 }>()
 
@@ -86,6 +93,26 @@ const emit = defineEmits<{
 }>()
 
 const pick = ref('')
+
+const optionGroups = computed(() => {
+  const byLevel = new Map<string, TrickOption[]>()
+  for (const option of options) {
+    const level = option.level ?? ''
+    const group = byLevel.get(level)
+    if (group) group.push(option)
+    else byLevel.set(level, [option])
+  }
+
+  return [...byLevel.entries()]
+    .sort(([a], [b]) => {
+      if (a === '' || b === '') return a === '' ? 1 : -1
+      return a.localeCompare(b, undefined, { numeric: true })
+    })
+    .map(([level, group]) => ({
+      label: level === '' ? 'No level' : `Level ${level}`,
+      options: [...group].sort((a, b) => a.name.localeCompare(b.name))
+    }))
+})
 
 function add () {
   if (pick.value === '') return

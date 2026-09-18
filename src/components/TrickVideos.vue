@@ -1,6 +1,6 @@
 <template>
   <div class="grid lg:grid-cols-2 gap-6">
-    <div class="w-full aspect-video bg-placeholder">
+    <div class="w-full aspect-video bg-placeholder isolate">
       <mux-player
         v-if="selected?.host === VideoHost.Mux"
         class="w-full h-full"
@@ -56,7 +56,7 @@
                 {{ videoTypeNames[video.type] }}
               </td>
               <td class="py-2 pr-2">
-                <code>{{ video.videoId }}</code>
+                <code class="block max-w-40 truncate" :title="video.videoId">{{ video.videoId }}</code>
               </td>
               <td class="py-2 pr-2">
                 {{ video.slowMoStart === null ? '–' : `${video.slowMoStart} s` }}
@@ -154,7 +154,7 @@ import { useIntervalFn } from '@vueuse/core'
 import { computed, ref, watch } from 'vue'
 import '@mux/mux-player'
 import VideoDialog from './VideoDialog.vue'
-import { useRemoveTrickVideoMutation, VideoHost, VideoUploadStatus } from '../graphql/generated/graphql'
+import { useRemoveTrickVideoMutation, VideoHost, VideoType, VideoUploadStatus } from '../graphql/generated/graphql'
 import { videoTypeNames } from '../helpers'
 
 import type { TrickQuery } from '../graphql/generated/graphql'
@@ -187,7 +187,13 @@ const dialogOpen = ref(false)
 const removing = ref<string | null>(null)
 const removeError = ref<string | null>(null)
 
-const selected = computed(() => videos.find(video => video.videoId === preview.value) ?? videos[0] ?? null)
+const fallback = computed(() =>
+  videos.find(video => video.host === VideoHost.Mux && video.type === VideoType.SlowMo) ??
+  videos.find(video => video.host === VideoHost.Mux) ??
+  videos[0] ?? null
+)
+
+const selected = computed(() => videos.find(video => video.videoId === preview.value) ?? fallback.value)
 
 const waitingOnMux = computed(() => pendingUploads.some(upload => !settledStatuses.includes(upload.status)))
 

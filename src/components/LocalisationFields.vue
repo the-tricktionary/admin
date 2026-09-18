@@ -1,27 +1,35 @@
 <template>
-  <dl v-if="readonly" class="mb-4">
-    <dt class="mb-1">
-      Name
-    </dt>
-    <dd class="mb-3">
-      {{ model.name || '–' }}
-    </dd>
-    <dt class="mb-1">
-      Alternative names
-    </dt>
-    <dd class="mb-3">
-      {{ model.alternativeNames.filter(alternative => alternative !== '').join(', ') || '–' }}
-    </dd>
-    <dt class="mb-1">
-      Description
-    </dt>
-    <dd class="whitespace-pre-line">
-      {{ model.description || '–' }}
-    </dd>
-  </dl>
+  <template v-if="readonly">
+    <dl :class="[columnClass, 'lg:row-start-2', 'mb-4']">
+      <dt class="mb-1">
+        Name
+      </dt>
+      <dd>
+        {{ model.name || '–' }}
+      </dd>
+    </dl>
+
+    <dl :class="[columnClass, 'lg:row-start-3', 'mb-4']">
+      <dt class="mb-1">
+        Alternative names
+      </dt>
+      <dd>
+        {{ model.alternativeNames.filter(alternative => alternative !== '').join(', ') || '–' }}
+      </dd>
+    </dl>
+
+    <dl :class="[columnClass, 'lg:row-start-4', 'mb-4']">
+      <dt class="mb-1">
+        Description
+      </dt>
+      <dd class="whitespace-pre-line">
+        {{ model.description || '–' }}
+      </dd>
+    </dl>
+  </template>
 
   <template v-else>
-    <form-field :id="`${idPrefix}-name`" label="Name">
+    <form-field :id="`${idPrefix}-name`" label="Name" :class="[columnClass, 'lg:row-start-2']">
       <template #default="field">
         <input
           v-bind="field"
@@ -33,7 +41,7 @@
       </template>
     </form-field>
 
-    <fieldset class="mb-4">
+    <fieldset :class="[columnClass, 'lg:row-start-3', 'mb-4']">
       <legend class="mb-1">
         Alternative names
       </legend>
@@ -61,7 +69,7 @@
       </button>
     </fieldset>
 
-    <form-field :id="`${idPrefix}-description`" label="Description">
+    <form-field :id="`${idPrefix}-description`" label="Description" :class="[columnClass, 'lg:row-start-4']">
       <template #default="field">
         <textarea
           v-bind="field"
@@ -75,6 +83,7 @@
 </template>
 
 <script setup lang="ts">
+import { computed } from 'vue'
 import FormField from './FormField.vue'
 
 import IconDelete from '~icons/mdi/delete-outline'
@@ -85,9 +94,13 @@ import type { LocalisationValue } from '../helpers'
 // against its own pristine copy
 const model = defineModel<LocalisationValue>({ required: true })
 
-const { readonly, idPrefix } = defineProps<{
+const { readonly, idPrefix, column = 1 } = defineProps<{
   readonly?: boolean
   /** Makes the field ids unique when several field sets share a page */
   idPrefix: string
+  /** The blocks are separate roots so two columns of a grid share rows and their fields line up */
+  column?: 1 | 2
 }>()
+
+const columnClass = computed(() => column === 2 ? 'lg:col-start-2' : 'lg:col-start-1')
 </script>
