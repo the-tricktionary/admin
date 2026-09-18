@@ -1,0 +1,24 @@
+name: Code QA
+
+on:
+  - push
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  frontend:
+    name: "Frontend: Lint"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci --prefer-offline
+      - run: npm run codegen
+
+      - run: npm run lint
+      - run: npm run typecheck

@@ -1,0 +1,13 @@
+query Me {
+  me {
+    id
+    name
+    photo
+    grants {
+      type
+      lang
+      rulesId
+      verificationLevel
+    }
+  }
+}

@@ -1,0 +1,21 @@
+overwrite: true
+# GRAPHQL_SCHEMA can point at a local introspection JSON to develop against an unreleased schema
+schema:
+  - ${GRAPHQL_SCHEMA:https://api.the-tricktionary.com/graphql}
+config:
+  scalars:
+    Timestamp: number
+generates:
+  src/graphql/generated/graphql.ts:
+    plugins:
+      - 'typescript-operations'
+      - 'typescript-vue-apollo'
+    config:
+      # typescript-operations v6 emits the enums and input types the operations
+      # use by itself, so the `typescript` plugin is no longer needed
+      enumType: native
+      exportFragmentSpreadSubTypes: true
+      vueCompositionApiImportFrom: 'vue'
+    documents:
+      - './src/**/*.{gql,graphql}'
+      - './src/**/!(*.d).{ts,vue}'
