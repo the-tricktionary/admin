@@ -12,6 +12,9 @@ jobs:
       url: ${{ steps.deploy.outputs.details_url }}
     steps:
       - uses: actions/checkout@v7
+        with:
+          # the Sentry release lists the commits since the previous release
+          fetch-depth: 0
       - uses: actions/setup-node@v7
         with:
           node-version: 24
@@ -42,4 +45,4 @@ jobs:
         with:
           environment: branch-deploy
           sourcemaps: ./dist
-          version_prefix: tricktionary-admin@
+          release_prefix: tricktionary-admin@
