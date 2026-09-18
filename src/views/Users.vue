@@ -114,25 +114,28 @@ import { useHead } from '@unhead/vue'
 import { computed, ref } from 'vue'
 import GrantSummary from '../components/GrantSummary.vue'
 import UserGrantsEditor from '../components/UserGrantsEditor.vue'
-import { useFindUsersQuery } from '../graphql/generated/graphql'
+import { useFindUsersQuery, useUsersWithGrantsQuery } from '../graphql/generated/graphql'
 
 const term = ref('')
 const searched = ref('')
 const editingId = ref<string | null>(null)
 
-const { result, loading, error, restart } = useFindUsersQuery(
-  () => ({ query: searched.value === '' ? null : searched.value }),
-  { fetchPolicy: 'cache-and-network' }
+const allQuery = useUsersWithGrantsQuery(() => ({ enabled: searched.value === '', fetchPolicy: 'cache-and-network' }))
+const searchQuery = useFindUsersQuery(
+  () => ({ query: searched.value }),
+  () => ({ enabled: searched.value !== '', fetchPolicy: 'cache-and-network' })
 )
 
-const users = computed(() => result.value?.findUsers)
+const loading = computed(() => searched.value === '' ? allQuery.loading.value : searchQuery.loading.value)
+const error = computed(() => searched.value === '' ? allQuery.error.value : searchQuery.error.value)
+const users = computed(() => searched.value === '' ? allQuery.result.value?.usersWithGrants : searchQuery.result.value?.findUsers)
 const editingUser = computed(() => users.value?.find(user => user.id === editingId.value) ?? null)
 
 function search () {
   const next = term.value.trim()
   editingId.value = null
   // the same term twice over is a deliberate re-read rather than a no-op
-  if (next === searched.value) restart()
+  if (next === searched.value) (next === '' ? allQuery : searchQuery).restart()
   else searched.value = next
 }
 

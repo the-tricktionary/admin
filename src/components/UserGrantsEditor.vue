@@ -118,9 +118,9 @@ import { grantTypeNames, languageLabel } from '../helpers'
 import useAuth from '../hooks/useAuth'
 import useLanguages from '../hooks/useLanguages'
 
-import type { FindUsersQuery, GrantInput } from '../graphql/generated/graphql'
+import type { GrantInput, UserWithGrantsFragment } from '../graphql/generated/graphql'
 
-type EditedUser = FindUsersQuery['findUsers'][number]
+type EditedUser = UserWithGrantsFragment
 
 interface GrantRow {
   key: number
@@ -169,7 +169,7 @@ watch([rows, defaultRulesId, defaultLang], () => {
 const { user: me } = useAuth()
 const wouldLockOut = computed(() => me.value?.id === user.id && !rows.value.some(row => row.type === GrantType.SuperAdmin))
 
-const { mutate, loading: saving, error } = useSetUserGrantsMutation({ throws: 'never', refetchQueries: ['FindUsers'] })
+const { mutate, loading: saving, error } = useSetUserGrantsMutation({ throws: 'never', refetchQueries: ['FindUsers', 'UsersWithGrants'] })
 
 function add () {
   rows.value.push({
