@@ -250,7 +250,7 @@ async function uploadToMux () {
   try {
     const created = await createUpload({ trickId, data: { type: type.value, slowMoStart: slowMoStartValue.value } })
     const upload = created?.data?.createTrickVideoUpload
-    if (!upload) throw new Error('The upload could not be started, please try again')
+    if (upload?.url == null) throw new Error('The upload could not be started, please try again')
 
     saving.value = false
     uploading.value = true
