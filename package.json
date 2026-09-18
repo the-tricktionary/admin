@@ -22,7 +22,6 @@
     "@sentry/vue": "^10.75.0",
     "@vue/apollo-composable": "^4.2.2",
     "@vueuse/core": "^15.0.0",
-    "@vueuse/head": "^2.0.0",
     "firebase": "^12.19.0",
     "graphql": "^16.11.0",
     "graphql-tag": "^2.12.7",

@@ -25,11 +25,10 @@
       <template #default="field">
         <input
           v-bind="field"
-          :value="model.name"
+          v-model="model.name"
           type="text"
           required
           class="w-full block rounded focus:border-b-ttred-900 border-line"
-          @input="patch({ name: inputValue($event) })"
         >
       </template>
     </form-field>
@@ -38,27 +37,26 @@
       <legend class="mb-1">
         Alternative names
       </legend>
-      <div v-for="(alternativeName, index) of model.alternativeNames" :key="index" class="flex gap-2 mb-2">
+      <div v-for="(_, index) of model.alternativeNames" :key="index" class="flex gap-2 mb-2">
         <label :for="`${idPrefix}-alternative-name-${index}`" class="sr-only">
           Alternative name {{ index + 1 }}
         </label>
         <input
           :id="`${idPrefix}-alternative-name-${index}`"
-          :value="alternativeName"
+          v-model="model.alternativeNames[index]"
           type="text"
           class="w-full block rounded focus:border-b-ttred-900 border-line"
-          @input="setAlternativeName(index, inputValue($event))"
         >
         <button
           type="button"
           class="btn w-max"
           :aria-label="`Remove alternative name ${index + 1}`"
-          @click="removeAlternativeName(index)"
+          @click="model.alternativeNames.splice(index, 1)"
         >
           <icon-delete aria-hidden="true" />
         </button>
       </div>
-      <button type="button" class="btn w-max" @click="patch({ alternativeNames: [...model.alternativeNames, ''] })">
+      <button type="button" class="btn w-max" @click="model.alternativeNames.push('')">
         Add alternative name
       </button>
     </fieldset>
@@ -67,10 +65,9 @@
       <template #default="field">
         <textarea
           v-bind="field"
-          :value="model.description"
+          v-model="model.description"
           rows="4"
           class="w-full block rounded focus:border-b-ttred-900 border-line"
-          @input="patch({ description: inputValue($event) })"
         />
       </template>
     </form-field>
@@ -84,6 +81,8 @@ import IconDelete from '~icons/mdi/delete-outline'
 
 import type { LocalisationValue } from '../helpers'
 
+// the fields edit the parent's object in place, the parent tracks changes
+// against its own pristine copy
 const model = defineModel<LocalisationValue>({ required: true })
 
 const { readonly, idPrefix } = defineProps<{
@@ -91,22 +90,4 @@ const { readonly, idPrefix } = defineProps<{
   /** Makes the field ids unique when several field sets share a page */
   idPrefix: string
 }>()
-
-function inputValue (event: Event) {
-  return (event.target as HTMLInputElement | HTMLTextAreaElement).value
-}
-
-function patch (changes: Partial<LocalisationValue>) {
-  model.value = { ...model.value, ...changes }
-}
-
-function setAlternativeName (index: number, value: string) {
-  patch({
-    alternativeNames: model.value.alternativeNames.map((alternative, other) => other === index ? value : alternative)
-  })
-}
-
-function removeAlternativeName (index: number) {
-  patch({ alternativeNames: model.value.alternativeNames.filter((_, other) => other !== index) })
-}
 </script>

@@ -15,10 +15,6 @@ query Trick ($id: ID!) {
       rulesId
       level
       verificationLevel
-      ruleset {
-        id
-        name
-      }
     }
     prerequisites {
       id
@@ -45,10 +41,8 @@ query Trick ($id: ID!) {
     pendingVideoUploads {
       id
       type
-      slowMoStart
       status
       error
-      createdAt
     }
   }
 }

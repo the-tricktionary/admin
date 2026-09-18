@@ -11,6 +11,7 @@
 
 <script setup lang="ts">
 import { GrantType } from '../graphql/generated/graphql'
+import { grantTypeNames } from '../helpers'
 
 import type { FindUsersQuery } from '../graphql/generated/graphql'
 
@@ -18,15 +19,8 @@ type Grant = FindUsersQuery['findUsers'][number]['grants'][number]
 
 const { grants } = defineProps<{ grants: Grant[] }>()
 
-const typeNames: Record<GrantType, string> = {
-  [GrantType.SuperAdmin]: 'Super admin',
-  [GrantType.TrickEditor]: 'Trick editor',
-  [GrantType.Translator]: 'Translator',
-  [GrantType.LevelEditor]: 'Level editor'
-}
-
 function label (grant: Grant) {
-  const name = typeNames[grant.type]
+  const name = grantTypeNames[grant.type]
   switch (grant.type) {
     case GrantType.Translator:
       return `${name}: ${grant.lang ?? '?'}`

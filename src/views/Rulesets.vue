@@ -2,12 +2,12 @@
   <div class="container mx-auto pt-4 px-2">
     <div class="flex justify-between items-center gap-2 mb-4">
       <h1>Rulesets</h1>
-      <button type="button" class="rounded bg-ttred-500 text-white px-3 py-1" @click="openCreate">
+      <button type="button" class="btn-primary w-max" @click="openEditor(null)">
         New ruleset
       </button>
     </div>
 
-    <p v-if="loading">
+    <p v-if="loading && !rulesets.length">
       Loading rulesets…
     </p>
     <p v-else-if="error" role="alert" class="text-ttred-900">
@@ -53,16 +53,16 @@
             <div class="flex gap-2">
               <button
                 type="button"
-                class="rounded bg-surface border border-line px-3 py-1"
+                class="btn w-max"
                 :aria-label="`Edit ${ruleset.id}`"
-                @click="openEdit(ruleset)"
+                @click="openEditor(ruleset)"
               >
                 Edit
               </button>
               <button
                 v-if="!ruleset.isPrimary"
                 type="button"
-                class="rounded bg-ttred-500 text-white px-3 py-1"
+                class="btn-primary w-max"
                 :aria-label="`Set ${ruleset.id} as primary`"
                 @click="setPrimary(ruleset)"
               >
@@ -74,7 +74,7 @@
       </tbody>
     </table>
 
-    <ruleset-dialog :ruleset="dialogRuleset" :open="dialogOpen" @close="dialogOpen = false" />
+    <ruleset-dialog v-if="dialogOpen" :ruleset="dialogRuleset" @close="dialogOpen = false" />
   </div>
 </template>
 
@@ -101,12 +101,7 @@ function otherNamesCount (ruleset: Ruleset) {
   return ruleset.names.filter(name => name.lang !== 'en').length
 }
 
-function openCreate () {
-  dialogRuleset.value = null
-  dialogOpen.value = true
-}
-
-function openEdit (ruleset: Ruleset) {
+function openEditor (ruleset: Ruleset | null) {
   dialogRuleset.value = ruleset
   dialogOpen.value = true
 }

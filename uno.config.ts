@@ -125,7 +125,8 @@ export default defineConfig({
       'hover:bg-elevated',
       'disabled:cursor-default disabled:bg-elevated disabled:text-muted',
       'focus-visible:outline-2 focus-visible:outline-solid focus-visible:outline-ttred-900 focus-visible:outline-offset-2'
-    ].join(' ')
+    ].join(' '),
+    'btn-primary': 'btn bg-ttred-500 border-ttred-900 text-white hover:bg-ttred-900'
   },
   preflights: [
     {

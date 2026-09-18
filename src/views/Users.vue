@@ -16,10 +16,7 @@
           class="w-full rounded"
         >
       </div>
-      <button
-        type="submit"
-        class="rounded bg-ttred-500 text-white border-none px-3 py-2 cursor-pointer hover:bg-ttred-900"
-      >
+      <button type="submit" class="btn-primary w-max">
         Search
       </button>
     </form>
@@ -86,7 +83,7 @@
               <td class="p-2">
                 <button
                   type="button"
-                  class="rounded bg-surface border border-solid border-line px-3 py-1 cursor-pointer hover:bg-elevated whitespace-nowrap"
+                  class="btn w-max whitespace-nowrap"
                   @click="editingId = user.id"
                 >
                   Edit grants

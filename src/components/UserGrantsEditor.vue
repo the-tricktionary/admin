@@ -1,12 +1,12 @@
 <template>
   <dialog
     ref="dialog"
-    aria-labelledby="user-grants-editor-title"
+    :aria-labelledby="titleId"
     class="bg-surface text-content border border-solid border-line rounded p-0 m-auto w-full max-w-160"
     @close="emit('close')"
   >
     <form class="p-4" @submit.prevent="save()">
-      <h2 id="user-grants-editor-title">
+      <h2 :id="titleId">
         Grants for {{ name }}
       </h2>
 
@@ -21,17 +21,8 @@
               Grant
             </label>
             <select :id="`grant-type-${row.key}`" v-model="row.type" class="w-full rounded">
-              <option :value="GrantType.SuperAdmin">
-                Super admin
-              </option>
-              <option :value="GrantType.TrickEditor">
-                Trick editor
-              </option>
-              <option :value="GrantType.Translator">
-                Translator
-              </option>
-              <option :value="GrantType.LevelEditor">
-                Level editor
+              <option v-for="(label, value) of grantTypeNames" :key="value" :value="value">
+                {{ label }}
               </option>
             </select>
           </div>
@@ -83,8 +74,9 @@
 
           <button
             type="button"
-            class="rounded bg-surface border border-solid border-line px-3 py-2 cursor-pointer hover:bg-elevated"
-            @click="remove(row)"
+            class="btn w-max"
+            :aria-label="`Remove the ${grantTypeNames[row.type]} grant`"
+            @click="rows = rows.filter(other => other !== row)"
           >
             Remove
           </button>
@@ -95,11 +87,7 @@
         Without a grant this user cannot reach the admin interface.
       </p>
 
-      <button
-        type="button"
-        class="rounded bg-surface border border-solid border-line px-3 py-2 cursor-pointer hover:bg-elevated"
-        @click="add()"
-      >
+      <button type="button" class="btn w-max" @click="add()">
         Add grant
       </button>
 
@@ -113,18 +101,10 @@
       </p>
 
       <div class="flex flex-wrap justify-end gap-2 mt-4">
-        <button
-          type="button"
-          class="rounded bg-surface border border-solid border-line px-3 py-2 cursor-pointer hover:bg-elevated"
-          @click="close()"
-        >
+        <button type="button" class="btn w-max" @click="dialog?.close()">
           Cancel
         </button>
-        <button
-          type="submit"
-          :disabled="wouldLockOut || saving"
-          class="rounded bg-ttred-500 text-white border-none px-3 py-2 cursor-pointer hover:bg-ttred-900 disabled:cursor-default disabled:bg-elevated disabled:text-muted"
-        >
+        <button type="submit" :disabled="wouldLockOut || saving" class="btn-primary w-max">
           {{ saving ? 'Saving…' : 'Save' }}
         </button>
       </div>
@@ -133,8 +113,9 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref, useTemplateRef, watch } from 'vue'
+import { computed, onMounted, ref, useId, useTemplateRef, watch } from 'vue'
 import { GrantType, useRulesetsQuery, useSetUserGrantsMutation, VerificationLevel } from '../graphql/generated/graphql'
+import { grantTypeNames } from '../helpers'
 import useAuth from '../hooks/useAuth'
 
 import type { FindUsersQuery, GrantInput } from '../graphql/generated/graphql'
@@ -152,6 +133,8 @@ interface GrantRow {
 const { user } = defineProps<{ user: EditedUser }>()
 const emit = defineEmits<{ close: [] }>()
 
+const dialog = useTemplateRef('dialog')
+const titleId = useId()
 const name = computed(() => user.name ?? user.username ?? user.email ?? user.id)
 
 let nextKey = 0
@@ -194,10 +177,6 @@ function add () {
   })
 }
 
-function remove (row: GrantRow) {
-  rows.value = rows.value.filter(other => other.key !== row.key)
-}
-
 function toInput (row: GrantRow): GrantInput {
   switch (row.type) {
     case GrantType.Translator:
@@ -209,16 +188,10 @@ function toInput (row: GrantRow): GrantInput {
   }
 }
 
-const dialog = useTemplateRef<HTMLDialogElement>('dialog')
-
-function close () {
-  dialog.value?.close()
-}
-
 async function save () {
   if (wouldLockOut.value) return
   const saved = await mutate({ userId: user.id, grants: rows.value.map(toInput) })
-  if (saved?.data) close()
+  if (saved?.data) dialog.value?.close()
 }
 
 onMounted(() => {

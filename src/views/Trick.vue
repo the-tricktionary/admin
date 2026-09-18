@@ -25,26 +25,26 @@
           <dl v-if="!canEditTricks" class="grid grid-cols-[max-content_1fr] gap-x-4 gap-y-1">
             <dt>Discipline</dt>
             <dd>
-              {{ disciplineNames[discipline] }}
+              {{ disciplineNames[form.discipline] }}
             </dd>
             <dt>Trick type</dt>
             <dd>
-              {{ trickType }}
+              {{ form.trickType }}
             </dd>
             <dt>Tricktionary level</dt>
             <dd>
-              {{ ttLevel === '' ? 'No level' : ttLevel }}
+              {{ form.levels[TRICKTIONARY] || 'No level' }}
             </dd>
             <dt>Slug</dt>
             <dd>
-              {{ slug }}
+              {{ form.slug }}
             </dd>
           </dl>
 
           <div v-else class="grid md:grid-cols-2 gap-x-4">
             <form-field id="discipline" label="Discipline">
               <template #default="field">
-                <select v-bind="field" v-model="discipline" class="w-full block rounded border-line">
+                <select v-bind="field" v-model="form.discipline" class="w-full block rounded border-line">
                   <option v-for="(label, value) of disciplineNames" :key="value" :value="value">
                     {{ label }}
                   </option>
@@ -54,7 +54,7 @@
 
             <form-field id="trick-type" label="Trick type">
               <template #default="field">
-                <select v-bind="field" v-model="trickType" class="w-full block rounded border-line">
+                <select v-bind="field" v-model="form.trickType" class="w-full block rounded border-line">
                   <option v-for="type of trickTypes" :key="type" :value="type">
                     {{ type }}
                   </option>
@@ -64,7 +64,7 @@
 
             <form-field id="tt-level" label="Tricktionary level">
               <template #default="field">
-                <select v-bind="field" v-model="ttLevel" class="w-full block rounded border-line">
+                <select v-bind="field" v-model="form.levels[TRICKTIONARY]" class="w-full block rounded border-line">
                   <option value="">
                     No level
                   </option>
@@ -79,7 +79,7 @@
               <template #default="field">
                 <input
                   v-bind="field"
-                  v-model="slug"
+                  v-model="form.slug"
                   type="text"
                   required
                   pattern="[a-z0-9]+(-[a-z0-9]+)*"
@@ -105,8 +105,8 @@
               :rows="previousRows"
               :options="previousOptions"
               :editable="canEditTricks"
-              @add="prerequisites = [...prerequisites, $event]"
-              @remove="prerequisites = prerequisites.filter(id => id !== $event)"
+              @add="form.prerequisites.push($event)"
+              @remove="form.prerequisites = form.prerequisites.filter(id => id !== $event)"
             />
 
             <prerequisite-table
@@ -118,8 +118,8 @@
               :rows="nextRows"
               :options="nextOptions"
               :editable="canEditTricks"
-              @add="prerequisiteFor = [...prerequisiteFor, $event]"
-              @remove="prerequisiteFor = prerequisiteFor.filter(id => id !== $event)"
+              @add="form.prerequisiteFor.push($event)"
+              @remove="form.prerequisiteFor = form.prerequisiteFor.filter(id => id !== $event)"
             />
           </div>
         </section>
@@ -134,7 +134,7 @@
               <h3 class="mb-2 font-semibold">
                 English
               </h3>
-              <localisation-fields v-model="en" id-prefix="en" :readonly="!canEditTricks" />
+              <localisation-fields v-model="form.en" id-prefix="en" :readonly="!canEditTricks" />
             </div>
 
             <div v-if="translationLangs.length">
@@ -157,9 +157,7 @@
                 </template>
               </form-field>
 
-              <div v-if="translation">
-                <localisation-fields v-model="translation" :id-prefix="lang" />
-              </div>
+              <localisation-fields v-if="translations[lang]" v-model="translations[lang]" :id-prefix="lang" />
               <p v-else role="status">
                 Loading the {{ lang }} translation...
               </p>
@@ -197,13 +195,12 @@
                       <label :for="`level-${row.rulesId}`" class="sr-only">{{ row.name }} level</label>
                       <input
                         :id="`level-${row.rulesId}`"
-                        :value="row.level"
+                        v-model="form.levels[row.rulesId]"
                         type="text"
                         placeholder="5, or 2-5"
                         :disabled="row.locked"
                         :aria-describedby="row.locked ? `level-locked-${row.rulesId}` : undefined"
                         class="w-full block rounded focus:border-b-ttred-900 border-line disabled:bg-sunken"
-                        @input="levels[row.rulesId] = inputValue($event)"
                       >
                       <p v-if="row.locked" :id="`level-locked-${row.rulesId}`" class="text-muted text-sm mt-1">
                         Verified above your own level
@@ -219,7 +216,7 @@
                       <button
                         v-if="row.canVerifyJudge"
                         type="button"
-                        class="rounded bg-surface border border-solid border-line px-3 py-1 cursor-pointer hover:bg-elevated whitespace-nowrap"
+                        class="btn w-max"
                         :disabled="verifying === row.rulesId"
                         @click="verify(row.rulesId, VerificationLevel.Judge)"
                       >
@@ -228,7 +225,7 @@
                       <button
                         v-if="row.canVerifyOfficial"
                         type="button"
-                        class="rounded bg-surface border border-solid border-line px-3 py-1 cursor-pointer hover:bg-elevated whitespace-nowrap"
+                        class="btn w-max"
                         :disabled="verifying === row.rulesId"
                         @click="verify(row.rulesId, VerificationLevel.Official)"
                       >
@@ -237,7 +234,7 @@
                       <button
                         v-if="row.canRecall"
                         type="button"
-                        class="rounded bg-surface border border-solid border-line px-3 py-1 cursor-pointer hover:bg-elevated whitespace-nowrap"
+                        class="btn w-max"
                         :disabled="verifying === row.rulesId"
                         @click="verify(row.rulesId, null)"
                       >
@@ -268,7 +265,7 @@
           :pending-uploads="trick.pendingVideoUploads"
           :editable="canEditTricks"
           :title="trick.en?.name ?? trick.slug"
-          @refresh="refreshVideos()"
+          @refresh="trickQuery.refetch()"
         />
       </section>
     </template>
@@ -335,21 +332,15 @@ import type { LocalisationValue } from '../helpers'
 
 type LoadedTrick = NonNullable<TrickQuery['trick']>
 
-interface Snapshot {
+interface TrickForm {
   discipline: Discipline
   trickType: TrickType
-  ttLevel: string
   slug: string
   en: LocalisationValue
   prerequisites: string[]
   prerequisiteFor: string[]
+  /** By ruleset, the tricktionary's own level included */
   levels: Record<string, string>
-}
-
-interface PrerequisiteChange {
-  add: boolean
-  trickId: string
-  prerequisiteId: string
 }
 
 /** The ruleset whose levels are the tricktionary's own, shown with the details */
@@ -372,17 +363,40 @@ const error = trickQuery.error
 const { result: rulesetsResult } = useRulesetsQuery()
 const rulesets = computed(() => rulesetsResult.value?.rulesets ?? [])
 
-/** What the trick looked like when it was loaded, or last saved */
-const pristine = ref<Snapshot | null>(null)
+function toLocalisationValue (localisation: { name: string, alternativeNames?: string[] | null, description?: string | null } | null | undefined): LocalisationValue {
+  return {
+    name: localisation?.name ?? '',
+    alternativeNames: [...localisation?.alternativeNames ?? []],
+    description: localisation?.description ?? ''
+  }
+}
 
-const discipline = ref(Discipline.SingleRope)
-const trickType = ref(TrickType.Basic)
-const ttLevel = ref('')
-const slug = ref('')
-const en = ref<LocalisationValue>(emptyLocalisation())
-const prerequisites = ref<string[]>([])
-const prerequisiteFor = ref<string[]>([])
-const levels = ref<Record<string, string>>({})
+function toForm (loaded: LoadedTrick): TrickForm {
+  const levels: Record<string, string> = { [TRICKTIONARY]: '' }
+  for (const level of loaded.levels) levels[level.rulesId] = level.level
+
+  return {
+    discipline: loaded.discipline,
+    trickType: loaded.trickType,
+    slug: loaded.slug,
+    en: toLocalisationValue(loaded.en),
+    prerequisites: loaded.prerequisites.map(other => other.id),
+    prerequisiteFor: loaded.prerequisiteFor.map(other => other.id),
+    levels
+  }
+}
+
+const form = ref<TrickForm>({
+  discipline: Discipline.SingleRope,
+  trickType: TrickType.Basic,
+  slug: '',
+  en: toLocalisationValue(null),
+  prerequisites: [],
+  prerequisiteFor: [],
+  levels: {}
+})
+/** What the trick looked like when it was loaded, or last saved, null until then */
+const pristine = ref<TrickForm | null>(null)
 
 /** Working copies and snapshots of every translation loaded so far, by language */
 const translations = ref<Record<string, LocalisationValue>>({})
@@ -393,50 +407,9 @@ const saveError = ref<string | null>(null)
 const slugError = ref<string | null>(null)
 const verifying = ref<string | null>(null)
 
-function emptyLocalisation (): LocalisationValue {
-  return { name: '', alternativeNames: [], description: '' }
-}
-
-function cloneLocalisation (value: LocalisationValue): LocalisationValue {
-  return { ...value, alternativeNames: [...value.alternativeNames] }
-}
-
-function toLocalisationValue (localisation: { name: string, alternativeNames?: string[] | null, description?: string | null } | null | undefined): LocalisationValue {
-  if (!localisation) return emptyLocalisation()
-  return {
-    name: localisation.name,
-    alternativeNames: [...localisation.alternativeNames ?? []],
-    description: localisation.description ?? ''
-  }
-}
-
-function inputValue (event: Event) {
-  return (event.target as HTMLInputElement).value
-}
-
 function resetFrom (loaded: LoadedTrick) {
-  const levelValues: Record<string, string> = {}
-  for (const level of loaded.levels) levelValues[level.rulesId] = level.level
-
-  pristine.value = {
-    discipline: loaded.discipline,
-    trickType: loaded.trickType,
-    ttLevel: levelValues[TRICKTIONARY] ?? '',
-    slug: loaded.slug,
-    en: toLocalisationValue(loaded.en),
-    prerequisites: loaded.prerequisites.map(other => other.id),
-    prerequisiteFor: loaded.prerequisiteFor.map(other => other.id),
-    levels: levelValues
-  }
-
-  discipline.value = pristine.value.discipline
-  trickType.value = pristine.value.trickType
-  ttLevel.value = pristine.value.ttLevel
-  slug.value = pristine.value.slug
-  en.value = cloneLocalisation(pristine.value.en)
-  prerequisites.value = [...pristine.value.prerequisites]
-  prerequisiteFor.value = [...pristine.value.prerequisiteFor]
-  levels.value = { ...pristine.value.levels }
+  pristine.value = toForm(loaded)
+  form.value = toForm(loaded)
 }
 
 watch(trickId, () => {
@@ -465,20 +438,12 @@ translationQuery.onResult(result => {
   if (variables?.id !== trickId.value) return
   // a language keeps the copy it was first given, edits included
   if (variables.lang in translations.value) return
-  const value = toLocalisationValue(result.data?.trick?.localisation)
-  translations.value[variables.lang] = value
-  pristineTranslations.value[variables.lang] = cloneLocalisation(value)
-})
-
-const translation = computed<LocalisationValue | null>({
-  get: () => translations.value[lang.value] ?? null,
-  set: value => {
-    if (value) translations.value[lang.value] = value
-  }
+  translations.value[variables.lang] = toLocalisationValue(result.data?.trick?.localisation)
+  pristineTranslations.value[variables.lang] = toLocalisationValue(result.data?.trick?.localisation)
 })
 
 const tricksQuery = useTricksQuery(
-  () => ({ discipline: discipline.value, searchQuery: null }),
+  () => ({ discipline: form.value.discipline, searchQuery: null }),
   () => ({ enabled: canEditTricks.value && trick.value != null })
 )
 const candidates = computed(() => tricksQuery.result.value?.tricks ?? [])
@@ -505,10 +470,10 @@ function optionsFor (linked: string[]) {
     .map(other => ({ id: other.id, name: other.en?.name ?? other.slug }))
 }
 
-const previousRows = computed(() => rowsFor(prerequisites.value))
-const nextRows = computed(() => rowsFor(prerequisiteFor.value))
-const previousOptions = computed(() => optionsFor(prerequisites.value))
-const nextOptions = computed(() => optionsFor(prerequisiteFor.value))
+const previousRows = computed(() => rowsFor(form.value.prerequisites))
+const nextRows = computed(() => rowsFor(form.value.prerequisiteFor))
+const previousOptions = computed(() => optionsFor(form.value.prerequisites))
+const nextOptions = computed(() => optionsFor(form.value.prerequisiteFor))
 
 const storedLevels = computed(() => new Map((trick.value?.levels ?? []).map(level => [level.rulesId, level])))
 
@@ -522,7 +487,7 @@ const levelRows = computed(() => rulesets.value
     return {
       rulesId: ruleset.id,
       name: ruleset.name,
-      level: levels.value[ruleset.id] ?? '',
+      level: form.value.levels[ruleset.id] ?? '',
       editable: canEditLevels(ruleset.id),
       locked: rank > ownRank,
       verification: verificationNames[rank],
@@ -554,21 +519,19 @@ const detailsInput = computed<UpdateTrickDetailsInput | null>(() => {
   if (!base) return null
 
   const data: UpdateTrickDetailsInput = {}
-  if (discipline.value !== base.discipline) data.discipline = discipline.value
-  if (trickType.value !== base.trickType) data.trickType = trickType.value
-  if (slug.value !== base.slug) data.slug = slug.value
+  if (form.value.discipline !== base.discipline) data.discipline = form.value.discipline
+  if (form.value.trickType !== base.trickType) data.trickType = form.value.trickType
+  if (form.value.slug !== base.slug) data.slug = form.value.slug
 
   return Object.keys(data).length ? data : null
 })
-
-const ttLevelChanged = computed(() => pristine.value != null && ttLevel.value !== pristine.value.ttLevel)
 
 const localisationChanges = computed(() => {
   const base = pristine.value
   if (!base) return []
 
   const changes: Array<{ lang: string, data: TrickLocalisationInput }> = []
-  if (localisationChanged(en.value, base.en)) changes.push({ lang: 'en', data: localisationInput(en.value) })
+  if (localisationChanged(form.value.en, base.en)) changes.push({ lang: 'en', data: localisationInput(form.value.en) })
 
   for (const [other, value] of Object.entries(translations.value)) {
     const original = pristineTranslations.value[other]
@@ -578,25 +541,25 @@ const localisationChanges = computed(() => {
   return changes
 })
 
-const prerequisiteChanges = computed<PrerequisiteChange[]>(() => {
+const prerequisiteChanges = computed(() => {
   const base = pristine.value
   if (!base) return []
 
   const id = trickId.value
-  const changes: PrerequisiteChange[] = []
+  const changes: Array<{ add: boolean, trickId: string, prerequisiteId: string }> = []
 
-  for (const other of prerequisites.value) {
+  for (const other of form.value.prerequisites) {
     if (!base.prerequisites.includes(other)) changes.push({ add: true, trickId: id, prerequisiteId: other })
   }
   for (const other of base.prerequisites) {
-    if (!prerequisites.value.includes(other)) changes.push({ add: false, trickId: id, prerequisiteId: other })
+    if (!form.value.prerequisites.includes(other)) changes.push({ add: false, trickId: id, prerequisiteId: other })
   }
   // the other trick owns an edge that makes this one its prerequisite
-  for (const other of prerequisiteFor.value) {
+  for (const other of form.value.prerequisiteFor) {
     if (!base.prerequisiteFor.includes(other)) changes.push({ add: true, trickId: other, prerequisiteId: id })
   }
   for (const other of base.prerequisiteFor) {
-    if (!prerequisiteFor.value.includes(other)) changes.push({ add: false, trickId: other, prerequisiteId: id })
+    if (!form.value.prerequisiteFor.includes(other)) changes.push({ add: false, trickId: other, prerequisiteId: id })
   }
 
   return changes
@@ -606,14 +569,13 @@ const levelChanges = computed(() => {
   const base = pristine.value
   if (!base) return []
 
-  return levelRows.value
-    .filter(row => row.level !== (base.levels[row.rulesId] ?? ''))
-    .map(row => ({ rulesId: row.rulesId, level: row.level === '' ? null : row.level }))
+  return Object.entries(form.value.levels)
+    .filter(([rulesId, level]) => level !== (base.levels[rulesId] ?? ''))
+    .map(([rulesId, level]) => ({ rulesId, level: level === '' ? null : level }))
 })
 
 const dirty = computed(() =>
   detailsInput.value != null ||
-  ttLevelChanged.value ||
   localisationChanges.value.length > 0 ||
   prerequisiteChanges.value.length > 0 ||
   levelChanges.value.length > 0
@@ -654,14 +616,11 @@ async function save () {
   slugError.value = null
 
   const id = trickId.value
+  let saved = false
 
   try {
     const details = detailsInput.value
     if (details) await updateDetails({ trickId: id, data: details })
-
-    if (ttLevelChanged.value) {
-      await setLevel({ trickId: id, rulesId: TRICKTIONARY, level: ttLevel.value === '' ? null : ttLevel.value })
-    }
 
     for (const change of localisationChanges.value) {
       await setLocalisation({ trickId: id, lang: change.lang, data: change.data })
@@ -677,15 +636,27 @@ async function save () {
       await setLevel({ trickId: id, rulesId: change.rulesId, level: change.level })
     }
 
-    await trickQuery.refetch()
-    const refreshed = trickQuery.result.value?.trick
-    if (refreshed) resetFrom(refreshed)
-    for (const [other, value] of Object.entries(translations.value)) {
-      pristineTranslations.value[other] = cloneLocalisation(value)
-    }
+    saved = true
   } catch (err) {
     if (isSlugCollision(err)) slugError.value = 'A trick with this slug already exists in this discipline'
     else saveError.value = errorMessage(err)
+  }
+
+  // whatever got through is stored now, so the stored trick is the new
+  // pristine and after a failure the form keeps only what still needs saving
+  try {
+    const refreshed = (await trickQuery.refetch())?.data.trick
+    if (refreshed) {
+      pristine.value = toForm(refreshed)
+      if (saved) {
+        form.value = toForm(refreshed)
+        for (const [other, value] of Object.entries(translations.value)) {
+          pristineTranslations.value[other] = toLocalisationValue(value)
+        }
+      }
+    }
+  } catch (err) {
+    saveError.value ??= errorMessage(err)
   } finally {
     saving.value = false
   }
@@ -704,10 +675,6 @@ async function verify (rulesId: string, verificationLevel: VerificationLevel | n
   } finally {
     verifying.value = null
   }
-}
-
-async function refreshVideos () {
-  await trickQuery.refetch()
 }
 
 onBeforeRouteLeave(() => !dirty.value || window.confirm('This trick has changes that have not been saved yet. Leave the page anyway?'))

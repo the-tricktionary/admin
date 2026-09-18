@@ -65,7 +65,7 @@
                 <div class="flex flex-wrap gap-2">
                   <button
                     type="button"
-                    class="rounded bg-surface border border-solid border-line px-3 py-1 cursor-pointer hover:bg-elevated whitespace-nowrap"
+                    class="btn w-max"
                     :aria-pressed="video.videoId === selected?.videoId"
                     :aria-label="`Preview ${videoTypeNames[video.type]} video ${video.videoId}`"
                     @click="preview = video.videoId"
@@ -75,7 +75,7 @@
                   <button
                     v-if="editable"
                     type="button"
-                    class="rounded bg-surface border border-solid border-line px-3 py-1 cursor-pointer hover:bg-elevated whitespace-nowrap disabled:cursor-default disabled:bg-elevated disabled:text-muted"
+                    class="btn w-max"
                     :disabled="removing === video.videoId"
                     :aria-label="`Remove ${videoTypeNames[video.type]} video ${video.videoId}`"
                     @click="remove(video.videoId)"
@@ -135,19 +135,13 @@
         </div>
       </template>
 
-      <button
-        v-if="editable"
-        type="button"
-        class="rounded bg-surface border border-solid border-line px-3 py-2 cursor-pointer hover:bg-elevated mt-4"
-        @click="dialogOpen = true"
-      >
+      <button v-if="editable" type="button" class="btn w-max mt-4" @click="dialogOpen = true">
         Add video
       </button>
 
       <video-dialog
-        v-if="editable"
+        v-if="dialogOpen"
         :trick-id="trickId"
-        :open="dialogOpen"
         @close="dialogOpen = false"
         @uploaded="emit('refresh')"
       />
@@ -167,7 +161,6 @@ import type { TrickQuery } from '../graphql/generated/graphql'
 
 type LoadedTrick = NonNullable<TrickQuery['trick']>
 
-/** How often the page is asked for a fresh look at the uploads Mux is working on */
 const POLL_INTERVAL = 10_000
 
 const settledStatuses: VideoUploadStatus[] = [VideoUploadStatus.Ready, VideoUploadStatus.Errored, VideoUploadStatus.Cancelled]
@@ -194,7 +187,6 @@ const dialogOpen = ref(false)
 const removing = ref<string | null>(null)
 const removeError = ref<string | null>(null)
 
-/** The previewed video, falling back to the first one until another is picked */
 const selected = computed(() => videos.find(video => video.videoId === preview.value) ?? videos[0] ?? null)
 
 const waitingOnMux = computed(() => pendingUploads.some(upload => !settledStatuses.includes(upload.status)))

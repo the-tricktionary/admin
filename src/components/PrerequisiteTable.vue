@@ -18,7 +18,7 @@
           <td v-if="editable" class="py-2">
             <button
               type="button"
-              class="rounded bg-surface border border-solid border-line px-3 py-1 cursor-pointer hover:bg-elevated whitespace-nowrap"
+              class="btn w-max"
               :aria-label="`Remove ${row.name} from ${title.toLowerCase()}`"
               @click="emit('remove', row.id)"
             >
@@ -48,7 +48,7 @@
           <td class="py-2">
             <button
               type="button"
-              class="rounded bg-surface border border-solid border-line px-3 py-1 cursor-pointer hover:bg-elevated whitespace-nowrap disabled:cursor-default disabled:bg-elevated disabled:text-muted"
+              class="btn w-max"
               :disabled="pick === ''"
               @click="add()"
             >
@@ -72,7 +72,6 @@ interface TrickRow {
 const { title, hint, empty, addLabel, idPrefix, rows, options, editable } = defineProps<{
   title: string
   hint: string
-  /** What to say in place of the rows when there are none */
   empty: string
   addLabel: string
   idPrefix: string

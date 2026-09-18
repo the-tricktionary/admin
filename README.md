@@ -9,12 +9,9 @@ verify the levels of a ruleset, and super admins additionally maintain users and
 rulesets. Someone without any grant is told they have no access rather than
 shown an empty interface.
 
-Development needs Node 22.12 or newer. Install the dependencies with `npm ci`,
-then generate the typed GraphQL operations with `npm run codegen` — it reads the
-schema from the deployed API, so point it elsewhere with
-`GRAPHQL_SCHEMA=path/to/introspection.json npm run codegen` when you develop
-against a schema that isn't released yet. `VITE_GRAPHQL_URL=http://localhost:3000
-npm run dev` then serves the app on port 3003 against a locally running API, and
-`npm run lint` and `npm run typecheck` check it the same way CI does. Pull
-requests are deployed to a Firebase hosting preview channel, and `main` goes to
-<https://admin.the-tricktionary.com>.
+Development needs Node 22.12 or newer. `npm run codegen` reads the schema from
+the deployed API, set `GRAPHQL_SCHEMA=path/to/introspection.json` to generate
+against a schema that isn't released yet, and `VITE_GRAPHQL_URL` (for example
+`http://localhost:3000`) to run the app against a locally running API. Pull
+requests are deployed to a Firebase hosting preview channel, and `master` goes
+to <https://admin.the-tricktionary.com>.

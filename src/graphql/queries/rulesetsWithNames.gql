@@ -7,7 +7,5 @@ query RulesetsWithNames {
       lang
       value
     }
-    createdAt
-    updatedAt
   }
 }

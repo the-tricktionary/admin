@@ -5,11 +5,8 @@ import useGrants from './hooks/useGrants'
 
 declare module 'vue-router' {
   interface RouteMeta {
-    /** Reachable without being signed in */
     public?: boolean
-    /** Only reachable with a super admin grant */
     superAdmin?: boolean
-    /** Only reachable with a grant that allows editing tricks */
     trickEditor?: boolean
   }
 }
@@ -31,13 +28,11 @@ const router = createRouter({
 })
 
 router.beforeEach(async to => {
-  // a page can only be judged once we know who, if anyone, is signed in
   await whenAuthKnown()
 
   const { firebaseUser } = useAuth()
   const { isSuperAdmin, canEditTricks, hasAnyAccess } = useGrants()
 
-  // the sign in page is the one place a visitor without a session belongs
   if (to.meta.public) return true
 
   if (!firebaseUser.value) {

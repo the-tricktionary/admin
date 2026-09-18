@@ -2,11 +2,7 @@ import { computed } from 'vue'
 import { GrantType, VerificationLevel } from '../graphql/generated/graphql'
 import useAuth from './useAuth'
 
-/**
- * The verification levels are ranked, a level editor may verify a trick level
- * at their own rank or lower. Rank 0 means they may edit levels but not verify
- * them. This mirrors `verificationLevelRank` in the API.
- */
+/** Mirrors the API: a level editor may verify at their own rank or lower, rank 0 may only edit */
 export function verificationLevelRank (level: VerificationLevel | null | undefined): 0 | 1 | 2 {
   switch (level) {
     case VerificationLevel.Official:
@@ -19,17 +15,15 @@ export function verificationLevelRank (level: VerificationLevel | null | undefin
 }
 
 export default function useGrants () {
-  const { user, loading } = useAuth()
+  const { user } = useAuth()
 
   const grants = computed(() => user.value?.grants ?? [])
 
   const isSuperAdmin = computed(() => grants.value.some(grant => grant.type === GrantType.SuperAdmin))
   const canEditTricks = computed(() => isSuperAdmin.value || grants.value.some(grant => grant.type === GrantType.TrickEditor))
 
-  /**
-   * English is the source language of the Tricktionary, so trick editors are
-   * its translators rather than anyone with a translator grant.
-   */
+  // english is the source language of the Tricktionary, so trick editors are
+  // its translators rather than anyone with a translator grant
   const translatorLangs = computed(() => {
     const langs = new Set(
       grants.value
@@ -41,7 +35,6 @@ export default function useGrants () {
     return [...langs]
   })
 
-  /** The highest level the user may verify this ruleset's levels at */
   function levelEditorRank (rulesId: string): 0 | 1 | 2 {
     if (isSuperAdmin.value) return 2
     let rank: 0 | 1 | 2 = 0
@@ -53,25 +46,11 @@ export default function useGrants () {
     return rank
   }
 
-  /**
-   * Whether the user may change this ruleset's levels at all. A level editor
-   * without a verification level still edits, they only cannot verify.
-   */
   function canEditLevels (rulesId: string) {
     return isSuperAdmin.value || grants.value.some(grant => grant.type === GrantType.LevelEditor && grant.rulesId === rulesId)
   }
 
-  /** Whether the user has any reason at all to be in here */
   const hasAnyAccess = computed(() => grants.value.length > 0)
 
-  return {
-    grants,
-    isSuperAdmin,
-    canEditTricks,
-    translatorLangs,
-    levelEditorRank,
-    canEditLevels,
-    hasAnyAccess,
-    loading
-  }
+  return { isSuperAdmin, canEditTricks, translatorLangs, levelEditorRank, canEditLevels, hasAnyAccess }
 }

@@ -1,5 +1,5 @@
 <template>
-  <header ref="headerRef" class="border-b-ttred-900 bg-ttred-500 border-b sticky top-0 left-0 right-0 flex justify-between items-center py-1 px-2 whitespace-nowrap z-1000">
+  <header ref="header" class="border-b-ttred-900 bg-ttred-500 border-b sticky top-0 left-0 right-0 flex justify-between items-center py-1 px-2 whitespace-nowrap z-1000">
     <router-link to="/" class="inline-flex justify-start items-center text-white text-xl">
       Tricktionary Admin
     </router-link>
@@ -40,7 +40,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, useTemplateRef } from 'vue'
 import { onClickOutside } from '@vueuse/core'
 import { getAuth, signOut } from 'firebase/auth'
 import { useRouter } from 'vue-router'
@@ -55,9 +55,9 @@ const { isSuperAdmin } = useGrants()
 const router = useRouter()
 
 const showNav = ref(false)
-const headerRef = ref<HTMLElement>()
+const header = useTemplateRef('header')
 
-onClickOutside(headerRef, () => {
+onClickOutside(header, () => {
   showNav.value = false
 })
 

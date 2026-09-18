@@ -1,4 +1,4 @@
-import { Discipline, VideoType } from './graphql/generated/graphql'
+import { Discipline, GrantType, VideoType } from './graphql/generated/graphql'
 
 export const disciplineNames: Record<Discipline, string> = {
   [Discipline.SingleRope]: 'Single Rope',
@@ -11,36 +11,28 @@ export const videoTypeNames: Record<VideoType, string> = {
   [VideoType.Explainer]: 'Explainer'
 }
 
-export function disciplineToSlug (discipline: Discipline) {
-  switch (discipline) {
-    case Discipline.SingleRope:
-      return 'sr'
-    case Discipline.DoubleDutch:
-      return 'dd'
-    case Discipline.Wheel:
-      return 'wh'
-  }
+export const grantTypeNames: Record<GrantType, string> = {
+  [GrantType.SuperAdmin]: 'Super admin',
+  [GrantType.TrickEditor]: 'Trick editor',
+  [GrantType.Translator]: 'Translator',
+  [GrantType.LevelEditor]: 'Level editor'
 }
 
-export function slugToDiscipline (slug: string) {
-  switch (slug) {
-    case 'sr':
-      return Discipline.SingleRope
-    case 'dd':
-      return Discipline.DoubleDutch
-    case 'wh':
-      return Discipline.Wheel
-    default:
-      return undefined
-  }
+const disciplineSlugs: Record<Discipline, string> = {
+  [Discipline.SingleRope]: 'sr',
+  [Discipline.DoubleDutch]: 'dd',
+  [Discipline.Wheel]: 'wh'
+}
+
+export function disciplineToSlug (discipline: Discipline) {
+  return disciplineSlugs[discipline]
 }
 
 /** The discipline a `?discipline=` parameter names, single rope when it names none */
 export function queryDiscipline (slug: unknown) {
-  return (typeof slug === 'string' ? slugToDiscipline(slug) : undefined) ?? Discipline.SingleRope
+  return Object.values(Discipline).find(discipline => disciplineSlugs[discipline] === slug) ?? Discipline.SingleRope
 }
 
-/** The editable part of a trick localisation, shared by the editor and its fields */
 export interface LocalisationValue {
   name: string
   alternativeNames: string[]
@@ -58,11 +50,7 @@ export function trickSorter (a: SortableTrick, b: SortableTrick) {
 
 const YOUTUBE_ID = /^[\w-]{11}$/
 
-/**
- * The video ID an editor pasted, whether they pasted the bare ID or any of the
- * links YouTube hands out (watch, youtu.be, shorts, embed). Null when the input
- * is neither.
- */
+/** The video ID in a bare ID or any of the links YouTube hands out (watch, youtu.be, shorts, embed) */
 export function parseYouTubeId (input: string): string | null {
   const trimmed = input.trim()
   if (YOUTUBE_ID.test(trimmed)) return trimmed
