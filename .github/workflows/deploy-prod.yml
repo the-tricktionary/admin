@@ -45,3 +45,5 @@ jobs:
           environment: production
           sourcemaps: ./dist
           release_prefix: tricktionary-admin@
+          # the previous release may point at a commit this repository no longer has
+          ignore_missing: true
