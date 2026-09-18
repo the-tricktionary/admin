@@ -1,0 +1,11 @@
+mutation RemoveTrickVideo ($trickId: ID!, $videoId: String!) {
+  removeTrickVideo (trickId: $trickId, videoId: $videoId) {
+    id
+    videos {
+      host
+      videoId
+      type
+      slowMoStart
+    }
+  }
+}

@@ -257,7 +257,20 @@
         </section>
       </form>
 
-      <!-- videos: admin#5 -->
+      <section class="mt-6">
+        <h2 class="mb-2">
+          Videos
+        </h2>
+
+        <trick-videos
+          :trick-id="trickId"
+          :videos="trick.videos"
+          :pending-uploads="trick.pendingVideoUploads"
+          :editable="canEditTricks"
+          :title="trick.en?.name ?? trick.slug"
+          @refresh="refreshVideos()"
+        />
+      </section>
     </template>
   </div>
 
@@ -296,6 +309,7 @@ import BottomBar from '../components/BottomBar.vue'
 import FormField from '../components/FormField.vue'
 import LocalisationFields from '../components/LocalisationFields.vue'
 import PrerequisiteTable from '../components/PrerequisiteTable.vue'
+import TrickVideos from '../components/TrickVideos.vue'
 import {
   Discipline,
   TrickType,
@@ -690,6 +704,10 @@ async function verify (rulesId: string, verificationLevel: VerificationLevel | n
   } finally {
     verifying.value = null
   }
+}
+
+async function refreshVideos () {
+  await trickQuery.refetch()
 }
 
 onBeforeRouteLeave(() => !dirty.value || window.confirm('This trick has changes that have not been saved yet. Leave the page anyway?'))
