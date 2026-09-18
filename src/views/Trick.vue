@@ -278,18 +278,20 @@
       Back to tricks
     </router-link>
 
-    <span v-if="dirty" class="self-center text-muted whitespace-nowrap">
-      Unsaved changes
-    </span>
+    <div class="flex items-center gap-4">
+      <span v-if="dirty" class="text-muted whitespace-nowrap">
+        Unsaved changes
+      </span>
 
-    <button
-      type="submit"
-      form="trick-editor"
-      class="btn w-max whitespace-nowrap"
-      :disabled="!dirty || saving"
-    >
-      {{ saving ? 'Saving...' : 'Save' }}
-    </button>
+      <button
+        type="submit"
+        form="trick-editor"
+        class="btn w-max whitespace-nowrap"
+        :disabled="!dirty || saving"
+      >
+        {{ saving ? 'Saving...' : 'Save' }}
+      </button>
+    </div>
   </bottom-bar>
 </template>
 

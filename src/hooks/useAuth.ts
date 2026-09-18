@@ -30,7 +30,8 @@ function createState () {
     enabled: authKnown.value
   }))
 
-  userQuery.onResult(() => { meKnown.value = true })
+  // on a cache miss the first result is a loading placeholder without data
+  userQuery.onResult(result => { if (!result.loading) meKnown.value = true })
   userQuery.onError(() => { meKnown.value = true })
 
   getAuth().onIdTokenChanged(user => {
