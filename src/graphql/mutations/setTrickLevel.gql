@@ -1,0 +1,8 @@
+mutation SetTrickLevel ($trickId: ID!, $rulesId: ID!, $level: String) {
+  setTrickLevel (trickId: $trickId, rulesId: $rulesId, level: $level) {
+    id
+    rulesId
+    level
+    verificationLevel
+  }
+}

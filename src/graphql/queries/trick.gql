@@ -1,0 +1,40 @@
+query Trick ($id: ID!) {
+  trick (id: $id) {
+    id
+    slug
+    discipline
+    trickType
+    en: localisation {
+      id
+      name
+      alternativeNames
+      description
+    }
+    levels {
+      id
+      rulesId
+      level
+      verificationLevel
+      ruleset {
+        id
+        name
+      }
+    }
+    prerequisites {
+      id
+      slug
+      en: localisation {
+        id
+        name
+      }
+    }
+    prerequisiteFor {
+      id
+      slug
+      en: localisation {
+        id
+        name
+      }
+    }
+  }
+}

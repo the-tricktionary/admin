@@ -7,7 +7,7 @@ import useAuth from './useAuth'
  * at their own rank or lower. Rank 0 means they may edit levels but not verify
  * them. This mirrors `verificationLevelRank` in the API.
  */
-function verificationLevelRank (level: VerificationLevel | null | undefined): 0 | 1 | 2 {
+export function verificationLevelRank (level: VerificationLevel | null | undefined): 0 | 1 | 2 {
   switch (level) {
     case VerificationLevel.Official:
       return 2
@@ -53,6 +53,14 @@ export default function useGrants () {
     return rank
   }
 
+  /**
+   * Whether the user may change this ruleset's levels at all. A level editor
+   * without a verification level still edits, they only cannot verify.
+   */
+  function canEditLevels (rulesId: string) {
+    return isSuperAdmin.value || grants.value.some(grant => grant.type === GrantType.LevelEditor && grant.rulesId === rulesId)
+  }
+
   /** Whether the user has any reason at all to be in here */
   const hasAnyAccess = computed(() => grants.value.length > 0)
 
@@ -62,6 +70,7 @@ export default function useGrants () {
     canEditTricks,
     translatorLangs,
     levelEditorRank,
+    canEditLevels,
     hasAnyAccess,
     loading
   }

@@ -35,6 +35,13 @@ export function queryDiscipline (slug: unknown) {
   return (typeof slug === 'string' ? slugToDiscipline(slug) : undefined) ?? Discipline.SingleRope
 }
 
+/** The editable part of a trick localisation, shared by the editor and its fields */
+export interface LocalisationValue {
+  name: string
+  alternativeNames: string[]
+  description: string
+}
+
 interface SortableTrick {
   slug: string
   en?: { name: string } | null
