@@ -27,7 +27,7 @@
         <h2 class="mb-2">
           English
         </h2>
-        <localisation-fields v-model="localisation" id-prefix="en" />
+        <localisation-fields v-model="localisation" id-prefix="en" lang="en" />
 
         <form-field id="slug" label="Slug" :error="slugError">
           <template #default="field">

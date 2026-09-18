@@ -133,7 +133,7 @@
             <h3 class="mb-2 font-semibold lg:col-start-1 lg:row-start-1">
               English
             </h3>
-            <localisation-fields v-model="form.en" id-prefix="en" :readonly="!canEditTricks" :column="1" />
+            <localisation-fields v-model="form.en" id-prefix="en" lang="en" :readonly="!canEditTricks" :column="1" />
 
             <template v-if="translationLangs.length">
               <div class="flex flex-wrap items-center gap-x-4 mb-2 lg:col-start-2 lg:row-start-1">
@@ -153,7 +153,7 @@
                 </select>
               </div>
 
-              <localisation-fields v-if="translations[lang]" v-model="translations[lang]" :id-prefix="lang" :column="2" />
+              <localisation-fields v-if="translations[lang]" v-model="translations[lang]" :id-prefix="lang" :lang="lang" :column="2" />
               <p v-else role="status" class="lg:col-start-2 lg:row-start-2">
                 Loading the {{ lang }} translation...
               </p>

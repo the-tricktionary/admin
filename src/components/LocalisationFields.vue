@@ -1,6 +1,6 @@
 <template>
   <template v-if="readonly">
-    <dl :class="[columnClass, 'lg:row-start-2', 'mb-4']">
+    <dl :lang="lang" :class="[columnClass, 'lg:row-start-2', 'mb-4']">
       <dt class="mb-1">
         Name
       </dt>
@@ -9,7 +9,7 @@
       </dd>
     </dl>
 
-    <dl :class="[columnClass, 'lg:row-start-3', 'mb-4']">
+    <dl :lang="lang" :class="[columnClass, 'lg:row-start-3', 'mb-4']">
       <dt class="mb-1">
         Alternative names
       </dt>
@@ -18,7 +18,7 @@
       </dd>
     </dl>
 
-    <dl :class="[columnClass, 'lg:row-start-4', 'mb-4']">
+    <dl :lang="lang" :class="[columnClass, 'lg:row-start-4', 'mb-4']">
       <dt class="mb-1">
         Description
       </dt>
@@ -29,7 +29,7 @@
   </template>
 
   <template v-else>
-    <form-field :id="`${idPrefix}-name`" label="Name" :class="[columnClass, 'lg:row-start-2']">
+    <form-field :id="`${idPrefix}-name`" label="Name" :lang="lang" :class="[columnClass, 'lg:row-start-2']">
       <template #default="field">
         <input
           v-bind="field"
@@ -41,7 +41,7 @@
       </template>
     </form-field>
 
-    <fieldset :class="[columnClass, 'lg:row-start-3', 'mb-4']">
+    <fieldset :lang="lang" :class="[columnClass, 'lg:row-start-3', 'mb-4']">
       <legend class="mb-1">
         Alternative names
       </legend>
@@ -69,7 +69,7 @@
       </button>
     </fieldset>
 
-    <form-field :id="`${idPrefix}-description`" label="Description" :class="[columnClass, 'lg:row-start-4']">
+    <form-field :id="`${idPrefix}-description`" label="Description" :lang="lang" :class="[columnClass, 'lg:row-start-4']">
       <template #default="field">
         <textarea
           v-bind="field"
@@ -94,7 +94,9 @@ import type { LocalisationValue } from '../helpers'
 // against its own pristine copy
 const model = defineModel<LocalisationValue>({ required: true })
 
-const { readonly, idPrefix, column = 1 } = defineProps<{
+const { lang, readonly, idPrefix, column = 1 } = defineProps<{
+  /** Set on the blocks so browsers spell check and hyphenate in the right language */
+  lang: string
   readonly?: boolean
   /** Makes the field ids unique when several field sets share a page */
   idPrefix: string
