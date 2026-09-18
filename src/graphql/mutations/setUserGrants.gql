@@ -1,0 +1,11 @@
+mutation SetUserGrants ($userId: ID!, $grants: [GrantInput!]!) {
+  setUserGrants (userId: $userId, grants: $grants) {
+    id
+    grants {
+      type
+      lang
+      rulesId
+      verificationLevel
+    }
+  }
+}
