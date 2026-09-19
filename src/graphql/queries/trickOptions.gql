@@ -1,0 +1,14 @@
+query TrickOptions ($discipline: Discipline) {
+  tricks (discipline: $discipline) {
+    id
+    slug
+    en: localisation {
+      id
+      name
+    }
+    ttLevels: levels (rulesId: "tricktionary") {
+      id
+      level
+    }
+  }
+}

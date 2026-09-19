@@ -1,5 +1,5 @@
-query Tricks ($discipline: Discipline, $searchQuery: String) {
-  tricks (discipline: $discipline, searchQuery: $searchQuery) {
+query Tricks ($discipline: Discipline, $searchQuery: String, $filter: TrickFilter, $statusLang: String, $withTranslation: Boolean!) {
+  tricks (discipline: $discipline, searchQuery: $searchQuery, filter: $filter) {
     id
     slug
     discipline
@@ -8,9 +8,20 @@ query Tricks ($discipline: Discipline, $searchQuery: String) {
       id
       name
     }
-    ttLevels: levels (rulesId: "tricktionary") {
+    translation: localisation (lang: $statusLang) @include(if: $withTranslation) {
       id
+      name
+      description
+    }
+    levels {
+      id
+      rulesId
       level
+      verificationLevel
+    }
+    videos {
+      host
+      type
     }
   }
 }

@@ -274,7 +274,8 @@
   </bottom-bar>
 
   <bottom-bar>
-    <router-link class="btn w-max whitespace-nowrap" :to="backToTricks">
+    <router-link class="btn w-max whitespace-nowrap flex items-center gap-1" :to="backToTricks">
+      <icon-chevron-left aria-hidden="true" />
       Back to tricks
     </router-link>
 
@@ -286,9 +287,10 @@
       <button
         type="submit"
         form="trick-editor"
-        class="btn w-max whitespace-nowrap"
+        class="btn w-max whitespace-nowrap flex items-center gap-1"
         :disabled="!dirty || saving"
       >
+        <icon-save aria-hidden="true" />
         {{ saving ? 'Saving...' : 'Save' }}
       </button>
     </div>
@@ -317,15 +319,17 @@ import {
   useSetTrickLocalisationMutation,
   useTrickLocalisationQuery,
   useTrickQuery,
-  useTricksQuery,
+  useTrickOptionsQuery,
   useUpdateTrickDetailsMutation,
   VerificationLevel
 } from '../graphql/generated/graphql'
-import { disciplineNames, disciplineToSlug, languageLabel, trickSorter } from '../helpers'
+import { disciplineNames, disciplineToSlug, languageLabel, TRICKTIONARY, trickSorter } from '../helpers'
 import useGrants, { verificationLevelRank } from '../hooks/useGrants'
 import useLanguages from '../hooks/useLanguages'
 
 import IconLoading from '~icons/mdi/loading'
+import IconChevronLeft from '~icons/mdi/chevron-left'
+import IconSave from '~icons/mdi/content-save-outline'
 
 import type { TrickLocalisationInput, TrickQuery, UpdateTrickDetailsInput } from '../graphql/generated/graphql'
 import type { LocalisationValue } from '../helpers'
@@ -344,7 +348,6 @@ interface TrickForm {
 }
 
 /** The ruleset whose levels are the tricktionary's own, shown with the details */
-const TRICKTIONARY = 'tricktionary'
 
 const tricktionaryLevels = ['1', '2', '3', '4', '5']
 const trickTypes = Object.values(TrickType).sort((a, b) => a.localeCompare(b))
@@ -449,11 +452,11 @@ translationQuery.onResult(result => {
   pristineTranslations.value[variables.lang] = toLocalisationValue(result.data?.trick?.localisation)
 })
 
-const tricksQuery = useTricksQuery(
-  () => ({ discipline: form.value.discipline, searchQuery: null }),
+const optionsQuery = useTrickOptionsQuery(
+  () => ({ discipline: form.value.discipline }),
   () => ({ enabled: canEditTricks.value && trick.value != null })
 )
-const candidates = computed(() => tricksQuery.result.value?.tricks ?? [])
+const candidates = computed(() => optionsQuery.result.value?.tricks ?? [])
 
 const trickNames = computed(() => {
   const names = new Map<string, string>()

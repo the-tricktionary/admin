@@ -1,6 +1,76 @@
 <template>
   <discipline-selector v-model:discipline="discipline" />
 
+  <div class="container mx-auto px-2 pt-2 flex justify-end">
+    <label class="flex items-center gap-2 text-sm whitespace-nowrap">
+      Translation status
+      <select v-model="statusLang" class="rounded border-line py-1 text-sm w-max">
+        <option value="">
+          None
+        </option>
+        <option v-for="tag of translatableLangs" :key="tag" :value="tag">
+          {{ languageLabel(tag) }}
+        </option>
+      </select>
+    </label>
+  </div>
+
+  <bottom-bar>
+    <div class="flex flex-wrap items-center gap-x-6 gap-y-2 w-full text-sm">
+      <label class="flex items-center gap-2 whitespace-nowrap">
+        Missing translation
+        <select v-model="missingLang" class="rounded border-line py-1 text-sm w-max">
+          <option value="">
+            –
+          </option>
+          <option v-for="tag of translatableLangs" :key="tag" :value="tag">
+            {{ languageLabel(tag) }}
+          </option>
+        </select>
+      </label>
+
+      <div role="group" aria-label="Level" class="flex items-center gap-2 whitespace-nowrap">
+        Level
+        <label for="filter-rules" class="sr-only">Ruleset</label>
+        <select id="filter-rules" v-model="levelRulesId" class="rounded border-line py-1 text-sm w-max">
+          <option value="">
+            –
+          </option>
+          <option v-for="ruleset of rulesets" :key="ruleset.id" :value="ruleset.id">
+            {{ ruleset.name }}
+          </option>
+        </select>
+
+        <label for="filter-level" class="sr-only">Level status</label>
+        <select
+          id="filter-level"
+          v-model="levelBelow"
+          :disabled="levelRulesId === ''"
+          class="rounded border-line py-1 text-sm w-max"
+        >
+          <option value="">
+            Missing
+          </option>
+          <option value="judge">
+            Missing or unverified
+          </option>
+          <option value="official">
+            Missing or not official
+          </option>
+        </select>
+      </div>
+
+      <label class="flex items-center gap-2 whitespace-nowrap">
+        <input v-model="withoutVideos" type="checkbox">
+        Without videos
+      </label>
+
+      <button v-if="filter" type="button" class="btn w-max whitespace-nowrap py-1 text-sm" @click="clearFilters()">
+        Clear filters
+      </button>
+    </div>
+  </bottom-bar>
+
   <bottom-bar>
     <input
       v-model="search"
@@ -12,21 +82,22 @@
 
     <router-link
       v-if="canEditTricks"
-      class="btn w-max whitespace-nowrap"
+      class="btn w-max whitespace-nowrap flex items-center gap-1"
       :to="{ name: 'trick-new', query: { discipline: disciplineToSlug(discipline) } }"
     >
+      <icon-plus aria-hidden="true" />
       Create new
     </router-link>
   </bottom-bar>
 
-  <div class="container mx-auto p-2 pb-20">
+  <div class="container mx-auto p-2 pb-36">
     <div v-if="loading && !tricks.length" class="flex items-center justify-center flex-col" role="status">
       <icon-loading class="animate-spin w-32 h-32" aria-hidden="true" />
       Loading tricks...
     </div>
     <div v-else-if="!tricks.length" class="flex items-center justify-center flex-col" role="status">
       <icon-confused class="w-32 h-32" aria-hidden="true" />
-      No tricks match the discipline and search you picked.
+      {{ filter ? 'No tricks match the discipline, search and filters you picked.' : 'No tricks match the discipline and search you picked.' }}
     </div>
     <div v-else>
       <section v-for="levelGroup of levelGroups" :key="levelGroup.level">
@@ -49,7 +120,18 @@
             >
               <span class="font-semibold">{{ trick.en?.name ?? trick.slug }}</span>
               <span class="text-muted text-sm">{{ trick.slug }}</span>
-              <span class="text-muted text-sm">{{ trick.trickType }}</span>
+              <ul class="list-none m-0 p-0 flex flex-wrap gap-1 mt-2" aria-label="Status">
+                <li
+                  v-for="status of trickStatuses(trick)"
+                  :key="status.kind"
+                  :class="statusClasses[status.state]"
+                  class="flex items-center gap-1 rounded border border-solid px-1.5 py-0.5 text-xs"
+                  :title="status.title"
+                >
+                  <component :is="status.icon" aria-hidden="true" />
+                  {{ status.label }}
+                </li>
+              </ul>
             </router-link>
           </div>
         </template>
@@ -61,22 +143,32 @@
 <script setup lang="ts">
 import { useHead } from '@unhead/vue'
 import { computed, ref } from 'vue'
-import { refDebounced } from '@vueuse/core'
+import { refDebounced, useLocalStorage } from '@vueuse/core'
 import { useRoute, useRouter } from 'vue-router'
 import BottomBar from '../components/BottomBar.vue'
 import DisciplineSelector from '../components/DisciplineSelector.vue'
-import { useTricksQuery } from '../graphql/generated/graphql'
-import { disciplineToSlug, queryDiscipline, trickSorter } from '../helpers'
-import useGrants from '../hooks/useGrants'
+import { useRulesetsQuery, useTricksQuery, VerificationLevel, VideoHost, VideoType } from '../graphql/generated/graphql'
+import { disciplineToSlug, languageLabel, queryDiscipline, TRICKTIONARY, trickSorter } from '../helpers'
+import useGrants, { verificationLevelRank } from '../hooks/useGrants'
+import useLanguages from '../hooks/useLanguages'
 
 import IconLoading from '~icons/mdi/loading'
 import IconConfused from '~icons/mdi/map-marker-question-outline'
+import IconPlus from '~icons/mdi/plus'
+import IconTranslate from '~icons/mdi/translate'
+import IconStairs from '~icons/mdi/stairs'
+import IconVideo from '~icons/mdi/video-outline'
 
-import type { Discipline, TricksQuery, TrickType } from '../graphql/generated/graphql'
+import type { Component } from 'vue'
+import type { Discipline, TrickFilter, TricksQuery, TrickType } from '../graphql/generated/graphql'
 
 const route = useRoute()
 const router = useRouter()
 const { canEditTricks } = useGrants()
+const { translatableLangs } = useLanguages()
+
+const rulesetsQuery = useRulesetsQuery()
+const rulesets = computed(() => rulesetsQuery.result.value?.rulesets ?? [])
 
 /** Kept in the URL so the list survives a reload and can be linked to */
 const discipline = computed<Discipline>({
@@ -85,6 +177,58 @@ const discipline = computed<Discipline>({
     void router.replace({ query: { ...route.query, discipline: disciplineToSlug(value) } })
   }
 })
+
+function queryValue (key: string) {
+  const value = route.query[key]
+  return typeof value === 'string' ? value : ''
+}
+
+/** Undefined drops the parameter, so a filter that is off leaves no trace in the URL */
+function setQuery (values: Record<string, string | undefined>) {
+  void router.replace({ query: { ...route.query, ...values } })
+}
+
+const missingLang = computed({
+  get: () => queryValue('lang'),
+  set: lang => { setQuery({ lang: lang === '' ? undefined : lang }) }
+})
+
+const levelRulesId = computed({
+  get: () => queryValue('rulesId'),
+  set: rulesId => { setQuery(rulesId === '' ? { rulesId: undefined, level: undefined } : { rulesId }) }
+})
+
+const levelBelow = computed({
+  get: () => queryValue('level'),
+  set: level => { setQuery({ level: level === '' ? undefined : level }) }
+})
+
+const withoutVideos = computed({
+  get: () => route.query.videos === 'none',
+  set: without => { setQuery({ videos: without ? 'none' : undefined }) }
+})
+
+const verifiedBelow: Record<string, VerificationLevel> = {
+  judge: VerificationLevel.Judge,
+  official: VerificationLevel.Official
+}
+
+const filter = computed<TrickFilter | null>(() => {
+  const parts: TrickFilter = {}
+  if (missingLang.value !== '') parts.missingLocalisation = missingLang.value
+  if (levelRulesId.value !== '') {
+    parts.level = { rulesId: levelRulesId.value, verifiedBelow: verifiedBelow[levelBelow.value] ?? null }
+  }
+  if (withoutVideos.value) parts.withoutVideos = true
+  return Object.keys(parts).length === 0 ? null : parts
+})
+
+function clearFilters () {
+  setQuery({ lang: undefined, rulesId: undefined, level: undefined, videos: undefined })
+}
+
+/** Which language the cards report translation status for, nothing when empty */
+const statusLang = useLocalStorage('tricks-status-lang', '')
 
 const search = ref('')
 const debouncedSearch = refDebounced(search, 1000)
@@ -95,7 +239,10 @@ const searchQuery = computed(() => {
 
 const tricksQuery = useTricksQuery(() => ({
   discipline: discipline.value,
-  searchQuery: searchQuery.value
+  searchQuery: searchQuery.value,
+  filter: filter.value,
+  statusLang: statusLang.value === '' ? null : statusLang.value,
+  withTranslation: statusLang.value !== ''
 }), { fetchPolicy: 'cache-and-network' })
 
 const loading = tricksQuery.loading
@@ -111,7 +258,7 @@ const levelGroups = computed(() => {
   const byLevel = new Map<string, Map<TrickType, TricksQuery['tricks']>>()
 
   for (const trick of [...tricks.value].sort(trickSorter)) {
-    const level = trick.ttLevels[0]?.level ?? ''
+    const level = trick.levels.find(trickLevel => trickLevel.rulesId === TRICKTIONARY)?.level ?? ''
     let byType = byLevel.get(level)
     if (!byType) {
       byType = new Map()
@@ -132,6 +279,67 @@ const levelGroups = computed(() => {
         .map(([trickType, typeTricks]) => ({ trickType, tricks: typeTricks }))
     }))
 })
+
+type Trick = TricksQuery['tricks'][number]
+type StatusState = 'done' | 'partial' | 'missing'
+
+interface TrickStatus {
+  kind: 'translation' | 'level' | 'video'
+  state: StatusState
+  label: string
+  title: string
+  icon: Component
+}
+
+const statusClasses: Record<StatusState, string> = {
+  done: 'border-line text-muted',
+  partial: 'bg-ttyellow-500 border-ttyellow-500 text-black',
+  missing: 'bg-ttred-500 border-ttred-900 text-white'
+}
+
+const verificationNames = ['unverified', 'judge verified', 'officially verified']
+
+const primaryRuleset = computed(() => rulesets.value.find(ruleset => ruleset.isPrimary))
+
+function translationStatus (trick: Trick): TrickStatus | undefined {
+  if (statusLang.value === '') return
+  const hasName = (trick.translation?.name.trim() ?? '') !== ''
+  const hasDescription = (trick.translation?.description?.trim() ?? '') !== ''
+  const title = `${languageLabel(statusLang.value)} translation`
+  if (hasName && hasDescription) return { kind: 'translation', state: 'done', label: 'Translated', title, icon: IconTranslate }
+  if (hasName) return { kind: 'translation', state: 'partial', label: 'No description', title, icon: IconTranslate }
+  if (hasDescription) return { kind: 'translation', state: 'partial', label: 'No name', title, icon: IconTranslate }
+  return { kind: 'translation', state: 'missing', label: 'Not translated', title, icon: IconTranslate }
+}
+
+function levelStatus (trick: Trick): TrickStatus | undefined {
+  const ruleset = primaryRuleset.value
+  if (!ruleset) return
+  const title = `Level in ${ruleset.name}`
+  const level = trick.levels.find(trickLevel => trickLevel.rulesId === ruleset.id)
+  if (!level) return { kind: 'level', state: 'missing', label: 'No level', title, icon: IconStairs }
+  const rank = verificationLevelRank(level.verificationLevel)
+  return {
+    kind: 'level',
+    state: rank === 0 ? 'partial' : 'done',
+    label: `Level ${level.level}, ${verificationNames[rank]}`,
+    title,
+    icon: IconStairs
+  }
+}
+
+function videoStatus (trick: Trick): TrickStatus {
+  const title = 'Videos'
+  if (trick.videos.some(video => video.host === VideoHost.Mux && video.type === VideoType.SlowMo)) {
+    return { kind: 'video', state: 'done', label: 'Slow-mo', title, icon: IconVideo }
+  }
+  if (trick.videos.length > 0) return { kind: 'video', state: 'partial', label: 'No Mux slow-mo', title, icon: IconVideo }
+  return { kind: 'video', state: 'missing', label: 'No video', title, icon: IconVideo }
+}
+
+function trickStatuses (trick: Trick) {
+  return [translationStatus(trick), levelStatus(trick), videoStatus(trick)].filter(status => status != null)
+}
 
 useHead({ title: 'Tricks' })
 </script>

@@ -2,7 +2,8 @@
   <div class="container mx-auto pt-4 px-2">
     <div class="flex justify-between items-center gap-2 mb-4">
       <h1>Languages</h1>
-      <button type="button" class="btn-primary w-max" @click="dialogOpen = true">
+      <button type="button" class="btn-primary w-max flex items-center gap-1" @click="dialogOpen = true">
+        <icon-plus aria-hidden="true" />
         New language
       </button>
     </div>
@@ -61,6 +62,8 @@ import { ref } from 'vue'
 import LanguageDialog from '../components/LanguageDialog.vue'
 import { useSetLanguageEnabledMutation } from '../graphql/generated/graphql'
 import { languageLabel, languageName } from '../helpers'
+
+import IconPlus from '~icons/mdi/plus'
 import useLanguages from '../hooks/useLanguages'
 
 import type { LanguagesQuery } from '../graphql/generated/graphql'
