@@ -26,6 +26,7 @@ jobs:
           VITE_COMMIT_REF: ${{ github.sha }}
           VITE_CONTEXT: branch-deploy
           VITE_GRAPHQL_URL: https://api.the-tricktionary.com
+          VITE_WEB_URL: https://the-tricktionary.com
           VITE_SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
 
       - uses: FirebaseExtended/action-hosting-deploy@v0

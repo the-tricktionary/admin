@@ -1,0 +1,12 @@
+mutation SetUiMessages ($lang: String!, $entries: [UiMessageInput!]!) {
+  setUiMessages (lang: $lang, entries: $entries) {
+    key
+    value
+    updatedBy {
+      id
+      name
+      username
+    }
+    updatedAt
+  }
+}

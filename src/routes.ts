@@ -8,6 +8,7 @@ declare module 'vue-router' {
     public?: boolean
     superAdmin?: boolean
     trickEditor?: boolean
+    translator?: boolean
   }
 }
 
@@ -19,6 +20,7 @@ export const routes: RouteRecordRaw[] = [
   { name: 'users', path: '/users', component: async () => await import('./views/Users.vue'), meta: { superAdmin: true } },
   { name: 'rulesets', path: '/rulesets', component: async () => await import('./views/Rulesets.vue'), meta: { superAdmin: true } },
   { name: 'languages', path: '/languages', component: async () => await import('./views/Languages.vue'), meta: { superAdmin: true } },
+  { name: 'translations', path: '/translations', component: async () => await import('./views/Translations.vue'), meta: { translator: true } },
   { name: 'no-access', path: '/no-access', component: async () => await import('./views/NoAccess.vue') },
   { name: 'not_found', path: '/:catchAll(.*)*', component: async () => await import('./views/404.vue') }
 ]
@@ -32,7 +34,7 @@ router.beforeEach(async to => {
   await whenAuthKnown()
 
   const { firebaseUser } = useAuth()
-  const { isSuperAdmin, canEditTricks, hasAnyAccess } = useGrants()
+  const { isSuperAdmin, canEditTricks, canTranslate, hasAnyAccess } = useGrants()
 
   if (to.meta.public) return true
 
@@ -47,6 +49,8 @@ router.beforeEach(async to => {
   if (to.meta.superAdmin && !isSuperAdmin.value) return { path: '/' }
 
   if (to.meta.trickEditor && !canEditTricks.value) return { path: '/' }
+
+  if (to.meta.translator && !canTranslate.value) return { path: '/' }
 
   return true
 })
