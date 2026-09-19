@@ -5,6 +5,7 @@ interface ViteTypeOptions {
 
 interface ImportMetaEnv {
   readonly VITE_GRAPHQL_URL: string
+  readonly VITE_WEB_URL: string
   readonly VITE_SENTRY_DSN?: string
   readonly VITE_COMMIT_REF?: string
   readonly VITE_CONTEXT?: string

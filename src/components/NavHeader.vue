@@ -38,6 +38,9 @@
       <router-link v-if="canEditEventDefinitions" active-class="active" class="nav-link" to="/event-definitions">
         Speed events
       </router-link>
+      <router-link v-if="canTranslate" active-class="active" class="nav-link" to="/translations">
+        Translations
+      </router-link>
       <button v-if="user" type="button" class="nav-link" @click="signOutAndLeave()">
         Sign out
       </button>
@@ -57,7 +60,7 @@ import IconMenu from '~icons/mdi/menu'
 import IconClose from '~icons/mdi/close'
 
 const { firebaseUser: user } = useAuth()
-const { isSuperAdmin, canEditEventDefinitions } = useGrants()
+const { isSuperAdmin, canEditEventDefinitions, canTranslate } = useGrants()
 const router = useRouter()
 
 const showNav = ref(false)

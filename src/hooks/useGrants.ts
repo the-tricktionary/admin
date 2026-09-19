@@ -36,6 +36,8 @@ export default function useGrants () {
     return [...langs]
   })
 
+  const canTranslate = computed(() => isSuperAdmin.value || grants.value.some(grant => grant.type === GrantType.Translator))
+
   function levelEditorRank (rulesId: string): 0 | 1 | 2 {
     if (isSuperAdmin.value) return 2
     let rank: 0 | 1 | 2 = 0
@@ -53,5 +55,5 @@ export default function useGrants () {
 
   const hasAnyAccess = computed(() => grants.value.length > 0)
 
-  return { isSuperAdmin, canEditTricks, canEditEventDefinitions, translatorLangs, levelEditorRank, canEditLevels, hasAnyAccess }
+  return { isSuperAdmin, canEditTricks, canEditEventDefinitions, canTranslate, translatorLangs, levelEditorRank, canEditLevels, hasAnyAccess }
 }
