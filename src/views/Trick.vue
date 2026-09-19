@@ -325,7 +325,7 @@ import {
 } from '../graphql/generated/graphql'
 import { disciplineNames, disciplineToSlug, languageLabel, TRICKTIONARY, trickSorter } from '../helpers'
 import useGrants, { verificationLevelRank } from '../hooks/useGrants'
-import useLanguages from '../hooks/useLanguages'
+import useTranslationLang from '../hooks/useTranslationLang'
 
 import IconLoading from '~icons/mdi/loading'
 import IconChevronLeft from '~icons/mdi/chevron-left'
@@ -354,8 +354,8 @@ const trickTypes = Object.values(TrickType).sort((a, b) => a.localeCompare(b))
 const verificationNames = ['Not verified', 'Judge', 'Official']
 
 const route = useRoute()
-const { isSuperAdmin, canEditTricks, canEditLevels, levelEditorRank, translatorLangs } = useGrants()
-const { translatableLangs } = useLanguages(() => isSuperAdmin.value)
+const { canEditTricks, canEditLevels, levelEditorRank } = useGrants()
+const { editableLangs: translationLangs, editLang: lang } = useTranslationLang()
 
 const trickId = computed(() => String(route.params.id))
 
@@ -425,17 +425,6 @@ watch(trickId, () => {
   saveError.value = null
   slugError.value = null
 })
-
-/** A super admin may translate into any language, everyone else into the ones they are granted */
-const translationLangs = computed(() => {
-  const langs = isSuperAdmin.value ? translatableLangs.value : translatorLangs.value.filter(other => other !== 'en')
-  return [...langs].sort((a, b) => a.localeCompare(b))
-})
-const lang = ref('')
-
-watch(translationLangs, langs => {
-  if (langs.length && !langs.includes(lang.value)) lang.value = langs[0]
-}, { immediate: true })
 
 const translationQuery = useTrickLocalisationQuery(
   () => ({ id: trickId.value, lang: lang.value }),

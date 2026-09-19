@@ -148,12 +148,11 @@
 import { useHead } from '@unhead/vue'
 import { useEventListener } from '@vueuse/core'
 import { computed, onMounted, ref, watch } from 'vue'
-import { onBeforeRouteLeave, useRoute, useRouter } from 'vue-router'
+import { onBeforeRouteLeave } from 'vue-router'
 import BottomBar from '../components/BottomBar.vue'
 import { useSetUiMessagesMutation, useUiMessageEntriesQuery } from '../graphql/generated/graphql'
 import { languageLabel, languageName } from '../helpers'
-import useGrants from '../hooks/useGrants'
-import useLanguages from '../hooks/useLanguages'
+import useTranslationLang from '../hooks/useTranslationLang'
 
 import IconLoading from '~icons/mdi/loading'
 import IconSave from '~icons/mdi/content-save-outline'
@@ -173,22 +172,7 @@ const LONG_MESSAGE = 80
 
 const dateFormat = new Intl.DateTimeFormat(undefined, { dateStyle: 'medium' })
 
-const route = useRoute()
-const router = useRouter()
-const { isSuperAdmin, translatorLangs } = useGrants()
-const { translatableLangs } = useLanguages(() => isSuperAdmin.value)
-
-/** A super admin may translate into any language, everyone else into the ones they are granted */
-const langs = computed(() => {
-  const available = isSuperAdmin.value ? translatableLangs.value : translatorLangs.value.filter(other => other !== 'en')
-  return [...available].sort((a, b) => a.localeCompare(b))
-})
-
-/** Kept in the URL so the language survives a reload and can be linked to */
-const lang = computed(() => {
-  const picked = String(route.query.lang ?? '')
-  return langs.value.includes(picked) ? picked : langs.value[0] ?? ''
-})
+const { editableLangs: langs, editLang: lang } = useTranslationLang()
 
 const filter = ref('')
 const untranslatedOnly = ref(false)
@@ -370,11 +354,11 @@ async function remove (key: string) {
 function pickLang (event: Event) {
   const select = event.target as HTMLSelectElement
   if (dirty.value && !window.confirm('This translation has changes that have not been saved yet. Switch language anyway?')) {
-    // only the query string holds the language, so nothing would reset the select
+    // the select is bound one way, so nothing else would put the old language back
     select.value = lang.value
     return
   }
-  void router.replace({ query: { ...route.query, lang: select.value } })
+  lang.value = select.value
 }
 
 onBeforeRouteLeave(() => !dirty.value || window.confirm('This translation has changes that have not been saved yet. Leave the page anyway?'))
