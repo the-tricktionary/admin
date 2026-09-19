@@ -296,7 +296,8 @@ const rows = computed(() => english.value
     long: message.value.length > LONG_MESSAGE,
     credit: credit(message.key)
   }))
-  .filter(row => (!untranslatedOnly.value || row.value === '') && matchesFilter(row.key, row.english, row.value))
+  // untranslated is judged on what is saved, so a row stays while it is being typed into
+  .filter(row => (!untranslatedOnly.value || storedValue(row.key) === '') && matchesFilter(row.key, row.english, row.value))
 )
 
 const englishKeys = computed(() => new Set(english.value.map(message => message.key)))
