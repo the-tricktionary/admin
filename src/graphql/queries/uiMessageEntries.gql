@@ -1,0 +1,12 @@
+query UiMessageEntries ($lang: String!) {
+  uiMessageEntries (lang: $lang) {
+    key
+    value
+    updatedBy {
+      id
+      name
+      username
+    }
+    updatedAt
+  }
+}
