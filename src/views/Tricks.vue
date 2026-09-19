@@ -65,7 +65,7 @@
         Without videos
       </label>
 
-      <button v-if="filter" type="button" class="btn w-max whitespace-nowrap" @click="clearFilters()">
+      <button v-if="filter" type="button" class="btn w-max whitespace-nowrap py-1 text-sm" @click="clearFilters()">
         Clear filters
       </button>
     </div>
