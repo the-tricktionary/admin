@@ -292,9 +292,9 @@ interface TrickStatus {
 }
 
 const statusClasses: Record<StatusState, string> = {
-  done: 'bg-success border-success text-white',
+  done: 'border-line text-muted',
   partial: 'bg-ttyellow-500 border-ttyellow-500 text-black',
-  missing: 'border-line text-muted'
+  missing: 'bg-ttred-500 border-ttred-900 text-white'
 }
 
 const verificationNames = ['unverified', 'judge verified', 'officially verified']
