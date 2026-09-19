@@ -2,6 +2,7 @@ query UiMessageEntries ($lang: String!) {
   uiMessageEntries (lang: $lang) {
     key
     value
+    source
     updatedBy {
       id
       name

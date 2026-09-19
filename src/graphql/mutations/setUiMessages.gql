@@ -2,6 +2,7 @@ mutation SetUiMessages ($lang: String!, $entries: [UiMessageInput!]!) {
   setUiMessages (lang: $lang, entries: $entries) {
     key
     value
+    source
     updatedBy {
       id
       name

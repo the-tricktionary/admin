@@ -29,8 +29,8 @@
         </div>
 
         <label class="flex items-center gap-2 pb-2">
-          <input v-model="untranslatedOnly" type="checkbox">
-          Show untranslated only
+          <input v-model="needsWorkOnly" type="checkbox">
+          Show untranslated and outdated only
         </label>
       </div>
 
@@ -56,9 +56,24 @@
           <li v-for="row of rows" :key="row.key" class="py-4">
             <p class="font-mono text-sm text-muted mb-1">
               {{ row.key }}
+              <span v-if="row.outdated" class="ml-2 rounded bg-ttyellow-500 text-black px-1.5 py-0.5 text-xs font-sans">
+                English has changed
+              </span>
+              <button
+                v-if="row.outdated"
+                type="button"
+                class="ml-2 text-xs font-sans underline cursor-pointer text-link hover:text-link-hover disabled:text-muted"
+                :disabled="keeping === row.key"
+                @click="keepCurrent(row.key)"
+              >
+                Still correct
+              </button>
             </p>
             <p lang="en" class="whitespace-pre-line mb-2">
               {{ row.english }}
+            </p>
+            <p v-if="row.outdated" lang="en" class="whitespace-pre-line text-muted text-sm mb-2">
+              Translated from: {{ row.wasEnglish }}
             </p>
             <label :for="`message-${row.key}`" class="sr-only">{{ languageName(lang) }}</label>
             <textarea
@@ -175,7 +190,7 @@ const dateFormat = new Intl.DateTimeFormat(undefined, { dateStyle: 'medium' })
 const { editableLangs: langs, editLang: lang } = useTranslationLang()
 
 const filter = ref('')
-const untranslatedOnly = ref(false)
+const needsWorkOnly = ref(false)
 
 const english = ref<EnglishMessage[]>([])
 const englishLoading = ref(true)
@@ -191,6 +206,7 @@ const draft = ref<Record<string, string>>({})
 const saving = ref(false)
 const saveError = ref<string | null>(null)
 const removing = ref<string | null>(null)
+const keeping = ref<string | null>(null)
 
 function errorMessage (err: unknown) {
   return err instanceof Error ? err.message : 'Something went wrong, please try again'
@@ -218,8 +234,20 @@ onMounted(async () => {
   }
 })
 
+const englishByKey = computed(() => new Map(english.value.map(message => [message.key, message.value])))
+
 function storedValue (key: string) {
   return loaded.value.get(key)?.value ?? ''
+}
+
+/**
+ * Whether the site has reworded the English since this was translated. A
+ * translation saved before we started recording the English it was made from
+ * cannot be judged, so it is left alone rather than flagged.
+ */
+function outdated (key: string) {
+  const source = loaded.value.get(key)?.source
+  return source != null && source.trim() !== (englishByKey.value.get(key)?.trim() ?? '')
 }
 
 function currentValue (key: string) {
@@ -228,7 +256,9 @@ function currentValue (key: string) {
 
 const changes = computed<UiMessageInput[]>(() => Object.entries(draft.value)
   .filter(([key, value]) => value !== storedValue(key))
-  .map(([key, value]) => ({ key, value: value === '' ? null : value }))
+  .map(([key, value]) => value === ''
+    ? { key, value: null }
+    : { key, value, source: englishByKey.value.get(key) ?? null })
 )
 
 const dirty = computed(() => changes.value.length > 0)
@@ -278,12 +308,14 @@ const rows = computed(() => english.value
   .map(message => ({
     key: message.key,
     english: message.value,
+    wasEnglish: loaded.value.get(message.key)?.source,
+    outdated: outdated(message.key),
     value: currentValue(message.key),
     long: message.value.length > LONG_MESSAGE,
     credit: credit(message.key)
   }))
-  // untranslated is judged on what is saved, so a row stays while it is being typed into
-  .filter(row => (!untranslatedOnly.value || storedValue(row.key) === '') && matchesFilter(row.key, row.english, row.value))
+  // what needs work is judged on what is saved, so a row stays while it is being typed into
+  .filter(row => (!needsWorkOnly.value || storedValue(row.key) === '' || row.outdated) && matchesFilter(row.key, row.english, row.value))
 )
 
 const englishKeys = computed(() => new Set(english.value.map(message => message.key)))
@@ -329,6 +361,24 @@ async function save () {
     saveError.value = errorMessage(err)
   } finally {
     saving.value = false
+  }
+}
+
+/** Keeps the translation as it reads and records the English it now answers to */
+async function keepCurrent (key: string) {
+  keeping.value = key
+  saveError.value = null
+
+  const forLang = lang.value
+  const sent: UiMessageInput[] = [{ key, value: currentValue(key), source: englishByKey.value.get(key) ?? null }]
+
+  try {
+    const result = await setUiMessages({ lang: forLang, entries: sent })
+    reconcile(forLang, sent, result?.data?.setUiMessages ?? [])
+  } catch (err) {
+    saveError.value = errorMessage(err)
+  } finally {
+    keeping.value = null
   }
 }
 
