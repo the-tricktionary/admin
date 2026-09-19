@@ -1,0 +1,5 @@
+mutation UpdateEventDefinition ($eventDefinitionId: ID!, $data: EventDefinitionUpdateInput!) {
+  updateEventDefinition (eventDefinitionId: $eventDefinitionId, data: $data) {
+    ...EventDefinitionRow
+  }
+}

@@ -1,0 +1,14 @@
+fragment EventDefinitionRow on EventDefinition {
+  id
+  name
+  totalDuration
+  eventDefinitionLookupCode
+  timingTrack {
+    audioUrl
+    cues {
+      type
+      offset
+      label
+    }
+  }
+}

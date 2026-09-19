@@ -1,0 +1,5 @@
+mutation CreateEventDefinition ($data: EventDefinitionCreateInput!) {
+  createEventDefinition (data: $data) {
+    ...EventDefinitionRow
+  }
+}
