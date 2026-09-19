@@ -143,7 +143,7 @@
 <script setup lang="ts">
 import { useHead } from '@unhead/vue'
 import { computed, ref } from 'vue'
-import { refDebounced, useLocalStorage } from '@vueuse/core'
+import { refDebounced } from '@vueuse/core'
 import { useRoute, useRouter } from 'vue-router'
 import BottomBar from '../components/BottomBar.vue'
 import DisciplineSelector from '../components/DisciplineSelector.vue'
@@ -151,6 +151,7 @@ import { useRulesetsQuery, useTricksQuery, VerificationLevel, VideoHost, VideoTy
 import { disciplineToSlug, languageLabel, queryDiscipline, TRICKTIONARY, trickSorter } from '../helpers'
 import useGrants, { verificationLevelRank } from '../hooks/useGrants'
 import useLanguages from '../hooks/useLanguages'
+import useTranslationLang from '../hooks/useTranslationLang'
 
 import IconLoading from '~icons/mdi/loading'
 import IconConfused from '~icons/mdi/map-marker-question-outline'
@@ -228,7 +229,7 @@ function clearFilters () {
 }
 
 /** Which language the cards report translation status for, nothing when empty */
-const statusLang = useLocalStorage('tricks-status-lang', '')
+const { lang: statusLang } = useTranslationLang()
 
 const search = ref('')
 const debouncedSearch = refDebounced(search, 1000)
