@@ -2,7 +2,8 @@
   <div class="container mx-auto pt-4 px-2">
     <div class="flex justify-between items-center gap-2 mb-4">
       <h1>Rulesets</h1>
-      <button type="button" class="btn-primary w-max" @click="openEditor(null)">
+      <button type="button" class="btn-primary w-max flex items-center gap-1" @click="openEditor(null)">
+        <icon-plus aria-hidden="true" />
         New ruleset
       </button>
     </div>

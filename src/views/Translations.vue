@@ -133,10 +133,11 @@
 
       <button
         type="button"
-        class="btn w-max whitespace-nowrap"
+        class="btn w-max whitespace-nowrap flex items-center gap-1"
         :disabled="!dirty || saving"
         @click="save()"
       >
+        <icon-save aria-hidden="true" />
         {{ saving ? 'Saving...' : 'Save' }}
       </button>
     </div>
@@ -155,6 +156,7 @@ import useGrants from '../hooks/useGrants'
 import useLanguages from '../hooks/useLanguages'
 
 import IconLoading from '~icons/mdi/loading'
+import IconSave from '~icons/mdi/content-save-outline'
 import IconConfused from '~icons/mdi/map-marker-question-outline'
 
 import type { UiMessageEntriesQuery, UiMessageInput } from '../graphql/generated/graphql'

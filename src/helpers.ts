@@ -1,5 +1,8 @@
 import { Discipline, GrantType, VideoType } from './graphql/generated/graphql'
 
+/** The Tricktionary's own ruleset, whose levels group the trick list */
+export const TRICKTIONARY = 'tricktionary'
+
 export const disciplineNames: Record<Discipline, string> = {
   [Discipline.SingleRope]: 'Single Rope',
   [Discipline.DoubleDutch]: 'Double Dutch',
