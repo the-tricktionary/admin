@@ -4,8 +4,12 @@
       Timing track
     </legend>
 
-    <template v-if="audioUrl">
-      <audio ref="player" :src="audioUrl" controls preload="metadata" class="w-full" />
+    <template v-if="playableUrl">
+      <audio ref="player" :src="playableUrl" controls preload="metadata" class="w-full" />
+
+      <p v-if="pendingFile" class="text-muted text-sm mb-0">
+        {{ pendingFile.name }} is uploaded when you save the event.
+      </p>
 
       <div class="flex flex-wrap gap-2 items-center">
         <button type="button" class="btn w-max" @click="addCueAtPlayhead()">
@@ -17,67 +21,69 @@
         </button>
       </div>
 
-      <table v-if="cues.length" class="w-full border-collapse">
-        <thead>
-          <tr class="border-b border-line text-left text-sm text-muted">
-            <th scope="col" class="py-1 pr-2">
-              Type
-            </th>
-            <th scope="col" class="py-1 pr-2">
-              Offset (seconds)
-            </th>
-            <th scope="col" class="py-1 pr-2">
-              Label
-            </th>
-            <th scope="col" class="py-1">
-              <span class="sr-only">Actions</span>
-            </th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr v-for="(cue, index) of sortedCues" :key="cue.key" class="border-b border-line">
-            <td class="py-1 pr-2">
-              <select v-model="cue.type" :aria-label="`Type of cue ${index + 1}`" class="rounded">
-                <option v-for="(label, value) of timingCueTypeNames" :key="value" :value="value">
-                  {{ label }}
-                </option>
-              </select>
-            </td>
-            <td class="py-1 pr-2">
-              <input
-                :value="(cue.offset / 1000).toFixed(3)"
-                type="number"
-                min="0"
-                step="0.001"
-                required
-                :aria-label="`Offset of cue ${index + 1} in seconds`"
-                class="rounded w-32"
-                @change="cue.offset = Math.round(Number(($event.target as HTMLInputElement).value) * 1000)"
-              >
-            </td>
-            <td class="py-1 pr-2">
-              <input
-                v-model="cue.label"
-                type="text"
-                maxlength="40"
-                :placeholder="cue.type === TimingCueType.Switch ? 'e.g. Athlete 2' : ''"
-                :aria-label="`Label of cue ${index + 1}`"
-                class="rounded w-full"
-              >
-            </td>
-            <td class="py-1">
-              <div class="flex gap-1">
-                <button type="button" class="btn w-max" :aria-label="`Jump to cue ${index + 1}`" @click="seek(cue.offset)">
-                  Jump
-                </button>
-                <button type="button" class="btn w-max" :aria-label="`Remove cue ${index + 1}`" @click="removeCue(cue)">
-                  Remove
-                </button>
-              </div>
-            </td>
-          </tr>
-        </tbody>
-      </table>
+      <div v-if="cues.length" class="overflow-x-auto">
+        <table class="w-full border-collapse">
+          <thead>
+            <tr class="border-b border-line text-left text-sm text-muted">
+              <th scope="col" class="py-1 pr-2">
+                Type
+              </th>
+              <th scope="col" class="py-1 pr-2">
+                Offset (seconds)
+              </th>
+              <th scope="col" class="py-1 pr-2">
+                Label
+              </th>
+              <th scope="col" class="py-1">
+                <span class="sr-only">Actions</span>
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="(cue, index) of sortedCues" :key="cue.key" class="border-b border-line">
+              <td class="py-1 pr-2">
+                <select v-model="cue.type" :aria-label="`Type of cue ${index + 1}`" class="rounded">
+                  <option v-for="(label, value) of timingCueTypeNames" :key="value" :value="value">
+                    {{ label }}
+                  </option>
+                </select>
+              </td>
+              <td class="py-1 pr-2">
+                <input
+                  :value="(cue.offset / 1000).toFixed(3)"
+                  type="number"
+                  min="0"
+                  step="0.001"
+                  required
+                  :aria-label="`Offset of cue ${index + 1} in seconds`"
+                  class="rounded w-32"
+                  @change="cue.offset = Math.round(Number(($event.target as HTMLInputElement).value) * 1000)"
+                >
+              </td>
+              <td class="py-1 pr-2">
+                <input
+                  v-model="cue.label"
+                  type="text"
+                  maxlength="40"
+                  :placeholder="cue.type === TimingCueType.Switch ? 'e.g. Athlete 2' : ''"
+                  :aria-label="`Label of cue ${index + 1}`"
+                  class="rounded w-full"
+                >
+              </td>
+              <td class="py-1">
+                <div class="flex gap-1">
+                  <button type="button" class="btn w-max" :aria-label="`Jump to cue ${index + 1}`" @click="seek(cue.offset)">
+                    Jump
+                  </button>
+                  <button type="button" class="btn w-max" :aria-label="`Remove cue ${index + 1}`" @click="removeCue(cue)">
+                    Remove
+                  </button>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
       <p v-else class="text-muted">
         No cues yet. Play the track and add a cue at each signal: one start, one
         switch per athlete change, one end.
@@ -114,7 +120,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, useId, useTemplateRef, watch } from 'vue'
+import { computed, onBeforeUnmount, ref, useId, useTemplateRef, watch } from 'vue'
 import { TimingCueType, useCreateTimingTrackUploadMutation } from '../graphql/generated/graphql'
 import { timingCueTypeNames } from '../helpers'
 
@@ -124,7 +130,10 @@ interface KeyedCueRow extends CueRow {
   key: number
 }
 
-const { eventDefinitionId } = defineProps<{ eventDefinitionId: string }>()
+const { eventDefinitionId } = defineProps<{
+  /** Null while the event is being created: an upload has nothing to attach to yet */
+  eventDefinitionId: string | null
+}>()
 
 /** null once the track has been removed, undefined while the event never had one */
 const audioUrl = defineModel<string | null | undefined>('audioUrl', { required: true })
@@ -134,6 +143,15 @@ const emit = defineEmits<{
   /** Whether an upload is in flight, so the dialog can hold off saving */
   busy: [busy: boolean]
 }>()
+
+/**
+ * A file chosen before the event exists. It plays from a local object URL so
+ * cues can be placed straight away, and goes up once saving has created the
+ * event and given us an id to scope the upload to.
+ */
+const pendingFile = ref<File | null>(null)
+const pendingUrl = ref<string | null>(null)
+const playableUrl = computed(() => pendingUrl.value ?? audioUrl.value ?? null)
 
 const fileInputId = useId()
 const player = useTemplateRef('player')
@@ -179,7 +197,47 @@ function seek (offset: number) {
   if (player.value) player.value.currentTime = offset / 1000
 }
 
+/** Keeps the file and plays it locally, so cues can be placed before saving */
+function holdForSave (file: File) {
+  releasePending()
+  pendingFile.value = file
+  pendingUrl.value = URL.createObjectURL(file)
+}
+
+function releasePending () {
+  if (pendingUrl.value) URL.revokeObjectURL(pendingUrl.value)
+  pendingUrl.value = null
+  pendingFile.value = null
+}
+
+/**
+ * Called by the dialog once the event has been created: the file finally has
+ * an id to be scoped to, so it goes up and becomes the track's audio.
+ */
+async function uploadPending (newEventDefinitionId: string) {
+  const file = pendingFile.value
+  if (!file) return
+  const contentType = contentTypeOf(file)
+  if (!contentType) throw new Error('Could not tell what kind of audio this is')
+
+  uploading.value = true
+  progress.value = 0
+  try {
+    const created = await createUpload({ eventDefinitionId: newEventDefinitionId, contentType })
+    const upload = created?.data?.createTimingTrackUpload
+    if (!upload) throw new Error('The upload could not be started, please try again')
+    await put(upload.url, file, contentType)
+    audioUrl.value = upload.audioUrl
+    releasePending()
+  } finally {
+    uploading.value = false
+  }
+}
+
+defineExpose({ uploadPending })
+
 function removeTrack () {
+  releasePending()
   if (!window.confirm('Remove the timing track? The audio file is deleted when you save.')) return
   audioUrl.value = null
   cues.value = []
@@ -237,6 +295,11 @@ async function upload (file: File | null) {
     return
   }
 
+  if (eventDefinitionId == null) {
+    holdForSave(file)
+    return
+  }
+
   uploading.value = true
   progress.value = 0
   emit('busy', true)
@@ -253,6 +316,8 @@ async function upload (file: File | null) {
     emit('busy', false)
   }
 }
+
+onBeforeUnmount(releasePending)
 </script>
 
 <style scoped>

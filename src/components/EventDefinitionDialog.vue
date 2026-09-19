@@ -55,15 +55,12 @@
         </form-field>
 
         <timing-track-editor
-          v-if="eventDefinition"
+          ref="trackEditor"
           v-model:audio-url="audioUrl"
           v-model:cues="cues"
-          :event-definition-id="eventDefinition.id"
+          :event-definition-id="eventDefinition?.id ?? null"
           @busy="uploading = $event"
         />
-        <p v-else class="text-muted">
-          Save the event first, then edit it again to upload its timing track.
-        </p>
       </fieldset>
 
       <p v-if="error" role="alert" class="text-ttred-900">
@@ -101,6 +98,7 @@ const emit = defineEmits<{
 }>()
 
 const dialog = useTemplateRef('dialog')
+const trackEditor = useTemplateRef('trackEditor')
 const titleId = useId()
 
 const name = ref(eventDefinition?.name ?? '')
@@ -143,7 +141,15 @@ async function save () {
     if (eventDefinition) {
       await updateEventDefinition({ eventDefinitionId: eventDefinition.id, data: { ...base, ...timingTrackInput() } })
     } else {
-      await createEventDefinition({ data: base })
+      // An upload is scoped to an event that exists, so a new one is created
+      // first, then its audio goes up, then the track is saved onto it.
+      const created = await createEventDefinition({ data: base })
+      const createdId = created?.data?.createEventDefinition.id
+      if (!createdId) throw new Error('The event was not created, please try again')
+      await trackEditor.value?.uploadPending(createdId)
+      if (audioUrl.value) {
+        await updateEventDefinition({ eventDefinitionId: createdId, data: { ...base, ...timingTrackInput() } })
+      }
     }
     dialog.value?.close()
   } catch (err) {

@@ -20,70 +20,72 @@
     <p v-else-if="error" role="alert" class="text-ttred-900">
       Failed to load events: {{ error.message }}
     </p>
-    <table v-else class="w-full border-collapse">
-      <thead>
-        <tr class="border-b border-line text-left">
-          <th scope="col" class="py-2 pr-2">
-            Name
-          </th>
-          <th scope="col" class="py-2 pr-2">
-            Duration
-          </th>
-          <th scope="col" class="py-2 pr-2">
-            Lookup code
-          </th>
-          <th scope="col" class="py-2 pr-2">
-            Timing track
-          </th>
-          <th scope="col" class="py-2 pr-2">
-            Actions
-          </th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr v-for="eventDefinition of eventDefinitions" :key="eventDefinition.id" class="border-b border-line">
-          <td class="py-2 pr-2">
-            {{ eventDefinition.name }}
-          </td>
-          <td class="py-2 pr-2">
-            {{ formatDuration(eventDefinition.totalDuration) }}
-          </td>
-          <td class="py-2 pr-2 font-mono text-sm">
-            {{ eventDefinition.eventDefinitionLookupCode ?? '' }}
-          </td>
-          <td class="py-2 pr-2">
-            <template v-if="eventDefinition.timingTrack">
-              {{ cueSummary(eventDefinition.timingTrack.cues) }}
-            </template>
-            <span v-else class="text-muted">None</span>
-          </td>
-          <td class="py-2 pr-2">
-            <div class="flex gap-2">
-              <button
-                type="button"
-                class="btn w-max"
-                :aria-label="`Edit ${eventDefinition.name}`"
-                @click="openEditor(eventDefinition)"
-              >
-                Edit
-              </button>
-              <button
-                type="button"
-                class="btn w-max"
-                :disabled="deleting === eventDefinition.id"
-                :aria-label="`Delete ${eventDefinition.name}`"
-                @click="remove(eventDefinition)"
-              >
-                Delete
-              </button>
-            </div>
-            <p v-if="errors.get(eventDefinition.id)" role="alert" class="text-ttred-900 text-sm mt-1">
-              {{ errors.get(eventDefinition.id) }}
-            </p>
-          </td>
-        </tr>
-      </tbody>
-    </table>
+    <div v-else class="overflow-x-auto">
+      <table class="w-full border-collapse">
+        <thead>
+          <tr class="border-b border-line text-left">
+            <th scope="col" class="py-2 pr-2">
+              Name
+            </th>
+            <th scope="col" class="py-2 pr-2">
+              Duration
+            </th>
+            <th scope="col" class="py-2 pr-2">
+              Lookup code
+            </th>
+            <th scope="col" class="py-2 pr-2">
+              Timing track
+            </th>
+            <th scope="col" class="py-2 pr-2">
+              Actions
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr v-for="eventDefinition of eventDefinitions" :key="eventDefinition.id" class="border-b border-line">
+            <td class="py-2 pr-2">
+              {{ eventDefinition.name }}
+            </td>
+            <td class="py-2 pr-2">
+              {{ formatDuration(eventDefinition.totalDuration) }}
+            </td>
+            <td class="py-2 pr-2 font-mono text-sm">
+              {{ eventDefinition.eventDefinitionLookupCode ?? '' }}
+            </td>
+            <td class="py-2 pr-2">
+              <template v-if="eventDefinition.timingTrack">
+                {{ cueSummary(eventDefinition.timingTrack.cues) }}
+              </template>
+              <span v-else class="text-muted">None</span>
+            </td>
+            <td class="py-2 pr-2">
+              <div class="flex gap-2">
+                <button
+                  type="button"
+                  class="btn w-max"
+                  :aria-label="`Edit ${eventDefinition.name}`"
+                  @click="openEditor(eventDefinition)"
+                >
+                  Edit
+                </button>
+                <button
+                  type="button"
+                  class="btn w-max"
+                  :disabled="deleting === eventDefinition.id"
+                  :aria-label="`Delete ${eventDefinition.name}`"
+                  @click="remove(eventDefinition)"
+                >
+                  Delete
+                </button>
+              </div>
+              <p v-if="errors.get(eventDefinition.id)" role="alert" class="text-ttred-900 text-sm mt-1">
+                {{ errors.get(eventDefinition.id) }}
+              </p>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
 
     <event-definition-dialog
       v-if="dialogOpen"
