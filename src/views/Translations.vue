@@ -52,91 +52,68 @@
           No messages match the filter you picked.
         </div>
 
-        <div v-else class="overflow-x-auto">
-          <table class="w-full border-collapse text-left">
-            <thead>
-              <tr class="border-b border-solid border-line">
-                <th scope="col" class="p-2">
-                  Key
-                </th>
-                <th scope="col" class="p-2">
-                  English
-                </th>
-                <th scope="col" class="p-2">
-                  {{ languageName(lang) }}
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr v-for="row of rows" :key="row.key" class="border-b border-solid border-line">
-                <td class="p-2 align-top font-mono text-sm text-muted">
-                  {{ row.key }}
-                </td>
-                <td lang="en" class="p-2 align-top whitespace-pre-line">
-                  {{ row.english }}
-                </td>
-                <td class="p-2 align-top">
-                  <label :for="`message-${row.key}`" class="sr-only">{{ row.key }}</label>
-                  <textarea
-                    v-if="row.long"
-                    :id="`message-${row.key}`"
-                    :lang="lang"
-                    :value="row.value"
-                    rows="3"
-                    class="w-full block rounded focus:border-b-ttred-900 border-line"
-                    @input="edit(row.key, $event)"
-                  />
-                  <input
-                    v-else
-                    :id="`message-${row.key}`"
-                    :lang="lang"
-                    :value="row.value"
-                    type="text"
-                    class="w-full block rounded focus:border-b-ttred-900 border-line"
-                    @input="edit(row.key, $event)"
-                  >
-                  <p v-if="row.credit" class="text-muted text-sm mt-1">
-                    {{ row.credit }}
-                  </p>
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
+        <ul v-else class="list-none m-0 p-0 divide-y divide-solid divide-line">
+          <li v-for="row of rows" :key="row.key" class="py-4">
+            <p class="font-mono text-sm text-muted mb-1">
+              {{ row.key }}
+            </p>
+            <p lang="en" class="whitespace-pre-line mb-2">
+              {{ row.english }}
+            </p>
+            <label :for="`message-${row.key}`" class="sr-only">{{ languageName(lang) }}</label>
+            <textarea
+              v-if="row.long"
+              :id="`message-${row.key}`"
+              :lang="lang"
+              :value="row.value"
+              rows="3"
+              class="w-full block rounded focus:border-b-ttred-900 border-line"
+              @input="edit(row.key, $event)"
+            />
+            <input
+              v-else
+              :id="`message-${row.key}`"
+              :lang="lang"
+              :value="row.value"
+              type="text"
+              class="w-full block rounded focus:border-b-ttred-900 border-line"
+              @input="edit(row.key, $event)"
+            >
+            <p v-if="row.credit" class="text-muted text-sm mt-1 mb-0">
+              {{ row.credit }}
+            </p>
+          </li>
+        </ul>
 
         <section v-if="unusedRows.length" class="mt-6">
           <h2 class="mb-2">
             Keys no longer in use
           </h2>
 
-          <div class="overflow-x-auto">
-            <table class="w-full border-collapse text-left">
-              <tbody>
-                <tr v-for="row of unusedRows" :key="row.key" class="border-b border-solid border-line">
-                  <td class="p-2 align-top font-mono text-sm text-muted">
-                    {{ row.key }}
-                  </td>
-                  <td :lang="lang" class="p-2 align-top whitespace-pre-line">
-                    {{ row.value }}
-                    <p v-if="row.credit" class="text-muted text-sm mt-1">
-                      {{ row.credit }}
-                    </p>
-                  </td>
-                  <td class="p-2 align-top">
-                    <button
-                      type="button"
-                      class="btn w-max"
-                      :disabled="removing === row.key"
-                      :aria-label="`Remove ${row.key}`"
-                      @click="remove(row.key)"
-                    >
-                      Remove
-                    </button>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
+          <ul class="list-none m-0 p-0 divide-y divide-solid divide-line">
+            <li v-for="row of unusedRows" :key="row.key" class="py-4 flex flex-wrap gap-4 items-start">
+              <div class="flex-auto">
+                <p class="font-mono text-sm text-muted mb-1">
+                  {{ row.key }}
+                </p>
+                <p :lang="lang" class="whitespace-pre-line mb-0">
+                  {{ row.value }}
+                </p>
+                <p v-if="row.credit" class="text-muted text-sm mt-1 mb-0">
+                  {{ row.credit }}
+                </p>
+              </div>
+              <button
+                type="button"
+                class="btn w-max"
+                :disabled="removing === row.key"
+                :aria-label="`Remove ${row.key}`"
+                @click="remove(row.key)"
+              >
+                Remove
+              </button>
+            </li>
+          </ul>
         </section>
       </template>
     </template>
