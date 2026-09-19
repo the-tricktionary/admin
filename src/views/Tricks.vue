@@ -2,6 +2,57 @@
   <discipline-selector v-model:discipline="discipline" />
 
   <bottom-bar>
+    <div class="flex flex-wrap items-center gap-2 w-full">
+      <label for="filter-lang" class="sr-only">Missing translation</label>
+      <select id="filter-lang" v-model="missingLang" class="rounded border-line py-1 text-sm w-max">
+        <option value="">
+          Missing translation: any language
+        </option>
+        <option v-for="tag of translatableLangs" :key="tag" :value="tag">
+          {{ languageLabel(tag) }}
+        </option>
+      </select>
+
+      <label for="filter-rules" class="sr-only">Level</label>
+      <select id="filter-rules" v-model="levelRulesId" class="rounded border-line py-1 text-sm w-max">
+        <option value="">
+          Level: any ruleset
+        </option>
+        <option v-for="ruleset of rulesets" :key="ruleset.id" :value="ruleset.id">
+          {{ ruleset.name }}
+        </option>
+      </select>
+
+      <label for="filter-level" class="sr-only">Level status</label>
+      <select
+        id="filter-level"
+        v-model="levelStatus"
+        :disabled="levelRulesId === ''"
+        class="rounded border-line py-1 text-sm w-max"
+      >
+        <option value="">
+          Missing
+        </option>
+        <option value="judge">
+          Not verified
+        </option>
+        <option value="official">
+          Not officially verified
+        </option>
+      </select>
+
+      <label class="flex items-center gap-2 text-sm whitespace-nowrap">
+        <input v-model="withoutVideos" type="checkbox">
+        Without videos
+      </label>
+
+      <button v-if="filter" type="button" class="btn w-max whitespace-nowrap" @click="clearFilters()">
+        Clear filters
+      </button>
+    </div>
+  </bottom-bar>
+
+  <bottom-bar>
     <input
       v-model="search"
       type="search"
@@ -19,14 +70,14 @@
     </router-link>
   </bottom-bar>
 
-  <div class="container mx-auto p-2 pb-20">
+  <div class="container mx-auto p-2 pb-36">
     <div v-if="loading && !tricks.length" class="flex items-center justify-center flex-col" role="status">
       <icon-loading class="animate-spin w-32 h-32" aria-hidden="true" />
       Loading tricks...
     </div>
     <div v-else-if="!tricks.length" class="flex items-center justify-center flex-col" role="status">
       <icon-confused class="w-32 h-32" aria-hidden="true" />
-      No tricks match the discipline and search you picked.
+      {{ filter ? 'No tricks match the discipline, search and filters you picked.' : 'No tricks match the discipline and search you picked.' }}
     </div>
     <div v-else>
       <section v-for="levelGroup of levelGroups" :key="levelGroup.level">
@@ -65,18 +116,23 @@ import { refDebounced } from '@vueuse/core'
 import { useRoute, useRouter } from 'vue-router'
 import BottomBar from '../components/BottomBar.vue'
 import DisciplineSelector from '../components/DisciplineSelector.vue'
-import { useTricksQuery } from '../graphql/generated/graphql'
-import { disciplineToSlug, queryDiscipline, trickSorter } from '../helpers'
+import { useRulesetsQuery, useTricksQuery, VerificationLevel } from '../graphql/generated/graphql'
+import { disciplineToSlug, languageLabel, queryDiscipline, trickSorter } from '../helpers'
 import useGrants from '../hooks/useGrants'
+import useLanguages from '../hooks/useLanguages'
 
 import IconLoading from '~icons/mdi/loading'
 import IconConfused from '~icons/mdi/map-marker-question-outline'
 
-import type { Discipline, TricksQuery, TrickType } from '../graphql/generated/graphql'
+import type { Discipline, TrickFilter, TricksQuery, TrickType } from '../graphql/generated/graphql'
 
 const route = useRoute()
 const router = useRouter()
 const { canEditTricks } = useGrants()
+const { translatableLangs } = useLanguages()
+
+const rulesetsQuery = useRulesetsQuery()
+const rulesets = computed(() => rulesetsQuery.result.value?.rulesets ?? [])
 
 /** Kept in the URL so the list survives a reload and can be linked to */
 const discipline = computed<Discipline>({
@@ -85,6 +141,55 @@ const discipline = computed<Discipline>({
     void router.replace({ query: { ...route.query, discipline: disciplineToSlug(value) } })
   }
 })
+
+function queryValue (key: string) {
+  const value = route.query[key]
+  return typeof value === 'string' ? value : ''
+}
+
+/** Undefined drops the parameter, so a filter that is off leaves no trace in the URL */
+function setQuery (values: Record<string, string | undefined>) {
+  void router.replace({ query: { ...route.query, ...values } })
+}
+
+const missingLang = computed({
+  get: () => queryValue('lang'),
+  set: lang => { setQuery({ lang: lang === '' ? undefined : lang }) }
+})
+
+const levelRulesId = computed({
+  get: () => queryValue('rulesId'),
+  set: rulesId => { setQuery(rulesId === '' ? { rulesId: undefined, level: undefined } : { rulesId }) }
+})
+
+const levelStatus = computed({
+  get: () => queryValue('level'),
+  set: level => { setQuery({ level: level === '' ? undefined : level }) }
+})
+
+const withoutVideos = computed({
+  get: () => route.query.videos === 'none',
+  set: without => { setQuery({ videos: without ? 'none' : undefined }) }
+})
+
+const verifiedBelow: Record<string, VerificationLevel> = {
+  judge: VerificationLevel.Judge,
+  official: VerificationLevel.Official
+}
+
+const filter = computed<TrickFilter | null>(() => {
+  const parts: TrickFilter = {}
+  if (missingLang.value !== '') parts.missingLocalisation = missingLang.value
+  if (levelRulesId.value !== '') {
+    parts.level = { rulesId: levelRulesId.value, verifiedBelow: verifiedBelow[levelStatus.value] ?? null }
+  }
+  if (withoutVideos.value) parts.withoutVideos = true
+  return Object.keys(parts).length === 0 ? null : parts
+})
+
+function clearFilters () {
+  setQuery({ lang: undefined, rulesId: undefined, level: undefined, videos: undefined })
+}
 
 const search = ref('')
 const debouncedSearch = refDebounced(search, 1000)
@@ -95,7 +200,8 @@ const searchQuery = computed(() => {
 
 const tricksQuery = useTricksQuery(() => ({
   discipline: discipline.value,
-  searchQuery: searchQuery.value
+  searchQuery: searchQuery.value,
+  filter: filter.value
 }), { fetchPolicy: 'cache-and-network' })
 
 const loading = tricksQuery.loading

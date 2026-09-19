@@ -1,5 +1,5 @@
-query Tricks ($discipline: Discipline, $searchQuery: String) {
-  tricks (discipline: $discipline, searchQuery: $searchQuery) {
+query Tricks ($discipline: Discipline, $searchQuery: String, $filter: TrickFilter) {
+  tricks (discipline: $discipline, searchQuery: $searchQuery, filter: $filter) {
     id
     slug
     discipline
