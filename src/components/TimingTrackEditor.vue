@@ -255,15 +255,37 @@ const EXTENSION_TYPES: Record<string, string> = {
   aac: 'audio/aac',
   ogg: 'audio/ogg',
   wav: 'audio/wav',
+  wave: 'audio/wav',
   webm: 'audio/webm',
   flac: 'audio/flac'
 }
 
+/**
+ * The other names browsers and operating systems give formats we already take:
+ * a wav picked on Windows often arrives as audio/vnd.wave, an m4a as
+ * audio/x-m4a. The file is uploaded under the name on the right, so what we
+ * store is always the one a browser is happiest to play back.
+ */
+const TYPE_ALIASES: Record<string, string> = {
+  'audio/mp3': 'audio/mpeg',
+  'audio/mpeg3': 'audio/mpeg',
+  'audio/x-mpeg': 'audio/mpeg',
+  'audio/m4a': 'audio/mp4',
+  'audio/x-m4a': 'audio/mp4',
+  'audio/x-aac': 'audio/aac',
+  'audio/vnd.wave': 'audio/wav',
+  'audio/wave': 'audio/wav',
+  'audio/x-wav': 'audio/wav',
+  'audio/x-pn-wav': 'audio/wav',
+  'audio/x-flac': 'audio/flac'
+}
+
 /** Browsers sometimes leave the type blank, the extension is the next best guess */
 function contentTypeOf (file: File) {
-  if (file.type) return file.type
-  const extension = file.name.split('.').pop()?.toLowerCase() ?? ''
-  return EXTENSION_TYPES[extension] ?? ''
+  const name = file.type
+    ? file.type.split(';')[0].trim().toLowerCase()
+    : EXTENSION_TYPES[file.name.split('.').pop()?.toLowerCase() ?? ''] ?? ''
+  return TYPE_ALIASES[name] ?? name
 }
 
 /** The signed URL takes the file as the body of a single PUT with the headers it was signed for */
