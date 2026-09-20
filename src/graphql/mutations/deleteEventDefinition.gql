@@ -1,0 +1,5 @@
+mutation DeleteEventDefinition ($eventDefinitionId: ID!) {
+  deleteEventDefinition (eventDefinitionId: $eventDefinitionId) {
+    id
+  }
+}

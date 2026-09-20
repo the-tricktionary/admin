@@ -14,43 +14,45 @@
     <p v-else-if="error" role="alert" class="text-ttred-900">
       Failed to load languages: {{ error.message }}
     </p>
-    <table v-else class="w-full border-collapse">
-      <thead>
-        <tr class="border-b border-line text-left">
-          <th scope="col" class="py-2 pr-2">
-            Tag
-          </th>
-          <th scope="col" class="py-2 pr-2">
-            Name
-          </th>
-          <th scope="col" class="py-2 pr-2">
-            Enabled
-          </th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr v-for="language of languages" :key="language.id" class="border-b border-line">
-          <td class="py-2 pr-2">
-            {{ language.id }}
-          </td>
-          <td class="py-2 pr-2">
-            {{ languageName(language.id) }}
-          </td>
-          <td class="py-2 pr-2">
-            <input
-              type="checkbox"
-              :checked="language.enabled"
-              :disabled="saving === language.id"
-              :aria-label="`Offer ${languageLabel(language.id)} on the public site`"
-              @change="toggle(language, $event)"
-            >
-            <p v-if="errors.get(language.id)" role="alert" class="text-ttred-900 text-sm">
-              {{ errors.get(language.id) }}
-            </p>
-          </td>
-        </tr>
-      </tbody>
-    </table>
+    <div v-else class="overflow-x-auto">
+      <table class="w-full border-collapse">
+        <thead>
+          <tr class="border-b border-line text-left">
+            <th scope="col" class="py-2 pr-2">
+              Tag
+            </th>
+            <th scope="col" class="py-2 pr-2">
+              Name
+            </th>
+            <th scope="col" class="py-2 pr-2">
+              Enabled
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr v-for="language of languages" :key="language.id" class="border-b border-line">
+            <td class="py-2 pr-2">
+              {{ language.id }}
+            </td>
+            <td class="py-2 pr-2">
+              {{ languageName(language.id) }}
+            </td>
+            <td class="py-2 pr-2">
+              <input
+                type="checkbox"
+                :checked="language.enabled"
+                :disabled="saving === language.id"
+                :aria-label="`Offer ${languageLabel(language.id)} on the public site`"
+                @change="toggle(language, $event)"
+              >
+              <p v-if="errors.get(language.id)" role="alert" class="text-ttred-900 text-sm">
+                {{ errors.get(language.id) }}
+              </p>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
 
     <language-dialog v-if="dialogOpen" @close="dialogOpen = false" />
   </div>
