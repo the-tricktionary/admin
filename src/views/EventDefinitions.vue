@@ -9,9 +9,9 @@
 
     <p class="text-muted mb-4">
       The events athletes can record speed scores against. A timing track is the
-      official audio of an event, with cues for the start, the switches and the
-      end, so the web app can play it while counting and attribute a relay's
-      steps to each athlete.
+      cues that split an event, so a relay's steps are attributed to each
+      athlete. The cues alone are enough, and the official audio is optional:
+      with it the web app can play the event while counting.
     </p>
 
     <p v-if="loading && !eventDefinitions.length">
@@ -54,7 +54,7 @@
             </td>
             <td class="py-2 pr-2">
               <template v-if="eventDefinition.timingTrack">
-                {{ cueSummary(eventDefinition.timingTrack.cues) }}
+                {{ cueSummary(eventDefinition.timingTrack) }}
               </template>
               <span v-else class="text-muted">None</span>
             </td>
@@ -115,15 +115,20 @@ const errors = reactive(new Map<string, string>())
 
 const { mutate: deleteEventDefinition } = useDeleteEventDefinitionMutation({ throws: 'always', refetchQueries: ['EventDefinitions'] })
 
-type TimingCues = NonNullable<EventDefinitionRowFragment['timingTrack']>['cues']
+type TimingTrack = NonNullable<EventDefinitionRowFragment['timingTrack']>
 
-function cueSummary (cues: TimingCues) {
+function cueSummary (track: TimingTrack) {
+  const cues = track.cues
   const switches = cues.filter(cue => cue.type === TimingCueType.Switch).length
+  const switchSummary = switches === 1 ? '1 switch' : `${switches} switches`
+  // without audio a start cue only names the opening stretch and there is no end cue, so neither is missing
+  if (!track.audioUrl) return `no audio, ${switchSummary}`
   const hasStart = cues.some(cue => cue.type === TimingCueType.Start)
   const hasEnd = cues.some(cue => cue.type === TimingCueType.End)
   const parts = [
+    'audio',
     hasStart ? 'start' : 'no start cue',
-    switches === 1 ? '1 switch' : `${switches} switches`,
+    switchSummary,
     hasEnd ? 'end' : 'no end cue'
   ]
   return parts.join(', ')

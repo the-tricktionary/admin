@@ -117,7 +117,10 @@ export function parseYouTubeId (input: string): string | null {
   return id != null && YOUTUBE_ID.test(id) ? id : null
 }
 
-/** A timing track cue as the admin edits it, offset in milliseconds from the start of the audio */
+/**
+ * A timing track cue as the admin edits it, offset in milliseconds from the
+ * start of the audio, or from the go signal on a track that has none
+ */
 export interface CueRow {
   type: TimingCueType
   offset: number
