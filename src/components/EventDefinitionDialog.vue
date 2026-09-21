@@ -59,6 +59,7 @@
           v-model:audio-url="audioUrl"
           v-model:cues="cues"
           :event-definition-id="eventDefinition?.id ?? null"
+          :total-duration="totalDuration"
           @busy="uploading = $event"
         />
       </fieldset>
@@ -109,6 +110,9 @@ const lookupCode = ref(eventDefinition?.eventDefinitionLookupCode ?? '')
 const audioUrl = ref<string | null | undefined>(eventDefinition?.timingTrack?.audioUrl)
 const cues = ref<CueRow[]>(eventDefinition?.timingTrack?.cues.map(cue => ({ type: cue.type, offset: cue.offset, label: cue.label ?? '' })) ?? [])
 
+/** Cues alone are a track, the audio is optional */
+const hasTrack = computed(() => typeof audioUrl.value === 'string' || cues.value.length > 0)
+
 const error = ref<string | null>(null)
 const saving = ref(false)
 const uploading = ref(false)
@@ -117,16 +121,19 @@ const busy = computed(() => saving.value || uploading.value)
 const { mutate: createEventDefinition } = useCreateEventDefinitionMutation({ throws: 'always', refetchQueries: ['EventDefinitions'] })
 const { mutate: updateEventDefinition } = useUpdateEventDefinitionMutation({ throws: 'always', refetchQueries: ['EventDefinitions'] })
 
+/** A track is its cues, which split the event, plus the audio they were placed against if any */
 function timingTrackInput () {
-  // never had one and none uploaded: leave the field alone
-  if (audioUrl.value === undefined) return {}
-  if (audioUrl.value === null) return { timingTrack: null }
-  return {
-    timingTrack: {
-      audioUrl: audioUrl.value,
-      cues: cues.value.map(cue => ({ type: cue.type, offset: Math.round(cue.offset), label: cue.label.trim() === '' ? null : cue.label.trim() }))
+  if (hasTrack.value) {
+    return {
+      timingTrack: {
+        ...(audioUrl.value ? { audioUrl: audioUrl.value } : {}),
+        cues: cues.value.map(cue => ({ type: cue.type, offset: Math.round(cue.offset), label: cue.label.trim() === '' ? null : cue.label.trim() }))
+      }
     }
   }
+  // nothing left of the track: clear the one the event had, leave the field alone otherwise
+  if (eventDefinition?.timingTrack) return { timingTrack: null }
+  return {}
 }
 
 async function save () {
@@ -147,7 +154,7 @@ async function save () {
       const createdId = created?.data?.createEventDefinition.id
       if (!createdId) throw new Error('The event was not created, please try again')
       await trackEditor.value?.uploadPending(createdId)
-      if (audioUrl.value) {
+      if (hasTrack.value) {
         await updateEventDefinition({ eventDefinitionId: createdId, data: { ...base, ...timingTrackInput() } })
       }
     }
