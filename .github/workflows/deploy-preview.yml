@@ -7,9 +7,12 @@ jobs:
   build_and_preview:
     if: '${{ github.event.pull_request.head.repo.full_name == github.repository }}'
     runs-on: ubuntu-latest
+    permissions:
+      contents: 'read'
+      id-token: 'write'
     environment:
       name: branch-deploy
-      url: ${{ steps.deploy.outputs.details_url }}
+      url: ${{ steps.deploy.outputs.url }}
     steps:
       - uses: actions/checkout@v7
         with:
@@ -27,22 +30,30 @@ jobs:
           VITE_CONTEXT: branch-deploy
           VITE_GRAPHQL_URL: https://api.the-tricktionary.com
           VITE_WEB_URL: https://the-tricktionary.com
-          VITE_SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
+          VITE_SENTRY_DSN: ${{ vars.SENTRY_DSN }}
 
-      - uses: FirebaseExtended/action-hosting-deploy@v0
-        id: deploy
+      - uses: google-github-actions/auth@v3
         with:
-          repoToken: '${{ secrets.GITHUB_TOKEN }}'
-          firebaseServiceAccount: '${{ secrets.FIREBASE_SERVICE_ACCOUNT_PROJECT_5641153190345267944 }}'
-          expires: 30d
-          projectId: project-5641153190345267944
+          workload_identity_provider: ${{ vars.GCP_WIF_PROVIDER }}
+          service_account: ${{ vars.GCP_DEPLOY_SERVICE_ACCOUNT }}
+          project_id: ${{ vars.GCP_PROJECT_ID }}
+
+      # The channel's own hostname is added to the Firebase Auth authorized
+      # domains by the CLI, which is why the deploy account needs
+      # firebaseauth.admin. 30d is the maximum the CLI accepts.
+      - name: Deploy preview channel
+        id: deploy
+        run: |
+          npx firebase-tools@15.30.2 hosting:channel:deploy "pr${{ github.event.number }}" \
+            --project "${{ vars.GCP_PROJECT_ID }}" --expires 30d --json > "$RUNNER_TEMP/channel.json"
+          echo "url=$(jq -er '[.result[].url][0]' "$RUNNER_TEMP/channel.json")" >> "$GITHUB_OUTPUT"
 
       - name: Create Sentry release
         uses: getsentry/action-release@v3
         env:
           SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
-          SENTRY_ORG: ${{ secrets.SENTRY_ORG }}
-          SENTRY_PROJECT: ${{ secrets.SENTRY_PROJECT }}
+          SENTRY_ORG: ${{ vars.SENTRY_ORG }}
+          SENTRY_PROJECT: ${{ vars.SENTRY_PROJECT }}
         with:
           environment: branch-deploy
           sourcemaps: ./dist
