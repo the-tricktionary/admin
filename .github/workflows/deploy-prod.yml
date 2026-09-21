@@ -8,6 +8,9 @@ name: Deploy to Production
 jobs:
   build_and_deploy:
     runs-on: ubuntu-latest
+    permissions:
+      contents: 'read'
+      id-token: 'write'
     environment:
       name: production
       url: https://admin.the-tricktionary.com
@@ -28,20 +31,24 @@ jobs:
           VITE_CONTEXT: production
           VITE_GRAPHQL_URL: https://api.the-tricktionary.com
           VITE_WEB_URL: https://the-tricktionary.com
-          VITE_SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
+          VITE_SENTRY_DSN: ${{ vars.SENTRY_DSN }}
 
-      - uses: FirebaseExtended/action-hosting-deploy@v0
+      - uses: google-github-actions/auth@v3
         with:
-          repoToken: '${{ secrets.GITHUB_TOKEN }}'
-          firebaseServiceAccount: '${{ secrets.FIREBASE_SERVICE_ACCOUNT_PROJECT_5641153190345267944 }}'
-          channelId: live
-          projectId: project-5641153190345267944
+          workload_identity_provider: ${{ vars.GCP_WIF_PROVIDER }}
+          service_account: ${{ vars.GCP_DEPLOY_SERVICE_ACCOUNT }}
+          project_id: ${{ vars.GCP_PROJECT_ID }}
+
+      # firebase-tools picks up the credentials the step above wrote, so the
+      # deploy needs no service account key.
+      - run: npx firebase-tools@15.30.2 deploy --only hosting --project "${{ vars.GCP_PROJECT_ID }}"
+
       - name: Create Sentry release
         uses: getsentry/action-release@v3
         env:
           SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
-          SENTRY_ORG: ${{ secrets.SENTRY_ORG }}
-          SENTRY_PROJECT: ${{ secrets.SENTRY_PROJECT }}
+          SENTRY_ORG: ${{ vars.SENTRY_ORG }}
+          SENTRY_PROJECT: ${{ vars.SENTRY_PROJECT }}
         with:
           environment: production
           sourcemaps: ./dist
