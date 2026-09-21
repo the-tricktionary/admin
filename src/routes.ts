@@ -21,6 +21,7 @@ export const routes: RouteRecordRaw[] = [
   { name: 'users', path: '/users', component: async () => await import('./views/Users.vue'), meta: { superAdmin: true } },
   { name: 'rulesets', path: '/rulesets', component: async () => await import('./views/Rulesets.vue'), meta: { superAdmin: true } },
   { name: 'languages', path: '/languages', component: async () => await import('./views/Languages.vue'), meta: { superAdmin: true } },
+  { name: 'notices', path: '/notices', component: async () => await import('./views/Notices.vue'), meta: { superAdmin: true } },
   { name: 'translations', path: '/translations', component: async () => await import('./views/Translations.vue'), meta: { translator: true } },
   { name: 'event-definitions', path: '/event-definitions', component: async () => await import('./views/EventDefinitions.vue'), meta: { speedEditor: true } },
   { name: 'no-access', path: '/no-access', component: async () => await import('./views/NoAccess.vue') },

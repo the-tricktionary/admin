@@ -43,6 +43,20 @@ export function formatOffset (milliseconds: number) {
   return `${minutes}:${String(seconds).padStart(2, '0')}.${String(rest).padStart(3, '0')}`
 }
 
+const pad = (part: number) => String(part).padStart(2, '0')
+
+/** A millisecond timestamp as the local `YYYY-MM-DDTHH:mm` a `datetime-local` input takes */
+export function toDatetimeLocal (milliseconds: number) {
+  const date = new Date(milliseconds)
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`
+}
+
+/** The millisecond timestamp a `datetime-local` value names in local time, null when it is empty or half typed */
+export function fromDatetimeLocal (value: string) {
+  const milliseconds = new Date(value).getTime()
+  return Number.isNaN(milliseconds) ? null : milliseconds
+}
+
 const languageDisplayNames = new Intl.DisplayNames(['en'], { type: 'language' })
 
 /** The English name of a language tag, the tag itself when it names no language we can put a name to */

@@ -1,0 +1,5 @@
+mutation DeleteNotice ($noticeId: ID!) {
+  deleteNotice (noticeId: $noticeId) {
+    ...NoticeRow
+  }
+}
