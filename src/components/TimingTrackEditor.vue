@@ -48,7 +48,7 @@
         <tbody>
           <tr v-for="(cue, index) of sortedCues" :key="cue.key" class="border-b border-line">
             <td class="py-1 pr-2">
-              <select v-model="cue.type" :aria-label="`Type of cue ${index + 1}`" class="rounded">
+              <select v-model="cue.type" :aria-label="`Type of cue ${index + 1}`" class="rounded min-w-24">
                 <option v-for="(label, value) of timingCueTypeNames" :key="value" :value="value">
                   {{ label }}
                 </option>
@@ -62,7 +62,7 @@
                 step="0.001"
                 required
                 :aria-label="`Offset of cue ${index + 1} in seconds`"
-                class="rounded w-32"
+                class="rounded w-32 min-w-32"
                 @change="cue.offset = Math.round(Number(($event.target as HTMLInputElement).value) * 1000)"
               >
             </td>
@@ -73,7 +73,7 @@
                 maxlength="40"
                 :placeholder="cue.type === TimingCueType.Switch ? 'e.g. Athlete 2' : ''"
                 :aria-label="`Label of cue ${index + 1}`"
-                class="rounded w-full"
+                class="rounded w-full min-w-40"
               >
             </td>
             <td class="py-1">
@@ -95,34 +95,51 @@
       {{ cueHint }}
     </p>
 
-    <div class="flex flex-wrap gap-2 items-end">
+    <div class="flex flex-wrap gap-2 items-center">
       <button v-if="playableUrl" type="button" class="btn w-max" @click="addCueAtPlayhead()">
         Add cue at playhead
       </button>
       <button type="button" class="btn w-max" @click="addSwitch()">
         Add switch
       </button>
-
-      <div class="flex gap-2 items-end">
-        <div>
-          <label :for="legsInputId" class="block text-sm text-muted mb-1">Legs</label>
-          <input
-            :id="legsInputId"
-            v-model.number="legs"
-            type="number"
-            min="2"
-            max="50"
-            step="1"
-            class="rounded w-20 block"
-          >
-        </div>
-        <button type="button" class="btn w-max" :disabled="totalDuration <= 0" @click="splitEvenly()">
-          Split evenly
-        </button>
-      </div>
-
       <button v-if="playableUrl || cues.length" type="button" class="btn w-max" @click="removeTrack()">
         Remove track
+      </button>
+    </div>
+
+    <div class="flex flex-wrap gap-2 items-end">
+      <div>
+        <label :for="legsInputId" class="block text-sm text-muted mb-1">Legs</label>
+        <input
+          :id="legsInputId"
+          v-model.number="legs"
+          type="number"
+          min="2"
+          max="50"
+          step="1"
+          class="rounded w-20 block"
+        >
+      </div>
+
+      <template v-if="playableUrl">
+        <div>
+          <label :for="startInputId" class="block text-sm text-muted mb-1">Start at (seconds)</label>
+          <input
+            :id="startInputId"
+            v-model.number="startSeconds"
+            type="number"
+            min="0"
+            step="0.001"
+            class="rounded w-32 block"
+          >
+        </div>
+        <button type="button" class="btn w-max" @click="startAtPlayhead()">
+          At playhead
+        </button>
+      </template>
+
+      <button type="button" class="btn w-max" :disabled="totalDuration <= 0" @click="splitEvenly()">
+        Split evenly
       </button>
     </div>
 
@@ -186,6 +203,7 @@ const playableUrl = computed(() => pendingUrl.value ?? audioUrl.value ?? null)
 
 const fileInputId = useId()
 const legsInputId = useId()
+const startInputId = useId()
 const player = useTemplateRef('player')
 
 let nextKey = 0
@@ -203,8 +221,8 @@ const sortedCues = computed(() => [...cues.value].sort((a, b) => a.offset - b.of
  */
 const cueHint = computed(() => {
   const lead = cues.value.length ? '' : 'No cues yet. '
-  if (playableUrl.value) return `${lead}Play the track and add a cue at each signal: one start, one switch per athlete change, one end.`
-  return `${lead}Offsets are seconds from the go signal, and the event runs from zero to its duration: there is no end cue, and a start cue can only sit at zero to name the opening stretch.`
+  if (playableUrl.value) return `${lead}Play the track and add a cue at each signal: one start, one switch per athlete change, one end. Split evenly rebuilds all of them from the start you give it and the number of legs, keeping the labels.`
+  return `${lead}Offsets are seconds from the go signal, and the event runs from zero to its duration: there is no end cue, and a start cue can only sit at zero to name the opening stretch. Split evenly rebuilds the cues for equal legs, keeping the labels.`
 })
 
 /** Mirrors what the API accepts, so a bad cue is caught before saving */
@@ -256,23 +274,45 @@ function addSwitch () {
 
 const legs = ref(4)
 
+/** Where the split puts the go signal, which with audio is the lead-in the admin times */
+const startSeconds = ref(startOffset() / 1000)
+
+function startAtPlayhead () {
+  startSeconds.value = Math.round((player.value?.currentTime ?? 0) * 1000) / 1000
+}
+
 /**
- * The switches of an evenly split relay: one at the end of every leg but the
- * last, measured from the go signal, which with audio is where the start cue
- * sits. Cues of the other types are left where they are.
+ * Times an evenly split relay in one go: it rebuilds the whole track from the
+ * start, the duration and the number of legs, so every cue placed by hand is
+ * replaced. A start cue names the opening stretch, a switch ends every leg but
+ * the last, and with audio an end cue closes the event, which without audio
+ * simply ends at its duration. The labels are carried over, switches by
+ * position, so the athletes stay named.
  */
 function splitEvenly () {
   const count = Math.round(legs.value)
   if (totalDuration <= 0 || !Number.isSafeInteger(count) || count < 2 || count > 50) return
-  const start = startOffset()
+  const start = playableUrl.value && Number.isFinite(startSeconds.value)
+    ? Math.max(0, Math.round(startSeconds.value * 1000))
+    : 0
+  const duration = Math.round(totalDuration * 1000)
+  const startLabel = cues.value.find(cue => cue.type === TimingCueType.Start)?.label ?? ''
+  const endLabel = cues.value.find(cue => cue.type === TimingCueType.End)?.label ?? ''
+  const switchLabels = cues.value
+    .filter(cue => cue.type === TimingCueType.Switch)
+    .sort((a, b) => a.offset - b.offset)
+    .map(cue => cue.label)
   cues.value = [
-    ...cues.value.filter(cue => cue.type !== TimingCueType.Switch),
+    { key: nextKey++, type: TimingCueType.Start, offset: start, label: startLabel },
     ...Array.from({ length: count - 1 }, (_, index) => ({
       key: nextKey++,
       type: TimingCueType.Switch,
-      offset: start + Math.round((index + 1) * totalDuration * 1000 / count),
-      label: ''
-    }))
+      offset: start + Math.round((index + 1) * duration / count),
+      label: switchLabels[index] ?? ''
+    })),
+    ...(playableUrl.value
+      ? [{ key: nextKey++, type: TimingCueType.End, offset: start + duration, label: endLabel }]
+      : [])
   ]
 }
 
