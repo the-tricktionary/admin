@@ -71,7 +71,7 @@
                 v-model="cue.label"
                 type="text"
                 maxlength="40"
-                :placeholder="cue.type === TimingCueType.Switch ? 'e.g. Athlete 2' : ''"
+                :placeholder="cueLabelPlaceholders[cue.type]"
                 :aria-label="`Label of cue ${index + 1}`"
                 class="rounded w-full min-w-40"
               >
@@ -224,6 +224,13 @@ const cueHint = computed(() => {
   if (playableUrl.value) return `${lead}Play the track and add a cue at each signal: one start, one switch per athlete change, one end. Split evenly rebuilds all of them from the start you give it and the number of legs, keeping the labels.`
   return `${lead}Offsets are seconds from the go signal, and the event runs from zero to its duration: there is no end cue, and a start cue can only sit at zero to name the opening stretch. Split evenly rebuilds the cues for equal legs, keeping the labels.`
 })
+
+/** A start cue names the opening stretch, a switch the one it opens, an end cue names nothing */
+const cueLabelPlaceholders: Record<TimingCueType, string> = {
+  [TimingCueType.Start]: 'e.g. Athlete 1',
+  [TimingCueType.Switch]: 'e.g. Athlete 2',
+  [TimingCueType.End]: ''
+}
 
 /** Mirrors what the API accepts, so a bad cue is caught before saving */
 const cueWarning = computed(() => {
