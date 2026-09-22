@@ -109,7 +109,7 @@
 import { computed, onMounted, ref, useId, useTemplateRef } from 'vue'
 import FormField from './FormField.vue'
 import { useAddTrickVideoMutation, useCreateTrickVideoUploadMutation, VideoType } from '../graphql/generated/graphql'
-import { parseYouTubeId, videoTypeNames } from '../helpers'
+import { parseSeconds, parseYouTubeId, videoTypeNames } from '../helpers'
 
 const { trickId } = defineProps<{ trickId: string }>()
 
@@ -139,10 +139,7 @@ const busy = computed(() => saving.value || uploading.value)
 const { mutate: addVideo } = useAddTrickVideoMutation({ throws: 'always' })
 const { mutate: createUpload } = useCreateTrickVideoUploadMutation({ throws: 'always' })
 
-const slowMoStartValue = computed(() => {
-  const seconds = Number.parseFloat(slowMoStart.value)
-  return Number.isNaN(seconds) ? null : seconds
-})
+const slowMoStartValue = computed(() => parseSeconds(slowMoStart.value))
 
 /** Mux hands out a URL that takes the file as the body of a single PUT */
 async function put (url: string, video: File) {

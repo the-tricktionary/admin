@@ -1,15 +1,9 @@
 <template>
   <div class="grid lg:grid-cols-2 gap-6">
     <div class="w-full aspect-video bg-placeholder isolate">
-      <mux-player
+      <mux-preview
         v-if="selected?.host === VideoHost.Mux"
-        class="w-full h-full"
         :playback-id="selected.videoId"
-        stream-type="on-demand"
-        autoplay="muted"
-        loop
-        playsinline
-        accent-color="#fe3500"
         :title="title"
       />
       <iframe
@@ -42,6 +36,9 @@
               <th scope="col" class="py-2 pr-2">
                 Slow motion start
               </th>
+              <th scope="col" class="py-2 pr-2">
+                Credited to
+              </th>
               <th scope="col" class="py-2">
                 <span class="sr-only">Actions</span>
               </th>
@@ -60,6 +57,9 @@
               </td>
               <td class="py-2 pr-2">
                 {{ video.slowMoStart === null ? '–' : `${video.slowMoStart} s` }}
+              </td>
+              <td class="py-2 pr-2">
+                {{ video.attribution?.name ?? '–' }}
               </td>
               <td class="py-2">
                 <div class="flex flex-wrap gap-2">
@@ -86,7 +86,7 @@
               </td>
             </tr>
             <tr v-if="!videos.length">
-              <td colspan="5" class="py-2 text-muted">
+              <td colspan="6" class="py-2 text-muted">
                 This trick has no videos yet.
               </td>
             </tr>
@@ -152,7 +152,7 @@
 <script setup lang="ts">
 import { useIntervalFn } from '@vueuse/core'
 import { computed, ref, watch } from 'vue'
-import '@mux/mux-player'
+import MuxPreview from './MuxPreview.vue'
 import VideoDialog from './VideoDialog.vue'
 import { useRemoveTrickVideoMutation, VideoHost, VideoType, VideoUploadStatus } from '../graphql/generated/graphql'
 import { videoTypeNames } from '../helpers'
@@ -222,12 +222,3 @@ async function remove (videoId: string) {
   }
 }
 </script>
-
-<style scoped>
-mux-player {
-  --captions-button: none;
-  --airplay-button: none;
-  --cast-button: none;
-  --pip-button: none;
-}
-</style>

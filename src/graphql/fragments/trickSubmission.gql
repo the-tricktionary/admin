@@ -1,0 +1,30 @@
+fragment TrickSubmissionRow on TrickSubmission {
+  id
+  submitter {
+    id
+    name
+    username
+  }
+  attributionName
+  discipline
+  trickType
+  lang
+  name
+  alternativeNames
+  description
+  status
+  upload {
+    id
+    status
+    error
+  }
+  video {
+    videoId
+    slowMoStart
+  }
+  reviewNote
+  trick {
+    id
+  }
+  createdAt
+}

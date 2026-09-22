@@ -114,7 +114,7 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, useId, useTemplateRef, watch } from 'vue'
 import { GrantType, useRulesetsQuery, useSetUserGrantsMutation, VerificationLevel } from '../graphql/generated/graphql'
-import { grantTypeNames, languageLabel } from '../helpers'
+import { grantTypeNames, languageLabel, userLabel } from '../helpers'
 import useAuth from '../hooks/useAuth'
 import useLanguages from '../hooks/useLanguages'
 
@@ -135,7 +135,7 @@ const emit = defineEmits<{ close: [] }>()
 
 const dialog = useTemplateRef('dialog')
 const titleId = useId()
-const name = computed(() => user.name ?? user.username ?? user.email ?? user.id)
+const name = computed(() => userLabel(user))
 
 let nextKey = 0
 

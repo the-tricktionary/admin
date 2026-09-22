@@ -26,6 +26,9 @@
       <router-link exact-active-class="active" class="nav-link" to="/">
         Tricks
       </router-link>
+      <router-link v-if="canEditTricks" active-class="active" class="nav-link" to="/submissions">
+        Submissions
+      </router-link>
       <router-link v-if="isSuperAdmin" active-class="active" class="nav-link" to="/users">
         Users
       </router-link>
@@ -60,7 +63,7 @@ import IconMenu from '~icons/mdi/menu'
 import IconClose from '~icons/mdi/close'
 
 const { firebaseUser: user } = useAuth()
-const { isSuperAdmin, canEditEventDefinitions, canTranslate } = useGrants()
+const { isSuperAdmin, canEditTricks, canEditEventDefinitions, canTranslate } = useGrants()
 const router = useRouter()
 
 const showNav = ref(false)

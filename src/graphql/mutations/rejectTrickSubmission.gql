@@ -1,0 +1,7 @@
+mutation RejectTrickSubmission ($submissionId: ID!, $note: String) {
+  rejectTrickSubmission (submissionId: $submissionId, note: $note) {
+    id
+    status
+    reviewNote
+  }
+}

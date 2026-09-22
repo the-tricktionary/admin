@@ -60,24 +60,20 @@ import { useRoute, useRouter } from 'vue-router'
 import FormField from '../components/FormField.vue'
 import LocalisationFields from '../components/LocalisationFields.vue'
 import { TrickType, useCreateTrickMutation } from '../graphql/generated/graphql'
-import { disciplineNames, queryDiscipline } from '../helpers'
-
-import type { LocalisationValue } from '../helpers'
+import { disciplineNames, localisationInput, queryDiscipline, slugFromName, toLocalisationValue, trickTypes } from '../helpers'
 
 const route = useRoute()
 const router = useRouter()
 
-const trickTypes = Object.values(TrickType).sort((a, b) => a.localeCompare(b))
-
 const discipline = ref(queryDiscipline(route.query.discipline))
 const trickType = ref(TrickType.Basic)
-const localisation = ref<LocalisationValue>({ name: '', alternativeNames: [], description: '' })
+const localisation = ref(toLocalisationValue(null))
 const slug = ref('')
 const slugEdited = ref(false)
 
 watch(() => localisation.value.name, name => {
   if (slugEdited.value) return
-  slug.value = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')
+  slug.value = slugFromName(name)
 })
 
 const { mutate, loading, error } = useCreateTrickMutation({
@@ -95,10 +91,7 @@ async function createTrick () {
       discipline: discipline.value,
       trickType: trickType.value,
       slug: slug.value,
-      localisation: {
-        ...localisation.value,
-        alternativeNames: localisation.value.alternativeNames.map(alternative => alternative.trim()).filter(alternative => alternative !== '')
-      }
+      localisation: localisationInput(localisation.value)
     }
   })
 

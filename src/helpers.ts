@@ -1,4 +1,6 @@
-import { Discipline, GrantType, TimingCueType, VideoType } from './graphql/generated/graphql'
+import { Discipline, GrantType, TimingCueType, TrickType, VideoType } from './graphql/generated/graphql'
+
+import type { TrickLocalisationInput } from './graphql/generated/graphql'
 
 /** The Tricktionary's own ruleset, whose levels group the trick list */
 export const TRICKTIONARY = 'tricktionary'
@@ -13,6 +15,9 @@ export const videoTypeNames: Record<VideoType, string> = {
   [VideoType.SlowMo]: 'Slow motion',
   [VideoType.Explainer]: 'Explainer'
 }
+
+/** Every trick type, in alphabetical order, for the pickers that offer them */
+export const trickTypes = Object.values(TrickType).sort((a, b) => a.localeCompare(b))
 
 export const grantTypeNames: Record<GrantType, string> = {
   [GrantType.SuperAdmin]: 'Super admin',
@@ -41,6 +46,19 @@ export function formatOffset (milliseconds: number) {
   const seconds = totalSeconds % 60
   const rest = Math.round(milliseconds % 1000)
   return `${minutes}:${String(seconds).padStart(2, '0')}.${String(rest).padStart(3, '0')}`
+}
+
+/** A seconds field as a number, null when it holds nothing a number can be read from */
+export function parseSeconds (input: string) {
+  const seconds = Number.parseFloat(input)
+  return Number.isNaN(seconds) ? null : seconds
+}
+
+const dateFormat = new Intl.DateTimeFormat(undefined, { dateStyle: 'medium' })
+
+/** A timestamp as a date in the reader's own locale */
+export function formatDate (timestamp: number) {
+  return dateFormat.format(timestamp)
 }
 
 const languageDisplayNames = new Intl.DisplayNames(['en'], { type: 'language' })
@@ -74,10 +92,45 @@ export function queryDiscipline (slug: unknown) {
   return Object.values(Discipline).find(discipline => disciplineSlugs[discipline] === slug) ?? Discipline.SingleRope
 }
 
+/** The slug a trick name suggests, its words lowercased and joined by single dashes */
+export function slugFromName (name: string) {
+  return name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')
+}
+
+interface NamedUser {
+  id: string
+  name?: string | null
+  username?: string | null
+  email?: string | null
+}
+
+/** What to call a user: the name their profile shows, else their username, email or id */
+export function userLabel (user: NamedUser) {
+  return user.name ?? user.username ?? user.email ?? user.id
+}
+
 export interface LocalisationValue {
   name: string
   alternativeNames: string[]
   description: string
+}
+
+/** The editable form of a localisation, blank throughout when there is none yet */
+export function toLocalisationValue (localisation: { name: string, alternativeNames?: string[] | null, description?: string | null } | null | undefined): LocalisationValue {
+  return {
+    name: localisation?.name ?? '',
+    alternativeNames: [...localisation?.alternativeNames ?? []],
+    description: localisation?.description ?? ''
+  }
+}
+
+/** A localisation as the API takes it, without the blank rows the editor left behind */
+export function localisationInput (value: LocalisationValue): TrickLocalisationInput {
+  return {
+    name: value.name,
+    alternativeNames: value.alternativeNames.map(alternative => alternative.trim()).filter(alternative => alternative !== ''),
+    description: value.description
+  }
 }
 
 interface SortableTrick {
