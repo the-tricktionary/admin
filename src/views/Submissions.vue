@@ -145,7 +145,7 @@
             <tr v-if="preview === submission.id" class="border-b border-solid border-line">
               <td colspan="9" class="py-2">
                 <div v-if="submission.video" class="w-full max-w-160 aspect-video bg-placeholder isolate">
-                  <mux-preview :playback-id="submission.video.videoId" :title="submission.name" />
+                  <video-preview :playback-id="submission.video.videoId" :title="submission.name" />
                 </div>
               </td>
             </tr>
@@ -168,7 +168,7 @@
 import { useHead } from '@unhead/vue'
 import { computed, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import MuxPreview from '../components/MuxPreview.vue'
+import VideoPreview from '../components/VideoPreview.vue'
 import SubmissionAcceptDialog from '../components/SubmissionAcceptDialog.vue'
 import SubmissionRejectDialog from '../components/SubmissionRejectDialog.vue'
 import { TrickSubmissionStatus, useTrickSubmissionsQuery, VideoUploadStatus } from '../graphql/generated/graphql'

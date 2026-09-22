@@ -1,7 +1,7 @@
 <template>
   <div class="grid lg:grid-cols-2 gap-6">
     <div class="w-full aspect-video bg-placeholder isolate">
-      <mux-preview
+      <video-preview
         v-if="selected?.host === VideoHost.Mux"
         :playback-id="selected.videoId"
         :title="title"
@@ -177,7 +177,7 @@
 <script setup lang="ts">
 import { useIntervalFn } from '@vueuse/core'
 import { computed, ref, watch } from 'vue'
-import MuxPreview from './MuxPreview.vue'
+import VideoPreview from './VideoPreview.vue'
 import VideoAttributionDialog from './VideoAttributionDialog.vue'
 import VideoDialog from './VideoDialog.vue'
 import { useRemoveTrickVideoMutation, VideoHost, VideoUploadStatus } from '../graphql/generated/graphql'
