@@ -1,7 +1,7 @@
 import { format, isValid, parseISO } from 'date-fns'
 import { Discipline, GrantType, TimingCueType, TrickType, VideoType } from './graphql/generated/graphql'
 
-import type { TrickLocalisationInput } from './graphql/generated/graphql'
+import type { AttributionInput, TrickLocalisationInput } from './graphql/generated/graphql'
 
 /** The Tricktionary's own ruleset, whose levels group the trick list */
 export const TRICKTIONARY = 'tricktionary'
@@ -147,6 +147,12 @@ export function localisationInput (value: LocalisationValue): TrickLocalisationI
     alternativeNames: value.alternativeNames.map(alternative => alternative.trim()).filter(alternative => alternative !== ''),
     description: value.description
   }
+}
+
+/** A credit as the API takes it, null when the field holds nothing but whitespace */
+export function attributionInput (name: string): AttributionInput | null {
+  const trimmed = name.trim()
+  return trimmed === '' ? null : { name: trimmed }
 }
 
 interface SortableTrick {

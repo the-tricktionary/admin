@@ -1,0 +1,14 @@
+mutation SetTrickVideoAttribution ($trickId: ID!, $videoId: String!, $attribution: AttributionInput) {
+  setTrickVideoAttribution (trickId: $trickId, videoId: $videoId, attribution: $attribution) {
+    id
+    videos {
+      host
+      videoId
+      type
+      slowMoStart
+      attribution {
+        name
+      }
+    }
+  }
+}

@@ -86,6 +86,22 @@
             </div>
           </template>
         </form-field>
+
+        <form-field id="video-attribution" label="Credited to (optional)">
+          <template #default="field">
+            <input
+              v-bind="field"
+              v-model="attributionName"
+              type="text"
+              maxlength="100"
+              aria-describedby="video-attribution-help"
+              class="w-full block rounded focus:border-b-ttred-900 border-line"
+            >
+            <p id="video-attribution-help" class="text-muted text-sm">
+              The name shown in the trick's credits, leave empty for no credit
+            </p>
+          </template>
+        </form-field>
       </fieldset>
 
       <div v-if="uploading" class="mb-4">
@@ -113,7 +129,7 @@
 import { computed, onMounted, ref, useId, useTemplateRef } from 'vue'
 import FormField from './FormField.vue'
 import { useAddTrickVideoMutation, useCreateTrickVideoUploadMutation, VideoType } from '../graphql/generated/graphql'
-import { parseSeconds, parseYouTubeId, videoTypeNames } from '../helpers'
+import { attributionInput, parseSeconds, parseYouTubeId, videoTypeNames } from '../helpers'
 
 const { trickId } = defineProps<{ trickId: string }>()
 
@@ -131,6 +147,7 @@ const type = ref<VideoType>(VideoType.FullSpeed)
 const slowMoStart = ref('')
 const youTubeInput = ref('')
 const file = ref<File | null>(null)
+const attributionName = ref('')
 
 const saving = ref(false)
 const uploading = ref(false)
@@ -171,7 +188,7 @@ async function addYouTubeVideo () {
 
   saving.value = true
   try {
-    await addVideo({ trickId, data: { videoId, type: type.value, slowMoStart: slowMoStartValue.value } })
+    await addVideo({ trickId, data: { videoId, type: type.value, slowMoStart: slowMoStartValue.value, attribution: attributionInput(attributionName.value) } })
     dialog.value?.close()
   } catch (err) {
     error.value = errorMessage(err)
@@ -189,7 +206,7 @@ async function uploadToMux () {
 
   saving.value = true
   try {
-    const created = await createUpload({ trickId, data: { type: type.value, slowMoStart: slowMoStartValue.value } })
+    const created = await createUpload({ trickId, data: { type: type.value, slowMoStart: slowMoStartValue.value, attribution: attributionInput(attributionName.value) } })
     const url = created?.data?.createTrickVideoUpload.url
     if (url == null) throw new Error('The upload could not be started, please try again')
     // the API knows about the upload from here on, whether or not the file makes it

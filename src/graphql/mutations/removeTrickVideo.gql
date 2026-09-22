@@ -6,6 +6,9 @@ mutation RemoveTrickVideo ($trickId: ID!, $videoId: String!) {
       videoId
       type
       slowMoStart
+      attribution {
+        name
+      }
     }
   }
 }

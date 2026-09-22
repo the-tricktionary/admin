@@ -59,7 +59,18 @@
                 {{ video.slowMoStart === null ? '–' : `${video.slowMoStart} s` }}
               </td>
               <td class="py-2 pr-2">
-                {{ video.attribution?.name ?? '–' }}
+                <div class="flex flex-wrap items-center gap-2">
+                  <span>{{ video.attribution?.name ?? '–' }}</span>
+                  <button
+                    v-if="editable"
+                    type="button"
+                    class="btn w-max"
+                    :aria-label="`Edit the credit for ${videoTypeNames[video.type]} video ${video.videoId}`"
+                    @click="crediting = video"
+                  >
+                    <icon-pencil aria-hidden="true" />
+                  </button>
+                </div>
               </td>
               <td class="py-2">
                 <div class="flex flex-wrap gap-2">
@@ -113,6 +124,9 @@
                 <th scope="col" class="py-2 pr-2">
                   Status
                 </th>
+                <th scope="col" class="py-2 pr-2">
+                  Credited to
+                </th>
                 <th scope="col" class="py-2">
                   Error
                 </th>
@@ -125,6 +139,9 @@
                 </td>
                 <td class="py-2 pr-2">
                   {{ upload.status }}
+                </td>
+                <td class="py-2 pr-2">
+                  {{ upload.attribution?.name ?? '–' }}
                 </td>
                 <td class="py-2 text-ttred-900">
                   {{ upload.error ?? '' }}
@@ -145,6 +162,14 @@
         @close="dialogOpen = false"
         @uploaded="emit('refresh')"
       />
+
+      <video-attribution-dialog
+        v-if="crediting"
+        :trick-id="trickId"
+        :video-id="crediting.videoId"
+        :name="crediting.attribution?.name ?? null"
+        @close="crediting = null"
+      />
     </div>
   </div>
 </template>
@@ -153,13 +178,17 @@
 import { useIntervalFn } from '@vueuse/core'
 import { computed, ref, watch } from 'vue'
 import MuxPreview from './MuxPreview.vue'
+import VideoAttributionDialog from './VideoAttributionDialog.vue'
 import VideoDialog from './VideoDialog.vue'
 import { useRemoveTrickVideoMutation, VideoHost, VideoUploadStatus } from '../graphql/generated/graphql'
 import { trickVideoTypes, videoTypeNames } from '../helpers'
 
+import IconPencil from '~icons/mdi/pencil-outline'
+
 import type { TrickQuery } from '../graphql/generated/graphql'
 
 type LoadedTrick = NonNullable<TrickQuery['trick']>
+type TrickVideo = LoadedTrick['videos'][number]
 
 const POLL_INTERVAL = 10_000
 
@@ -184,6 +213,7 @@ const emit = defineEmits<{
 
 const preview = ref<string | null>(null)
 const dialogOpen = ref(false)
+const crediting = ref<TrickVideo | null>(null)
 const removing = ref<string | null>(null)
 const removeError = ref<string | null>(null)
 

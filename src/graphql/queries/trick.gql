@@ -46,6 +46,9 @@ query Trick ($id: ID!) {
       type
       status
       error
+      attribution {
+        name
+      }
     }
   }
 }
