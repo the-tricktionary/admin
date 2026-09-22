@@ -154,8 +154,8 @@ import { useIntervalFn } from '@vueuse/core'
 import { computed, ref, watch } from 'vue'
 import MuxPreview from './MuxPreview.vue'
 import VideoDialog from './VideoDialog.vue'
-import { useRemoveTrickVideoMutation, VideoHost, VideoType, VideoUploadStatus } from '../graphql/generated/graphql'
-import { videoTypeNames } from '../helpers'
+import { useRemoveTrickVideoMutation, VideoHost, VideoUploadStatus } from '../graphql/generated/graphql'
+import { trickVideoTypes, videoTypeNames } from '../helpers'
 
 import type { TrickQuery } from '../graphql/generated/graphql'
 
@@ -187,8 +187,11 @@ const dialogOpen = ref(false)
 const removing = ref<string | null>(null)
 const removeError = ref<string | null>(null)
 
+/** The public site's preference first, then whatever there is to preview */
 const fallback = computed(() =>
-  videos.find(video => video.host === VideoHost.Mux && video.type === VideoType.SlowMo) ??
+  trickVideoTypes
+    .map(type => videos.find(video => video.host === VideoHost.Mux && video.type === type))
+    .find(video => video != null) ??
   videos.find(video => video.host === VideoHost.Mux) ??
   videos[0] ?? null
 )

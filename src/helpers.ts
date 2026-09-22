@@ -13,9 +13,13 @@ export const disciplineNames: Record<Discipline, string> = {
 }
 
 export const videoTypeNames: Record<VideoType, string> = {
+  [VideoType.FullSpeed]: 'Full speed',
   [VideoType.SlowMo]: 'Slow motion',
   [VideoType.Explainer]: 'Explainer'
 }
+
+/** The types that show the trick itself rather than explain it, in the order the public site's player prefers them */
+export const trickVideoTypes = [VideoType.FullSpeed, VideoType.SlowMo]
 
 /** Every trick type, in alphabetical order, for the pickers that offer them */
 export const trickTypes = Object.values(TrickType).sort((a, b) => a.localeCompare(b))

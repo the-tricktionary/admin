@@ -147,8 +147,8 @@ import { refDebounced } from '@vueuse/core'
 import { useRoute, useRouter } from 'vue-router'
 import BottomBar from '../components/BottomBar.vue'
 import DisciplineSelector from '../components/DisciplineSelector.vue'
-import { useRulesetsQuery, useTricksQuery, VerificationLevel, VideoHost, VideoType } from '../graphql/generated/graphql'
-import { disciplineToSlug, languageLabel, queryDiscipline, TRICKTIONARY, trickSorter } from '../helpers'
+import { useRulesetsQuery, useTricksQuery, VerificationLevel, VideoHost } from '../graphql/generated/graphql'
+import { disciplineToSlug, languageLabel, queryDiscipline, TRICKTIONARY, trickSorter, trickVideoTypes, videoTypeNames } from '../helpers'
 import useGrants, { verificationLevelRank } from '../hooks/useGrants'
 import useLanguages from '../hooks/useLanguages'
 import useTranslationLang from '../hooks/useTranslationLang'
@@ -331,10 +331,11 @@ function levelStatus (trick: Trick): TrickStatus | undefined {
 
 function videoStatus (trick: Trick): TrickStatus {
   const title = 'Videos'
-  if (trick.videos.some(video => video.host === VideoHost.Mux && video.type === VideoType.SlowMo)) {
-    return { kind: 'video', state: 'done', label: 'Slow-mo', title, icon: IconVideo }
+  const trickVideo = trick.videos.find(video => video.host === VideoHost.Mux && trickVideoTypes.includes(video.type))
+  if (trickVideo) {
+    return { kind: 'video', state: 'done', label: videoTypeNames[trickVideo.type], title, icon: IconVideo }
   }
-  if (trick.videos.length > 0) return { kind: 'video', state: 'partial', label: 'No Mux slow-mo', title, icon: IconVideo }
+  if (trick.videos.length > 0) return { kind: 'video', state: 'partial', label: 'No Mux trick video', title, icon: IconVideo }
   return { kind: 'video', state: 'missing', label: 'No video', title, icon: IconVideo }
 }
 

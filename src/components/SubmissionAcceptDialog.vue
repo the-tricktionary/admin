@@ -43,7 +43,11 @@
             </template>
           </form-field>
 
-          <form-field id="accept-slow-mo-start" label="Slow motion start (seconds)">
+          <form-field
+            v-if="videoType === VideoType.SlowMo"
+            id="accept-slow-mo-start"
+            label="Slow motion start (seconds)"
+          >
             <template #default="field">
               <input
                 v-bind="field"
@@ -128,7 +132,7 @@ const titleId = useId()
 
 const discipline = ref(submission.discipline)
 const trickType = ref(submission.trickType ?? TrickType.Basic)
-const videoType = ref(VideoType.SlowMo)
+const videoType = ref(VideoType.FullSpeed)
 const slowMoStart = ref(submission.video?.slowMoStart?.toString() ?? '')
 const localisation = ref(toLocalisationValue(submission.lang === 'en' ? submission : null))
 const slug = ref(slugFromName(submission.name))
@@ -151,7 +155,7 @@ const slugTaken = computed(() => error.value?.graphQLErrors.some(err => err.exte
 const slugError = computed(() => slugTaken.value ? 'A trick with this slug already exists in this discipline' : null)
 const submitError = computed(() => slugTaken.value ? null : error.value?.message ?? null)
 
-const slowMoStartValue = computed(() => parseSeconds(slowMoStart.value))
+const slowMoStartValue = computed(() => videoType.value === VideoType.SlowMo ? parseSeconds(slowMoStart.value) : null)
 
 async function accept () {
   const result = await mutate({

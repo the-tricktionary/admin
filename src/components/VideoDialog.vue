@@ -35,7 +35,11 @@
           </template>
         </form-field>
 
-        <form-field id="video-slow-mo-start" label="Slow motion start (seconds)">
+        <form-field
+          v-if="type === VideoType.SlowMo"
+          id="video-slow-mo-start"
+          label="Slow motion start (seconds)"
+        >
           <template #default="field">
             <input
               v-bind="field"
@@ -123,7 +127,7 @@ const dialog = useTemplateRef('dialog')
 const titleId = useId()
 
 const source = ref<'mux' | 'youtube'>('mux')
-const type = ref<VideoType>(VideoType.SlowMo)
+const type = ref<VideoType>(VideoType.FullSpeed)
 const slowMoStart = ref('')
 const youTubeInput = ref('')
 const file = ref<File | null>(null)
@@ -139,7 +143,7 @@ const busy = computed(() => saving.value || uploading.value)
 const { mutate: addVideo } = useAddTrickVideoMutation({ throws: 'always' })
 const { mutate: createUpload } = useCreateTrickVideoUploadMutation({ throws: 'always' })
 
-const slowMoStartValue = computed(() => parseSeconds(slowMoStart.value))
+const slowMoStartValue = computed(() => type.value === VideoType.SlowMo ? parseSeconds(slowMoStart.value) : null)
 
 /** Mux hands out a URL that takes the file as the body of a single PUT */
 async function put (url: string, video: File) {
