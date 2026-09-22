@@ -1,0 +1,8 @@
+mutation SetNotificationOptions ($data: NotificationOptionsInput!) {
+  setNotificationOptions (data: $data) {
+    id
+    notificationOptions {
+      adminDigest
+    }
+  }
+}

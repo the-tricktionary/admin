@@ -47,6 +47,9 @@
       <router-link v-if="canTranslate" active-class="active" class="nav-link" to="/translations">
         Translations
       </router-link>
+      <router-link v-if="user" active-class="active" class="nav-link" to="/settings">
+        Settings
+      </router-link>
       <button v-if="user" type="button" class="nav-link" @click="signOutAndLeave()">
         Sign out
       </button>
