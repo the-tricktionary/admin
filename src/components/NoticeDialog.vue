@@ -64,8 +64,8 @@
               v-model="link.url"
               type="text"
               required
-              pattern="/(?!/)\S*|https?://\S+"
-              placeholder="/tricks or https://example.com"
+              pattern="/(?!/)\S*|https?://\S+|mailto:[^\s@/]+@[^\s@/]+"
+              placeholder="/tricks, https://example.com or mailto:hello@example.com"
               class="flex-1 min-w-48 block rounded border-line font-mono"
             >
             <label :for="`notice-link-label-${index}`" class="sr-only">
