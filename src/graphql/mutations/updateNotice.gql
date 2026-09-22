@@ -1,0 +1,5 @@
+mutation UpdateNotice ($noticeId: ID!, $data: NoticeInput!) {
+  updateNotice (noticeId: $noticeId, data: $data) {
+    ...NoticeRow
+  }
+}

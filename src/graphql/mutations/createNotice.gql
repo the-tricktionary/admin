@@ -1,0 +1,5 @@
+mutation CreateNotice ($data: NoticeInput!) {
+  createNotice (data: $data) {
+    ...NoticeRow
+  }
+}

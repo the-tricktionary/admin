@@ -1,3 +1,4 @@
+import { format, isValid, parseISO } from 'date-fns'
 import { Discipline, GrantType, TimingCueType, VideoType } from './graphql/generated/graphql'
 
 /** The Tricktionary's own ruleset, whose levels group the trick list */
@@ -41,6 +42,17 @@ export function formatOffset (milliseconds: number) {
   const seconds = totalSeconds % 60
   const rest = Math.round(milliseconds % 1000)
   return `${minutes}:${String(seconds).padStart(2, '0')}.${String(rest).padStart(3, '0')}`
+}
+
+/** A millisecond timestamp as the local `YYYY-MM-DDTHH:mm` a `datetime-local` input takes */
+export function toDatetimeLocal (milliseconds: number) {
+  return format(milliseconds, "yyyy-MM-dd'T'HH:mm")
+}
+
+/** The millisecond timestamp a `datetime-local` value names in local time, null when it is empty or half typed */
+export function fromDatetimeLocal (value: string) {
+  const date = parseISO(value)
+  return isValid(date) ? date.getTime() : null
 }
 
 const languageDisplayNames = new Intl.DisplayNames(['en'], { type: 'language' })
