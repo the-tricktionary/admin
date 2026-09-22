@@ -166,7 +166,7 @@ import { computed, onMounted, ref, watch } from 'vue'
 import { onBeforeRouteLeave } from 'vue-router'
 import BottomBar from '../components/BottomBar.vue'
 import { useSetUiMessagesMutation, useUiMessageEntriesQuery } from '../graphql/generated/graphql'
-import { languageLabel, languageName } from '../helpers'
+import { formatDate, languageLabel, languageName } from '../helpers'
 import useTranslationLang from '../hooks/useTranslationLang'
 
 import IconLoading from '~icons/mdi/loading'
@@ -184,8 +184,6 @@ interface EnglishMessage {
 
 /** Text long enough that a single line input would hide most of it */
 const LONG_MESSAGE = 80
-
-const dateFormat = new Intl.DateTimeFormat(undefined, { dateStyle: 'medium' })
 
 const { editableLangs: langs, editLang: lang } = useTranslationLang()
 
@@ -296,7 +294,7 @@ function credit (key: string) {
   const entry = loaded.value.get(key)
   if (!entry) return null
   const name = entry.updatedBy?.name ?? entry.updatedBy?.username ?? 'someone'
-  return `by ${name}, ${dateFormat.format(entry.updatedAt)}`
+  return `by ${name}, ${formatDate(entry.updatedAt)}`
 }
 
 function matchesFilter (...texts: string[]) {

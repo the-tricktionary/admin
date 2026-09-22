@@ -18,6 +18,7 @@ export const routes: RouteRecordRaw[] = [
   { name: 'tricks', path: '/', component: async () => await import('./views/Tricks.vue') },
   { name: 'trick-new', path: '/trick/new', component: async () => await import('./views/TrickNew.vue'), meta: { trickEditor: true } },
   { name: 'trick', path: '/trick/:id', component: async () => await import('./views/Trick.vue') },
+  { name: 'submissions', path: '/submissions', component: async () => await import('./views/Submissions.vue'), meta: { trickEditor: true } },
   { name: 'users', path: '/users', component: async () => await import('./views/Users.vue'), meta: { superAdmin: true } },
   { name: 'rulesets', path: '/rulesets', component: async () => await import('./views/Rulesets.vue'), meta: { superAdmin: true } },
   { name: 'languages', path: '/languages', component: async () => await import('./views/Languages.vue'), meta: { superAdmin: true } },

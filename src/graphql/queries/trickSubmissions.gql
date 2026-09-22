@@ -1,0 +1,7 @@
+#import "../fragments/trickSubmission.gql"
+
+query TrickSubmissions ($status: TrickSubmissionStatus) {
+  trickSubmissions (status: $status) {
+    ...TrickSubmissionRow
+  }
+}

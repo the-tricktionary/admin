@@ -323,7 +323,7 @@ import {
   useUpdateTrickDetailsMutation,
   VerificationLevel
 } from '../graphql/generated/graphql'
-import { disciplineNames, disciplineToSlug, languageLabel, TRICKTIONARY, trickSorter } from '../helpers'
+import { disciplineNames, disciplineToSlug, languageLabel, localisationInput, toLocalisationValue, TRICKTIONARY, trickSorter, trickTypes } from '../helpers'
 import useGrants, { verificationLevelRank } from '../hooks/useGrants'
 import useTranslationLang from '../hooks/useTranslationLang'
 
@@ -350,7 +350,6 @@ interface TrickForm {
 /** The ruleset whose levels are the tricktionary's own, shown with the details */
 
 const tricktionaryLevels = ['1', '2', '3', '4', '5']
-const trickTypes = Object.values(TrickType).sort((a, b) => a.localeCompare(b))
 const verificationNames = ['Not verified', 'Judge', 'Official']
 
 const route = useRoute()
@@ -368,14 +367,6 @@ useHead({ title: computed(() => trick.value ? `Edit: ${trick.value.en?.name ?? t
 
 const { result: rulesetsResult } = useRulesetsQuery()
 const rulesets = computed(() => rulesetsResult.value?.rulesets ?? [])
-
-function toLocalisationValue (localisation: { name: string, alternativeNames?: string[] | null, description?: string | null } | null | undefined): LocalisationValue {
-  return {
-    name: localisation?.name ?? '',
-    alternativeNames: [...localisation?.alternativeNames ?? []],
-    description: localisation?.description ?? ''
-  }
-}
 
 function toForm (loaded: LoadedTrick): TrickForm {
   const levels: Record<string, string> = { [TRICKTIONARY]: '' }
@@ -496,14 +487,6 @@ const levelRows = computed(() => rulesets.value
     }
   })
 )
-
-function localisationInput (value: LocalisationValue): TrickLocalisationInput {
-  return {
-    name: value.name,
-    alternativeNames: value.alternativeNames.map(alternative => alternative.trim()).filter(alternative => alternative !== ''),
-    description: value.description
-  }
-}
 
 function localisationChanged (value: LocalisationValue, original: LocalisationValue) {
   const left = localisationInput(value)

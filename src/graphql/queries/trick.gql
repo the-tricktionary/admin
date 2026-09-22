@@ -37,12 +37,18 @@ query Trick ($id: ID!) {
       videoId
       type
       slowMoStart
+      attribution {
+        name
+      }
     }
     pendingVideoUploads {
       id
       type
       status
       error
+      attribution {
+        name
+      }
     }
   }
 }

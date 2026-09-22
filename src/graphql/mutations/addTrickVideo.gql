@@ -6,6 +6,9 @@ mutation AddTrickVideo ($trickId: ID!, $data: YouTubeVideoInput!) {
       videoId
       type
       slowMoStart
+      attribution {
+        name
+      }
     }
   }
 }

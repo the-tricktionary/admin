@@ -1,0 +1,9 @@
+mutation AcceptTrickSubmission ($submissionId: ID!, $data: AcceptTrickSubmissionInput!) {
+  acceptTrickSubmission (submissionId: $submissionId, data: $data) {
+    id
+    status
+    trick {
+      id
+    }
+  }
+}
