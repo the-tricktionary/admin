@@ -1,0 +1,19 @@
+fragment NoticeRow on Notice {
+  id
+  from
+  until
+  updatedAt
+  updatedBy {
+    id
+    name
+    username
+  }
+  texts {
+    lang
+    body
+    links {
+      label
+      url
+    }
+  }
+}

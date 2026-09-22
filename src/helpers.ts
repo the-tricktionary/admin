@@ -1,3 +1,4 @@
+import { format, isValid, parseISO } from 'date-fns'
 import { Discipline, GrantType, TimingCueType, TrickType, VideoType } from './graphql/generated/graphql'
 
 import type { TrickLocalisationInput } from './graphql/generated/graphql'
@@ -59,6 +60,17 @@ const dateFormat = new Intl.DateTimeFormat(undefined, { dateStyle: 'medium' })
 /** A timestamp as a date in the reader's own locale */
 export function formatDate (timestamp: number) {
   return dateFormat.format(timestamp)
+}
+
+/** A millisecond timestamp as the local `YYYY-MM-DDTHH:mm` a `datetime-local` input takes */
+export function toDatetimeLocal (milliseconds: number) {
+  return format(milliseconds, "yyyy-MM-dd'T'HH:mm")
+}
+
+/** The millisecond timestamp a `datetime-local` value names in local time, null when it is empty or half typed */
+export function fromDatetimeLocal (value: string) {
+  const date = parseISO(value)
+  return isValid(date) ? date.getTime() : null
 }
 
 const languageDisplayNames = new Intl.DisplayNames(['en'], { type: 'language' })

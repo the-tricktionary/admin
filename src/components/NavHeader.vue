@@ -38,6 +38,9 @@
       <router-link v-if="isSuperAdmin" active-class="active" class="nav-link" to="/languages">
         Languages
       </router-link>
+      <router-link v-if="isSuperAdmin" active-class="active" class="nav-link" to="/notices">
+        Notices
+      </router-link>
       <router-link v-if="canEditEventDefinitions" active-class="active" class="nav-link" to="/event-definitions">
         Speed events
       </router-link>
