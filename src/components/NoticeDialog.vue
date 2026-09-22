@@ -64,7 +64,7 @@
               v-model="link.url"
               type="text"
               required
-              pattern="/(?!/)\S*|https?://\S+|mailto:[^\s@/]+@[^\s@/]+"
+              pattern="/(?!/)\S*|https?://\S+|mailto:\S*"
               placeholder="/tricks, https://example.com or mailto:hello@example.com"
               class="flex-1 min-w-48 block rounded border-line font-mono"
             >
