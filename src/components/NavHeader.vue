@@ -5,9 +5,10 @@
     </router-link>
 
     <button
-      v-if="linksKnown && collapsed"
+      v-if="collapsed || !ready"
       type="button"
       class="nav-link inline-flex items-center justify-center min-h-8 cursor-pointer"
+      :class="{ invisible: !ready }"
       :aria-expanded="showNav"
       aria-controls="main-nav"
       aria-label="Toggle menu"
@@ -18,7 +19,7 @@
     </button>
 
     <nav
-      v-show="linksKnown && (!collapsed || showNav)"
+      v-show="ready && (!collapsed || showNav)"
       id="main-nav"
       class="flex items-center"
       :class="{ menu: collapsed }"
@@ -50,7 +51,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, useTemplateRef, watch } from 'vue'
+import { computed, nextTick, ref, useTemplateRef, watch } from 'vue'
 import { onClickOutside, unrefElement, useResizeObserver } from '@vueuse/core'
 import { getAuth, signOut } from 'firebase/auth'
 import { useRouter } from 'vue-router'
@@ -86,15 +87,17 @@ const links = computed(() => ([
 ] satisfies NavLink[]).filter(link => link.show))
 
 const showNav = ref(false)
-/** Whether the links are behind the menu button, starting there so a narrow screen never has them overflow */
+/** Whether the links are behind the menu button */
 const collapsed = ref(true)
 /**
- * Whether the grants have loaded once, until then neither the links nor the
- * menu button show, or a narrow screen would have the few links there are
- * before the grants in a row, then swap them for the menu button
+ * Whether the grants have loaded once and the row of links been measured for
+ * them, until then neither the links nor the menu button show, or a narrow
+ * screen would have the few links there are before the grants in a row, then
+ * swap them for the menu button. The button still takes its room, so the
+ * header keeps its height
  */
-const linksKnown = ref(false)
-void whenAuthKnown().then(() => { linksKnown.value = true })
+const ready = ref(false)
+const authKnown = ref(false)
 
 const header = useTemplateRef('header')
 const brand = useTemplateRef<ComponentPublicInstance>('brand')
@@ -112,10 +115,19 @@ function fit () {
   const style = window.getComputedStyle(headerEl)
   const room = headerEl.clientWidth - Number.parseFloat(style.paddingLeft) - Number.parseFloat(style.paddingRight) - brandEl.getBoundingClientRect().width
   collapsed.value = row.value.getBoundingClientRect().width > room
+  if (authKnown.value) ready.value = true
 }
 
 // the header resizes with the window, the row when links come and go or the font loads
 useResizeObserver([header, row], fit)
+
+// the links for the grants are rendered by the next tick, measure those
+// rather than showing them before they are
+void whenAuthKnown().then(async () => {
+  authKnown.value = true
+  await nextTick()
+  fit()
+})
 
 watch(collapsed, () => {
   showNav.value = false
