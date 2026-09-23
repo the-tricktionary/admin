@@ -18,7 +18,7 @@
           <template #default="field">
             <select v-bind="field" v-model="trickType" class="w-full block rounded border-line">
               <option v-for="type of trickTypes" :key="type" :value="type">
-                {{ type }}
+                {{ trickTypeLabel(type) }}
               </option>
             </select>
           </template>
@@ -60,10 +60,12 @@ import { useRoute, useRouter } from 'vue-router'
 import FormField from '../components/FormField.vue'
 import LocalisationFields from '../components/LocalisationFields.vue'
 import { TrickType, useCreateTrickMutation } from '../graphql/generated/graphql'
-import { disciplineNames, localisationInput, queryDiscipline, slugFromName, toLocalisationValue, trickTypes } from '../helpers'
+import { disciplineNames, localisationInput, queryDiscipline, slugFromName, toLocalisationValue } from '../helpers'
+import useTags from '../hooks/useTags'
 
 const route = useRoute()
 const router = useRouter()
+const { trickTypes, trickTypeLabel } = useTags()
 
 const discipline = ref(queryDiscipline(route.query.discipline))
 const trickType = ref(TrickType.Basic)

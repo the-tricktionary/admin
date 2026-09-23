@@ -27,7 +27,7 @@
             <template #default="field">
               <select v-bind="field" v-model="trickType" class="w-full block rounded border-line">
                 <option v-for="type of trickTypes" :key="type" :value="type">
-                  {{ type }}
+                  {{ trickTypeLabel(type) }}
                 </option>
               </select>
             </template>
@@ -117,7 +117,8 @@ import { computed, onMounted, ref, useId, useTemplateRef, watch } from 'vue'
 import FormField from './FormField.vue'
 import LocalisationFields from './LocalisationFields.vue'
 import { TrickType, useAcceptTrickSubmissionMutation, VideoType } from '../graphql/generated/graphql'
-import { disciplineNames, languageName, localisationInput, parseSeconds, slugFromName, toLocalisationValue, trickTypes, videoTypeNames } from '../helpers'
+import { disciplineNames, languageName, localisationInput, parseNumber, slugFromName, toLocalisationValue, videoTypeNames } from '../helpers'
+import useTags from '../hooks/useTags'
 
 import type { TrickSubmissionRowFragment } from '../graphql/generated/graphql'
 
@@ -129,6 +130,7 @@ const emit = defineEmits<{
 
 const dialog = useTemplateRef('dialog')
 const titleId = useId()
+const { trickTypes, trickTypeLabel } = useTags()
 
 const discipline = ref(submission.discipline)
 const trickType = ref(submission.trickType ?? TrickType.Basic)
@@ -155,7 +157,7 @@ const slugTaken = computed(() => error.value?.graphQLErrors.some(err => err.exte
 const slugError = computed(() => slugTaken.value ? 'A trick with this slug already exists in this discipline' : null)
 const submitError = computed(() => slugTaken.value ? null : error.value?.message ?? null)
 
-const slowMoStartValue = computed(() => videoType.value === VideoType.SlowMo ? parseSeconds(slowMoStart.value) : null)
+const slowMoStartValue = computed(() => videoType.value === VideoType.SlowMo ? parseNumber(slowMoStart.value) : null)
 
 async function accept () {
   const result = await mutate({

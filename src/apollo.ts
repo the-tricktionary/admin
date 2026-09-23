@@ -25,8 +25,7 @@ const cache = new InMemoryCache({
         return mergeObjects(existing, incoming)
       }
     },
-    // a value's id is only unique within its tag, `power` is a trick type and
-    // an IJRU judge type, so values stay inside the tag they belong to
+    // value ids are only unique within their tag
     TagValue: {
       keyFields: false
     }

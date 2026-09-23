@@ -60,7 +60,12 @@
               {{ tag.disciplines.length ? tag.disciplines.map(discipline => disciplineNames[discipline]).join(', ') : 'All' }}
             </td>
             <td class="py-2 pr-2">
-              {{ tag.trickCount }}
+              <router-link v-if="tag.trickCount > 0" :to="tricksWith(tag)">
+                {{ tag.trickCount }}
+              </router-link>
+              <template v-else>
+                0
+              </template>
             </td>
             <td class="py-2 pr-2">
               {{ otherLanguages(tag) }}
@@ -109,7 +114,7 @@ import { useHead } from '@unhead/vue'
 import { computed, reactive, ref } from 'vue'
 import TagDialog from '../components/TagDialog.vue'
 import { TagValueType, useDeleteTagMutation, useTagsWithCountsQuery } from '../graphql/generated/graphql'
-import { disciplineNames, tagValueTypeNames } from '../helpers'
+import { disciplineNames, disciplineToSlug, tagValueTypeNames } from '../helpers'
 
 import IconPlus from '~icons/mdi/plus'
 
@@ -139,6 +144,11 @@ function typeDetails (tag: Tag) {
     return parts.join(', ')
   }
   return ''
+}
+
+function tricksWith (tag: Tag) {
+  const discipline = tag.disciplines[0]
+  return { name: 'tricks', query: { q: `#${tag.id}`, ...(discipline ? { discipline: disciplineToSlug(discipline) } : {}) } }
 }
 
 function otherLanguages (tag: Tag) {

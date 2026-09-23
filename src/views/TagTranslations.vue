@@ -89,14 +89,13 @@
 
 <script setup lang="ts">
 import { useHead } from '@unhead/vue'
-import { useEventListener } from '@vueuse/core'
 import { computed, ref, watch } from 'vue'
-import { onBeforeRouteLeave } from 'vue-router'
 import BottomBar from '../components/BottomBar.vue'
 import TranslationTabs from '../components/TranslationTabs.vue'
 import { useSetTagLocalisationMutation, useTagsQuery } from '../graphql/generated/graphql'
 import { languageLabel } from '../helpers'
 import useTranslationLang from '../hooks/useTranslationLang'
+import useUnsavedChanges from '../hooks/useUnsavedChanges'
 
 import IconLoading from '~icons/mdi/loading'
 import IconSave from '~icons/mdi/content-save-outline'
@@ -153,6 +152,7 @@ const changedRows = computed(() => allRows.value
   .filter(row => draft.value[row.key] != null && draft.value[row.key].trim() !== row.stored))
 
 const dirty = computed(() => changedRows.value.length > 0)
+const { confirmDiscard } = useUnsavedChanges(dirty, 'This translation')
 
 watch(lang, () => {
   draft.value = {}
@@ -191,7 +191,7 @@ async function save () {
     saveError.value = errorMessage(err)
   }
 
-  // the tags that went through are stored, anything else still needs saving
+  // drafts of tags that failed to save stay
   try {
     await refetch()
   } catch (err) {
@@ -209,20 +209,13 @@ function errorMessage (err: unknown) {
 
 function pickLang (event: Event) {
   const select = event.target as HTMLSelectElement
-  if (dirty.value && !window.confirm('These tag names have changes that have not been saved yet. Switch language anyway?')) {
+  if (!confirmDiscard('Switch language')) {
     // the select is bound one way, so nothing else would put the old language back
     select.value = lang.value
     return
   }
   lang.value = select.value
 }
-
-onBeforeRouteLeave(() => !dirty.value || window.confirm('These tag names have changes that have not been saved yet. Leave the page anyway?'))
-
-useEventListener(window, 'beforeunload', (event: BeforeUnloadEvent) => {
-  if (!dirty.value) return
-  event.preventDefault()
-})
 
 useHead({ title: 'Tag names' })
 </script>

@@ -21,9 +21,6 @@ export const videoTypeNames: Record<VideoType, string> = {
 /** The types that show the trick itself rather than explain it, in the order the public site's player prefers them */
 export const trickVideoTypes = [VideoType.FullSpeed, VideoType.SlowMo]
 
-/** Every trick type, in alphabetical order, for the pickers that offer them */
-export const trickTypes = Object.values(TrickType).sort((a, b) => a.localeCompare(b))
-
 export const grantTypeNames: Record<GrantType, string> = {
   [GrantType.SuperAdmin]: 'Super admin',
   [GrantType.TrickEditor]: 'Trick editor',
@@ -33,7 +30,7 @@ export const grantTypeNames: Record<GrantType, string> = {
   [GrantType.TagWrangler]: 'Tag wrangler'
 }
 
-/** The built in tag that holds a trick's type, it is set through the trick's details rather than with its other tags */
+/** Set through the trick's details rather than with its other tags */
 export const TRICK_TYPE_TAG = 'trick-type'
 
 export const tagValueTypeNames: Record<TagValueType, string> = {
@@ -46,7 +43,6 @@ interface TaggedTrick {
   tags: ReadonlyArray<{ tag: { id: string }, values: ReadonlyArray<{ id: string }> }>
 }
 
-/** The trick type the `trick-type` tag holds, null for a trick without one */
 export function trickTypeOf (trick: TaggedTrick): TrickType | null {
   const value = trick.tags.find(trickTag => trickTag.tag.id === TRICK_TYPE_TAG)?.values[0]?.id
   return (Object.values(TrickType) as string[]).includes(value ?? '') ? value as TrickType : null
@@ -73,10 +69,13 @@ export function formatOffset (milliseconds: number) {
   return `${minutes}:${String(seconds).padStart(2, '0')}.${String(rest).padStart(3, '0')}`
 }
 
-/** A seconds field as a number, null when it holds nothing a number can be read from */
-export function parseSeconds (input: string) {
-  const seconds = Number.parseFloat(input)
-  return Number.isNaN(seconds) ? null : seconds
+/**
+ * A number field's value, null when it holds nothing a number can be read
+ * from. `v-model` hands a number input's value over as a number once it parses.
+ */
+export function parseNumber (input: string | number) {
+  const number = Number.parseFloat(String(input))
+  return Number.isNaN(number) ? null : number
 }
 
 const dateFormat = new Intl.DateTimeFormat(undefined, { dateStyle: 'medium' })

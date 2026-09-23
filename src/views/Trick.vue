@@ -405,9 +405,8 @@
 <script setup lang="ts">
 import { ApolloError } from '@apollo/client/core'
 import { useHead } from '@unhead/vue'
-import { useEventListener } from '@vueuse/core'
 import { computed, ref, watch } from 'vue'
-import { onBeforeRouteLeave, useRoute } from 'vue-router'
+import { useRoute } from 'vue-router'
 import BottomBar from '../components/BottomBar.vue'
 import FormField from '../components/FormField.vue'
 import LocalisationFields from '../components/LocalisationFields.vue'
@@ -424,15 +423,16 @@ import {
   useSetTrickLevelVerificationMutation,
   useSetTrickLocalisationMutation,
   useSetTrickTagsMutation,
-  useTagsQuery,
   useTrickLocalisationQuery,
   useTrickQuery,
   useTrickOptionsQuery,
   useUpdateTrickDetailsMutation,
   VerificationLevel
 } from '../graphql/generated/graphql'
-import { disciplineNames, disciplineToSlug, languageLabel, localisationInput, toLocalisationValue, TRICK_TYPE_TAG, TRICKTIONARY, trickSorter, trickTypeOf, trickTypes } from '../helpers'
+import { disciplineNames, disciplineToSlug, languageLabel, localisationInput, parseNumber, toLocalisationValue, TRICK_TYPE_TAG, TRICKTIONARY, trickSorter, trickTypeOf } from '../helpers'
 import useGrants, { verificationLevelRank } from '../hooks/useGrants'
+import useTags from '../hooks/useTags'
+import useUnsavedChanges from '../hooks/useUnsavedChanges'
 import useTranslationLang from '../hooks/useTranslationLang'
 
 import IconLoading from '~icons/mdi/loading'
@@ -444,17 +444,17 @@ import type { LocalisationValue } from '../helpers'
 
 type LoadedTrick = NonNullable<TrickQuery['trick']>
 
-/** A tag on the trick as the form edits it, the number as typed */
 interface TagRow {
   tagId: string
-  number: string
+  /** As the number input holds it, see `parseNumber` */
+  number: string | number
   values: string[]
 }
 
 interface TrickForm {
   discipline: Discipline
   trickType: TrickType
-  /** Every tag but the trick type, which has a field of its own */
+  /** But the trick type, see `trickType` */
   tags: TagRow[]
   slug: string
   en: LocalisationValue
@@ -485,19 +485,7 @@ useHead({ title: computed(() => trick.value ? `Edit: ${trick.value.en?.name ?? t
 const { result: rulesetsResult } = useRulesetsQuery()
 const rulesets = computed(() => rulesetsResult.value?.rulesets ?? [])
 
-const { result: tagsResult } = useTagsQuery()
-const tagsById = computed(() => new Map((tagsResult.value?.tags ?? []).map(tag => [tag.id, tag])))
-
-function trickTypeLabel (type: TrickType) {
-  // the tag's value IDs are the trick types
-  const valueId: string = type
-  return tagsById.value.get(TRICK_TYPE_TAG)?.values.find(value => value.id === valueId)?.name ?? type
-}
-
-function appliesTo (tagId: string, discipline: Discipline) {
-  const disciplines = tagsById.value.get(tagId)?.disciplines ?? []
-  return disciplines.length === 0 || disciplines.includes(discipline)
-}
+const { tagsById, trickTypes, trickTypeLabel, appliesTo } = useTags()
 
 function toForm (loaded: LoadedTrick): TrickForm {
   const levels: Record<string, string> = { [TRICKTIONARY]: '' }
@@ -508,7 +496,7 @@ function toForm (loaded: LoadedTrick): TrickForm {
     trickType: trickTypeOf(loaded) ?? TrickType.Basic,
     tags: loaded.tags
       .filter(trickTag => trickTag.tag.id !== TRICK_TYPE_TAG)
-      .map(trickTag => ({ tagId: trickTag.tag.id, number: trickTag.number?.toString() ?? '', values: trickTag.values.map(value => value.id) })),
+      .map(trickTag => ({ tagId: trickTag.tag.id, number: trickTag.number ?? '', values: trickTag.values.map(value => value.id) })),
     slug: loaded.slug,
     en: toLocalisationValue(loaded.en),
     prerequisites: loaded.prerequisites.map(other => other.id),
@@ -682,7 +670,6 @@ const prerequisiteChanges = computed(() => {
   return changes
 })
 
-/** The tags that could still go on the trick, the built in ones have fields of their own */
 const addableTags = computed(() => [...tagsById.value.values()]
   .filter(tag => !tag.system && appliesTo(tag.id, form.value.discipline) && !form.value.tags.some(row => row.tagId === tag.id))
 )
@@ -698,7 +685,7 @@ function addTag () {
 function tagInput (row: TagRow): TrickTagInput {
   switch (tagsById.value.get(row.tagId)?.valueType) {
     case TagValueType.Number:
-      return { tagId: row.tagId, number: row.number.trim() === '' ? null : Number(row.number) }
+      return { tagId: row.tagId, number: parseNumber(row.number) }
     case TagValueType.Enum:
       return { tagId: row.tagId, values: row.values }
     default:
@@ -708,11 +695,11 @@ function tagInput (row: TagRow): TrickTagInput {
 
 function tagsKey (rows: TagRow[]) {
   return JSON.stringify(rows
-    .map(row => [row.tagId, row.number.trim(), [...row.values].sort()])
+    .map(row => [row.tagId, parseNumber(row.number), [...row.values].sort()])
     .sort(([a], [b]) => String(a).localeCompare(String(b))))
 }
 
-/** Every tag the trick should carry, null while they are as stored */
+/** Null while unchanged */
 const tagChanges = computed<TrickTagInput[] | null>(() => {
   const base = pristine.value
   if (!base || tagsKey(form.value.tags) === tagsKey(base.tags)) return null
@@ -777,8 +764,7 @@ async function save () {
   try {
     const details = detailsInput.value
     const tags = tagChanges.value
-    // a trick only moves discipline with tags that apply to the new one, so
-    // the ones that don't come off first and the new discipline's go on after
+    // a trick can't move to a discipline its tags don't apply to, so those come off first
     const from = pristine.value?.discipline
     if (tags && details?.discipline != null && from != null) {
       await setTrickTags({ trickId: id, tags: tags.filter(input => appliesTo(String(input.tagId), from)) })
@@ -841,10 +827,5 @@ async function verify (rulesId: string, verificationLevel: VerificationLevel | n
   }
 }
 
-onBeforeRouteLeave(() => !dirty.value || window.confirm('This trick has changes that have not been saved yet. Leave the page anyway?'))
-
-useEventListener(window, 'beforeunload', (event: BeforeUnloadEvent) => {
-  if (!dirty.value) return
-  event.preventDefault()
-})
+useUnsavedChanges(dirty, 'This trick')
 </script>

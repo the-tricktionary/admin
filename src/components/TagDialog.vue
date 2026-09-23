@@ -194,7 +194,7 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, useId, useTemplateRef } from 'vue'
 import { TagValueType, useCreateTagMutation, useUpdateTagMutation } from '../graphql/generated/graphql'
-import { disciplineNames, slugFromName, tagValueTypeNames } from '../helpers'
+import { disciplineNames, parseNumber, slugFromName, tagValueTypeNames } from '../helpers'
 
 import IconArrowUp from '~icons/mdi/arrow-up'
 import IconArrowDown from '~icons/mdi/arrow-down'
@@ -205,7 +205,7 @@ interface ValueRow {
   key: number
   id: string
   name: string
-  /** Stored on the tag already, so its ID is fixed */
+  /** Saved, so its ID is fixed */
   saved: boolean
   idTouched: boolean
 }
@@ -228,7 +228,6 @@ const typeHints: Record<TagValueType, string> = {
 const dialog = useTemplateRef('dialog')
 const titleId = useId()
 
-/** The built in tag, whose type and values are fixed */
 const locked = computed(() => tag?.system === true)
 
 let nextKey = 0
@@ -238,9 +237,9 @@ const idTouched = ref(tag !== null)
 const name = ref(tag?.name ?? '')
 const valueType = ref(tag?.valueType ?? TagValueType.Flag)
 const disciplines = ref<Discipline[]>([...tag?.disciplines ?? []])
-const min = ref(tag?.min?.toString() ?? '')
-const max = ref(tag?.max?.toString() ?? '')
-const step = ref(tag?.step?.toString() ?? '')
+const min = ref<string | number>(tag?.min ?? '')
+const max = ref<string | number>(tag?.max ?? '')
+const step = ref<string | number>(tag?.step ?? '')
 const multiple = ref(tag?.multiple ?? false)
 const values = ref<ValueRow[]>(tag?.values.map(value => ({ key: nextKey++, id: value.id, name: value.name, saved: true, idTouched: true })) ?? [])
 
@@ -264,11 +263,6 @@ function move (index: number, by: number) {
   values.value.splice(index + by, 0, row)
 }
 
-/** A number field as the API takes it, null when it is empty */
-function optionalNumber (input: string) {
-  return input.trim() === '' ? null : Number(input)
-}
-
 const { mutate: createTag } = useCreateTagMutation({ throws: 'always', refetchQueries: ['TagsWithCounts', 'Tags'] })
 const { mutate: updateTag } = useUpdateTagMutation({ throws: 'always', refetchQueries: ['TagsWithCounts', 'Tags'] })
 
@@ -282,9 +276,9 @@ async function save () {
       name: name.value,
       valueType: valueType.value,
       disciplines: disciplines.value,
-      min: isNumber ? optionalNumber(min.value) : null,
-      max: isNumber ? optionalNumber(max.value) : null,
-      step: isNumber ? optionalNumber(step.value) : null,
+      min: isNumber ? parseNumber(min.value) : null,
+      max: isNumber ? parseNumber(max.value) : null,
+      step: isNumber ? parseNumber(step.value) : null,
       multiple: isEnum ? multiple.value : null,
       values: isEnum ? values.value.map(row => ({ id: row.id, name: row.name })) : null
     }
