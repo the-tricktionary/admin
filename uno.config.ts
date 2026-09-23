@@ -138,9 +138,9 @@ export default defineConfig({
     {
       getCSS: () => `
           /*
-           * Dark mode follows the operating system. The data-theme attribute on
-           * <html> is an escape hatch that forces one scheme, so a manual
-           * toggle can be added later without touching any component.
+           * Dark mode follows the operating system unless the data-theme
+           * attribute on <html>, set from the theme the user picked on the
+           * public site, forces one scheme.
            */
           :root {
             color-scheme: light;
