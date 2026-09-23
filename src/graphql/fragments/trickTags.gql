@@ -1,0 +1,11 @@
+fragment TrickTags on Trick {
+  tags {
+    tag {
+      id
+    }
+    number
+    values {
+      id
+    }
+  }
+}

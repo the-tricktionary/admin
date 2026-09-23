@@ -1,0 +1,5 @@
+mutation CreateTag ($tagId: ID!, $data: TagInput!) {
+  createTag (tagId: $tagId, data: $data) {
+    ...TagDetails
+  }
+}

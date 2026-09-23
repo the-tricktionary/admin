@@ -22,6 +22,7 @@ export default function useGrants () {
   const isSuperAdmin = computed(() => grants.value.some(grant => grant.type === GrantType.SuperAdmin))
   const canEditTricks = computed(() => isSuperAdmin.value || grants.value.some(grant => grant.type === GrantType.TrickEditor))
   const canEditEventDefinitions = computed(() => isSuperAdmin.value || grants.value.some(grant => grant.type === GrantType.SpeedEditor))
+  const canManageTags = computed(() => isSuperAdmin.value || grants.value.some(grant => grant.type === GrantType.TagWrangler))
 
   // english is the source language of the Tricktionary, so trick editors are
   // its translators rather than anyone with a translator grant
@@ -55,5 +56,5 @@ export default function useGrants () {
 
   const hasAnyAccess = computed(() => grants.value.length > 0)
 
-  return { isSuperAdmin, canEditTricks, canEditEventDefinitions, canTranslate, translatorLangs, levelEditorRank, canEditLevels, hasAnyAccess }
+  return { isSuperAdmin, canEditTricks, canEditEventDefinitions, canManageTags, canTranslate, translatorLangs, levelEditorRank, canEditLevels, hasAnyAccess }
 }

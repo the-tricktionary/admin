@@ -1,5 +1,5 @@
 import { format, isValid, parseISO } from 'date-fns'
-import { Discipline, GrantType, TimingCueType, TrickType, VideoType } from './graphql/generated/graphql'
+import { Discipline, GrantType, TagValueType, TimingCueType, TrickType, VideoType } from './graphql/generated/graphql'
 
 import type { AttributionInput, TrickLocalisationInput } from './graphql/generated/graphql'
 
@@ -29,7 +29,27 @@ export const grantTypeNames: Record<GrantType, string> = {
   [GrantType.TrickEditor]: 'Trick editor',
   [GrantType.Translator]: 'Translator',
   [GrantType.LevelEditor]: 'Level editor',
-  [GrantType.SpeedEditor]: 'Speed editor'
+  [GrantType.SpeedEditor]: 'Speed editor',
+  [GrantType.TagWrangler]: 'Tag wrangler'
+}
+
+/** The built in tag that holds a trick's type, it is set through the trick's details rather than with its other tags */
+export const TRICK_TYPE_TAG = 'trick-type'
+
+export const tagValueTypeNames: Record<TagValueType, string> = {
+  [TagValueType.Flag]: 'Flag',
+  [TagValueType.Number]: 'Number',
+  [TagValueType.Enum]: 'Enum'
+}
+
+interface TaggedTrick {
+  tags: ReadonlyArray<{ tag: { id: string }, values: ReadonlyArray<{ id: string }> }>
+}
+
+/** The trick type the `trick-type` tag holds, null for a trick without one */
+export function trickTypeOf (trick: TaggedTrick): TrickType | null {
+  const value = trick.tags.find(trickTag => trickTag.tag.id === TRICK_TYPE_TAG)?.values[0]?.id
+  return (Object.values(TrickType) as string[]).includes(value ?? '') ? value as TrickType : null
 }
 
 export const timingCueTypeNames: Record<TimingCueType, string> = {

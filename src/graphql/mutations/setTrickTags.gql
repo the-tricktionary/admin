@@ -1,0 +1,6 @@
+mutation SetTrickTags ($trickId: ID!, $tags: [TrickTagInput!]!) {
+  setTrickTags (trickId: $trickId, tags: $tags) {
+    id
+    ...TrickTags
+  }
+}

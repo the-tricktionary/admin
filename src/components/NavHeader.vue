@@ -44,6 +44,9 @@
       <router-link v-if="canEditEventDefinitions" active-class="active" class="nav-link" to="/event-definitions">
         Speed events
       </router-link>
+      <router-link v-if="canManageTags" active-class="active" class="nav-link" to="/tags">
+        Tags
+      </router-link>
       <router-link v-if="canTranslate" active-class="active" class="nav-link" to="/translations">
         Translations
       </router-link>
@@ -66,7 +69,7 @@ import IconMenu from '~icons/mdi/menu'
 import IconClose from '~icons/mdi/close'
 
 const { firebaseUser: user } = useAuth()
-const { isSuperAdmin, canEditTricks, canEditEventDefinitions, canTranslate } = useGrants()
+const { isSuperAdmin, canEditTricks, canEditEventDefinitions, canManageTags, canTranslate } = useGrants()
 const router = useRouter()
 
 const showNav = ref(false)

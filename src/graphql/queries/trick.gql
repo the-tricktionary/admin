@@ -3,7 +3,7 @@ query Trick ($id: ID!) {
     id
     slug
     discipline
-    trickType
+    ...TrickTags
     en: localisation {
       id
       name

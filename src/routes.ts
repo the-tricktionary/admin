@@ -9,6 +9,7 @@ declare module 'vue-router' {
     superAdmin?: boolean
     trickEditor?: boolean
     speedEditor?: boolean
+    tagWrangler?: boolean
     translator?: boolean
   }
 }
@@ -24,6 +25,8 @@ export const routes: RouteRecordRaw[] = [
   { name: 'languages', path: '/languages', component: async () => await import('./views/Languages.vue'), meta: { superAdmin: true } },
   { name: 'notices', path: '/notices', component: async () => await import('./views/Notices.vue'), meta: { superAdmin: true } },
   { name: 'translations', path: '/translations', component: async () => await import('./views/Translations.vue'), meta: { translator: true } },
+  { name: 'tag-translations', path: '/translations/tags', component: async () => await import('./views/TagTranslations.vue'), meta: { translator: true } },
+  { name: 'tags', path: '/tags', component: async () => await import('./views/Tags.vue'), meta: { tagWrangler: true } },
   { name: 'event-definitions', path: '/event-definitions', component: async () => await import('./views/EventDefinitions.vue'), meta: { speedEditor: true } },
   { name: 'no-access', path: '/no-access', component: async () => await import('./views/NoAccess.vue') },
   { name: 'not_found', path: '/:catchAll(.*)*', component: async () => await import('./views/404.vue') }
@@ -38,7 +41,7 @@ router.beforeEach(async to => {
   await whenAuthKnown()
 
   const { firebaseUser } = useAuth()
-  const { isSuperAdmin, canEditTricks, canEditEventDefinitions, canTranslate, hasAnyAccess } = useGrants()
+  const { isSuperAdmin, canEditTricks, canEditEventDefinitions, canManageTags, canTranslate, hasAnyAccess } = useGrants()
 
   if (to.meta.public) return true
 
@@ -56,6 +59,7 @@ router.beforeEach(async to => {
 
   if (to.meta.translator && !canTranslate.value) return { path: '/' }
   if (to.meta.speedEditor && !canEditEventDefinitions.value) return { path: '/' }
+  if (to.meta.tagWrangler && !canManageTags.value) return { path: '/' }
 
   return true
 })

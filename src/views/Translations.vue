@@ -1,6 +1,7 @@
 <template>
   <div class="container mx-auto pt-4 px-2 pb-24">
     <h1>Translations</h1>
+    <translation-tabs />
 
     <p v-if="!langs.length" class="mt-4">
       There is no language for you to translate yet.
@@ -165,6 +166,7 @@ import { useEventListener } from '@vueuse/core'
 import { computed, onMounted, ref, watch } from 'vue'
 import { onBeforeRouteLeave } from 'vue-router'
 import BottomBar from '../components/BottomBar.vue'
+import TranslationTabs from '../components/TranslationTabs.vue'
 import { useSetUiMessagesMutation, useUiMessageEntriesQuery } from '../graphql/generated/graphql'
 import { formatDate, languageLabel, languageName } from '../helpers'
 import useTranslationLang from '../hooks/useTranslationLang'

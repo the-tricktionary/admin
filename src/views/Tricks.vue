@@ -109,7 +109,7 @@
 
         <template v-for="typeGroup of levelGroup.types" :key="typeGroup.trickType">
           <h3 class="text-center text-xl mt-4 mb-2">
-            {{ typeGroup.trickType }}
+            {{ typeGroup.label }}
           </h3>
           <div class="grid md:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-5 gap-4">
             <router-link
@@ -147,8 +147,8 @@ import { refDebounced } from '@vueuse/core'
 import { useRoute, useRouter } from 'vue-router'
 import BottomBar from '../components/BottomBar.vue'
 import DisciplineSelector from '../components/DisciplineSelector.vue'
-import { useRulesetsQuery, useTricksQuery, VerificationLevel, VideoHost } from '../graphql/generated/graphql'
-import { disciplineToSlug, languageLabel, queryDiscipline, TRICKTIONARY, trickSorter, trickVideoTypes, videoTypeNames } from '../helpers'
+import { useRulesetsQuery, useTagsQuery, useTricksQuery, VerificationLevel, VideoHost } from '../graphql/generated/graphql'
+import { disciplineToSlug, languageLabel, queryDiscipline, TRICK_TYPE_TAG, TRICKTIONARY, trickSorter, trickTypeOf, trickVideoTypes, videoTypeNames } from '../helpers'
 import useGrants, { verificationLevelRank } from '../hooks/useGrants'
 import useLanguages from '../hooks/useLanguages'
 import useTranslationLang from '../hooks/useTranslationLang'
@@ -161,7 +161,7 @@ import IconStairs from '~icons/mdi/stairs'
 import IconVideo from '~icons/mdi/video-outline'
 
 import type { Component } from 'vue'
-import type { Discipline, TrickFilter, TricksQuery, TrickType } from '../graphql/generated/graphql'
+import type { Discipline, TrickFilter, TricksQuery } from '../graphql/generated/graphql'
 
 const route = useRoute()
 const router = useRouter()
@@ -255,8 +255,15 @@ function levelRank (level: string) {
   return level === '' || Number.isNaN(rank) ? Number.MAX_SAFE_INTEGER : rank
 }
 
+const { result: tagsResult } = useTagsQuery()
+
+function trickTypeLabel (trickType: string) {
+  if (trickType === '') return 'No trick type'
+  return tagsResult.value?.tags.find(tag => tag.id === TRICK_TYPE_TAG)?.values.find(value => value.id === trickType)?.name ?? trickType
+}
+
 const levelGroups = computed(() => {
-  const byLevel = new Map<string, Map<TrickType, TricksQuery['tricks']>>()
+  const byLevel = new Map<string, Map<string, TricksQuery['tricks']>>()
 
   for (const trick of [...tricks.value].sort(trickSorter)) {
     const level = trick.levels.find(trickLevel => trickLevel.rulesId === TRICKTIONARY)?.level ?? ''
@@ -265,9 +272,10 @@ const levelGroups = computed(() => {
       byType = new Map()
       byLevel.set(level, byType)
     }
-    const group = byType.get(trick.trickType) ?? []
+    const trickType = trickTypeOf(trick) ?? ''
+    const group = byType.get(trickType) ?? []
     group.push(trick)
-    byType.set(trick.trickType, group)
+    byType.set(trickType, group)
   }
 
   return [...byLevel]
@@ -277,7 +285,7 @@ const levelGroups = computed(() => {
       label: level === '' ? 'No level' : `Level ${level}`,
       types: [...byType]
         .sort(([a], [b]) => a.localeCompare(b))
-        .map(([trickType, typeTricks]) => ({ trickType, tricks: typeTricks }))
+        .map(([trickType, typeTricks]) => ({ trickType, label: trickTypeLabel(trickType), tricks: typeTricks }))
     }))
 })
 

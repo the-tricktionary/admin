@@ -1,0 +1,23 @@
+fragment TagDetails on Tag {
+  id
+  name
+  names {
+    lang
+    value
+  }
+  valueType
+  disciplines
+  min
+  max
+  step
+  multiple
+  values {
+    id
+    name
+    names {
+      lang
+      value
+    }
+  }
+  system
+}

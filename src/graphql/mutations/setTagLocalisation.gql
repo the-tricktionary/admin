@@ -1,0 +1,5 @@
+mutation SetTagLocalisation ($tagId: ID!, $lang: String!, $data: TagLocalisationInput!) {
+  setTagLocalisation (tagId: $tagId, lang: $lang, data: $data) {
+    ...TagDetails
+  }
+}
