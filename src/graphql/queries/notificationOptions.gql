@@ -1,0 +1,9 @@
+query NotificationOptions {
+  me {
+    id
+    email
+    notificationOptions {
+      adminDigest
+    }
+  }
+}

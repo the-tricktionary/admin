@@ -80,7 +80,8 @@ const links = computed(() => ([
   { to: '/languages', label: 'Languages', show: isSuperAdmin.value },
   { to: '/notices', label: 'Notices', show: isSuperAdmin.value },
   { to: '/event-definitions', label: 'Speed events', show: canEditEventDefinitions.value },
-  { to: '/translations', label: 'Translations', show: canTranslate.value }
+  { to: '/translations', label: 'Translations', show: canTranslate.value },
+  { to: '/settings', label: 'Settings', show: !!user.value }
 ] satisfies NavLink[]).filter(link => link.show))
 
 const showNav = ref(false)
