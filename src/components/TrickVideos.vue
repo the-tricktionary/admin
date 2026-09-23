@@ -1,5 +1,5 @@
 <template>
-  <div class="grid lg:grid-cols-2 gap-6">
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
     <div class="w-full aspect-video bg-placeholder isolate">
       <video-preview
         v-if="selected?.host === VideoHost.Mux"
@@ -20,7 +20,7 @@
     </div>
 
     <div>
-      <div class="overflow-x-auto">
+      <div class="relative overflow-x-auto">
         <table class="w-full border-collapse text-left">
           <thead>
             <tr class="border-b border-solid border-line">

@@ -1,6 +1,7 @@
 query Me {
   me {
     id
+    theme
     grants {
       type
       lang
