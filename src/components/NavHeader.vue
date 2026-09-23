@@ -29,8 +29,7 @@
       <router-link
         v-for="link of links"
         :key="link.to"
-        :active-class="link.exact ? undefined : 'active'"
-        :exact-active-class="link.exact ? 'active' : undefined"
+        active-class="active"
         class="nav-link"
         :to="link.to"
       >
@@ -66,8 +65,6 @@ import type { ComponentPublicInstance } from 'vue'
 interface NavLink {
   to: string
   label: string
-  /** Active only on this exact path, for the link to the root */
-  exact?: boolean
   show: boolean
 }
 
@@ -76,7 +73,7 @@ const { isSuperAdmin, canEditTricks, canEditEventDefinitions, canTranslate } = u
 const router = useRouter()
 
 const links = computed(() => ([
-  { to: '/', label: 'Tricks', exact: true, show: true },
+  { to: '/', label: 'Tricks', show: true },
   { to: '/submissions', label: 'Submissions', show: canEditTricks.value },
   { to: '/users', label: 'Users', show: isSuperAdmin.value },
   { to: '/rulesets', label: 'Rulesets', show: isSuperAdmin.value },
@@ -87,26 +84,15 @@ const links = computed(() => ([
 ] satisfies NavLink[]).filter(link => link.show))
 
 const showNav = ref(false)
-/** Whether the links are behind the menu button */
 const collapsed = ref(true)
-/**
- * Whether the grants have loaded once and the row of links been measured for
- * them, until then neither the links nor the menu button show, or a narrow
- * screen would have the few links there are before the grants in a row, then
- * swap them for the menu button. The button still takes its room, so the
- * header keeps its height
- */
+/** False until measured with the grants' links; meanwhile the button is invisible but keeps the header's height */
 const ready = ref(false)
-const authKnown = ref(false)
 
 const header = useTemplateRef('header')
 const brand = useTemplateRef<ComponentPublicInstance>('brand')
 const row = useTemplateRef('row')
 
-// how many links there are depends on the grants, and how wide they are on
-// the font, so rather than below a fixed width the links go behind the menu
-// button whenever the row of them, laid out unseen inside the header, is
-// wider than the room the name leaves
+// measures the hidden copy of the row, as the nav is laid out as the menu while collapsed
 function fit () {
   const headerEl = header.value
   const brandEl = unrefElement(brand)
@@ -115,18 +101,14 @@ function fit () {
   const style = window.getComputedStyle(headerEl)
   const room = headerEl.clientWidth - Number.parseFloat(style.paddingLeft) - Number.parseFloat(style.paddingRight) - brandEl.getBoundingClientRect().width
   collapsed.value = row.value.getBoundingClientRect().width > room
-  if (authKnown.value) ready.value = true
 }
 
-// the header resizes with the window, the row when links come and go or the font loads
 useResizeObserver([header, row], fit)
 
-// the links for the grants are rendered by the next tick, measure those
-// rather than showing them before they are
 void whenAuthKnown().then(async () => {
-  authKnown.value = true
   await nextTick()
   fit()
+  ready.value = true
 })
 
 watch(collapsed, () => {
@@ -153,7 +135,6 @@ async function signOutAndLeave () {
   @apply text-white;
 }
 
-/* The links behind the menu button, stacked full-width below the header */
 .menu {
   @apply absolute;
   @apply top-full;
