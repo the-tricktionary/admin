@@ -1,5 +1,5 @@
 <template>
-  <fieldset class="flex flex-col gap-3 border border-line rounded p-3">
+  <fieldset class="flex flex-col gap-3 min-w-0 border border-line rounded p-3">
     <legend class="px-1">
       Timing track
     </legend>
@@ -27,7 +27,7 @@
       <label class="file-picker w-max" :for="fileInputId">Upload audio</label>
     </template>
 
-    <div v-if="cues.length" class="overflow-x-auto">
+    <div v-if="cues.length" class="relative overflow-x-auto">
       <table class="w-full border-collapse">
         <thead>
           <tr class="border-b border-line text-left text-sm text-muted">
