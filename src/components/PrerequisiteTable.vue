@@ -7,7 +7,7 @@
       {{ hint }}
     </p>
 
-    <div class="overflow-x-auto">
+    <div class="relative overflow-x-auto">
       <table class="w-full border-collapse text-left">
         <tbody>
           <tr v-for="row of rows" :key="row.id" class="border-b border-solid border-line">

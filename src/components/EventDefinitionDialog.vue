@@ -11,7 +11,7 @@
         {{ eventDefinition ? 'Edit event' : 'New event' }}
       </h2>
 
-      <fieldset :disabled="busy" class="border-none p-0 m-0 flex flex-col gap-3">
+      <fieldset :disabled="busy" class="border-none p-0 m-0 min-w-0 flex flex-col gap-3">
         <form-field id="event-name" label="Name">
           <template #default="field">
             <input

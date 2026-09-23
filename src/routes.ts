@@ -28,6 +28,7 @@ export const routes: RouteRecordRaw[] = [
   { name: 'tag-translations', path: '/translations/tags', component: async () => await import('./views/TagTranslations.vue'), meta: { translator: true } },
   { name: 'tags', path: '/tags', component: async () => await import('./views/Tags.vue'), meta: { tagWrangler: true } },
   { name: 'event-definitions', path: '/event-definitions', component: async () => await import('./views/EventDefinitions.vue'), meta: { speedEditor: true } },
+  { name: 'settings', path: '/settings', component: async () => await import('./views/Settings.vue') },
   { name: 'no-access', path: '/no-access', component: async () => await import('./views/NoAccess.vue') },
   { name: 'not_found', path: '/:catchAll(.*)*', component: async () => await import('./views/404.vue') }
 ]
