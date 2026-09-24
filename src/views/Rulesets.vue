@@ -19,16 +19,10 @@
         <thead>
           <tr class="border-b border-line text-left">
             <th scope="col" class="py-2 pr-2">
-              ID
-            </th>
-            <th scope="col" class="py-2 pr-2">
               Name
             </th>
             <th scope="col" class="py-2 pr-2">
               Other languages
-            </th>
-            <th scope="col" class="py-2 pr-2">
-              Primary
             </th>
             <th scope="col" class="py-2 pr-2">
               Actions
@@ -36,20 +30,19 @@
           </tr>
         </thead>
         <tbody>
-          <tr v-for="ruleset in rulesets" :key="ruleset.id" class="border-b border-line">
+          <tr v-for="ruleset in rulesets" :key="ruleset.id" class="border-b border-line align-top">
             <td class="py-2 pr-2">
-              {{ ruleset.id }}
-            </td>
-            <td class="py-2 pr-2">
-              {{ ruleset.name }}
+              <!-- laid out like the tags' name column, which a phone squeezes as narrow as its content lets it -->
+              <div class="flex flex-wrap items-center gap-1">
+                <span class="whitespace-nowrap mr-1">{{ ruleset.name }}</span>
+                <span v-if="ruleset.isPrimary" class="whitespace-nowrap rounded bg-ttyellow-500 text-black px-2 py-0.5 text-sm">
+                  Primary
+                </span>
+              </div>
+              <span class="block whitespace-nowrap font-mono text-sm text-muted">{{ ruleset.id }}</span>
             </td>
             <td class="py-2 pr-2">
               {{ otherNamesCount(ruleset) }}
-            </td>
-            <td class="py-2 pr-2">
-              <span v-if="ruleset.isPrimary" class="rounded bg-ttyellow-500 text-black px-2 py-0.5 text-sm">
-                Primary
-              </span>
             </td>
             <td class="py-2 pr-2">
               <div class="flex gap-2">
@@ -86,6 +79,8 @@ import { useHead } from '@unhead/vue'
 import { computed, ref } from 'vue'
 import RulesetDialog from '../components/RulesetDialog.vue'
 import { useRulesetsWithNamesQuery, useSetPrimaryRulesetMutation } from '../graphql/generated/graphql'
+
+import IconPlus from '~icons/mdi/plus'
 
 import type { RulesetsWithNamesQuery } from '../graphql/generated/graphql'
 

@@ -1,5 +1,5 @@
 <template>
-  <div class="container mx-auto pt-4 px-2 pb-24">
+  <div class="container mx-auto pt-4 px-2 pb-8">
     <h1>Translations</h1>
     <translation-tabs />
 

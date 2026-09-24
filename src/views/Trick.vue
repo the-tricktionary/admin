@@ -1,5 +1,5 @@
 <template>
-  <div class="container mx-auto pt-4 px-2 pb-24">
+  <div class="container mx-auto pt-4 px-2 pb-8">
     <div v-if="loading && !trick" class="flex items-center justify-center flex-col" role="status">
       <icon-loading class="animate-spin w-32 h-32" aria-hidden="true" />
       Loading trick...

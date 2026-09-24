@@ -95,7 +95,7 @@
     </router-link>
   </bottom-bar>
 
-  <div class="container mx-auto p-2 pb-36">
+  <div class="container mx-auto p-2 pb-8">
     <div v-if="loading && !tricks.length" class="flex items-center justify-center flex-col" role="status">
       <icon-loading class="animate-spin w-32 h-32" aria-hidden="true" />
       Loading tricks...

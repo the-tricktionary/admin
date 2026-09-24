@@ -132,7 +132,11 @@ export default defineConfig({
       'disabled:cursor-default disabled:bg-elevated disabled:text-muted',
       'focus-visible:outline-2 focus-visible:outline-solid focus-visible:outline-ttred-900 focus-visible:outline-offset-2'
     ].join(' '),
-    'btn-primary': 'btn bg-ttred-500 border-ttred-900 text-white hover:bg-ttred-900'
+    // The hover is left to enabled buttons: hover and disabled carry the same
+    // weight and the hover comes later, so a button disabled under the pointer,
+    // e.g. while saving what it was just clicked for, kept the red behind the
+    // disabled grey text
+    'btn-primary': 'btn bg-ttred-500 border-ttred-900 text-white hover:not-disabled:bg-ttred-900'
   },
   preflights: [
     {
