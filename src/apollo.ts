@@ -3,7 +3,9 @@ import { setContext } from '@apollo/client/link/context'
 import { getAuth } from 'firebase/auth'
 
 const httpLink = createHttpLink({
-  uri: `${import.meta.env.VITE_GRAPHQL_URL}/graphql`
+  uri: `${import.meta.env.VITE_GRAPHQL_URL}/graphql`,
+  // identifies the app to the API, see the API's README
+  headers: import.meta.env.VITE_API_KEY ? { 'api-key': import.meta.env.VITE_API_KEY } : {}
 })
 
 const authLink = setContext(async (_, { headers }) => {

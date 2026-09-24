@@ -13,5 +13,6 @@ Development needs Node 22.12 or newer. `npm run codegen` reads the schema from
 the deployed API, set `GRAPHQL_SCHEMA=path/to/introspection.json` to generate
 against a schema that isn't released yet, and `VITE_GRAPHQL_URL` (for example
 `http://localhost:3000`) to run the app against a locally running API;
-`.env.example` lists the variables. Pull requests are deployed to a Firebase
+`.env.example` lists the variables, among them `VITE_API_KEY`, the admin's
+publishable API key that the API needs to see from a browser. Pull requests are deployed to a Firebase
 hosting preview channel, and `main` goes to <https://admin.the-tricktionary.com>.
