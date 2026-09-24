@@ -1,0 +1,19 @@
+fragment ApiKeyRow on ApiKey {
+  id
+  hint
+  createdAt
+  revokedAt
+}
+
+fragment ApiClientRow on ApiClient {
+  id
+  name
+  contact
+  scopes
+  origins
+  builtIn
+  enabled
+  keys {
+    ...ApiKeyRow
+  }
+}

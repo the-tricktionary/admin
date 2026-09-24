@@ -1,0 +1,5 @@
+mutation UpdateApiClient ($clientId: ID!, $data: ApiClientInput!) {
+  updateApiClient (clientId: $clientId, data: $data) {
+    ...ApiClientRow
+  }
+}

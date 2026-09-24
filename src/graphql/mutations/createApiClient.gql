@@ -1,0 +1,5 @@
+mutation CreateApiClient ($clientId: ID!, $data: ApiClientInput!) {
+  createApiClient (clientId: $clientId, data: $data) {
+    ...ApiClientRow
+  }
+}

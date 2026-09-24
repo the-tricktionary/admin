@@ -1,0 +1,6 @@
+mutation SetApiClientEnabled ($clientId: ID!, $enabled: Boolean!) {
+  setApiClientEnabled (clientId: $clientId, enabled: $enabled) {
+    id
+    enabled
+  }
+}

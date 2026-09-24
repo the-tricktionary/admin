@@ -1,5 +1,5 @@
 import { format, isValid, parseISO } from 'date-fns'
-import { Discipline, GrantType, TagValueType, TimingCueType, VideoType } from './graphql/generated/graphql'
+import { Discipline, GrantType, Scope, TagValueType, TimingCueType, VideoType } from './graphql/generated/graphql'
 
 import type { AttributionInput, TrickLocalisationInput, TrickTagInput } from './graphql/generated/graphql'
 
@@ -29,6 +29,13 @@ export const grantTypeNames: Record<GrantType, string> = {
   [GrantType.SpeedEditor]: 'Speed editor',
   [GrantType.TagWrangler]: 'Tag wrangler'
 }
+
+/** What a registered API client may be given, the other scopes are for the Tricktionary's own apps */
+export const registrableScopes: Array<{ scope: Scope, description: string }> = [
+  { scope: Scope.Public, description: 'Tricks and their tags, levels and videos, rulesets and languages' },
+  { scope: Scope.Site, description: 'Interface messages, notices, event definitions, global statistics and the shop' },
+  { scope: Scope.Profiles, description: 'Users\' public profiles, with their checklists and speed bests' }
+]
 
 /** The slug of the built in tags holding the trick type, one per discipline */
 export const TRICK_TYPE_SLUG = 'trick-type'

@@ -1,0 +1,8 @@
+mutation IssueApiKey ($clientId: ID!) {
+  issueApiKey (clientId: $clientId) {
+    key
+    apiKey {
+      ...ApiKeyRow
+    }
+  }
+}

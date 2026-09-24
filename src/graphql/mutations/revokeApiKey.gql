@@ -1,0 +1,5 @@
+mutation RevokeApiKey ($keyId: ID!) {
+  revokeApiKey (keyId: $keyId) {
+    ...ApiKeyRow
+  }
+}
