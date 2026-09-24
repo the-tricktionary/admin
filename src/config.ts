@@ -4,12 +4,12 @@ import { initializeApp } from 'firebase/app'
 import type { Router } from 'vue-router'
 
 const firebaseConfig = {
-  apiKey: "AIzaSyDpxeEGAi9KSSR3vuCq27GwUYiYXSGiNR8",
-  authDomain: "the-tricktionary.com",
-  projectId: "project-5641153190345267944",
-  messagingSenderId: "1048157266079",
-  appId: "1:1048157266079:web:7e27b88b92262698ae02aa",
-  measurementId: "G-G29EYN86T1"
+  apiKey: 'AIzaSyDpxeEGAi9KSSR3vuCq27GwUYiYXSGiNR8',
+  authDomain: 'the-tricktionary.com',
+  projectId: 'project-5641153190345267944',
+  messagingSenderId: '1048157266079',
+  appId: '1:1048157266079:web:7e27b88b92262698ae02aa',
+  measurementId: 'G-G29EYN86T1'
 }
 
 initializeApp(firebaseConfig)
