@@ -54,7 +54,7 @@
               <span v-if="tag.required" class="ml-1 rounded border border-line px-2 py-0.5 text-sm">
                 Required
               </span>
-              <span class="block font-mono text-sm text-muted">#{{ tag.id }}</span>
+              <span class="block font-mono text-sm text-muted">#{{ tag.slug }}</span>
             </td>
             <td class="py-2 pr-2">
               {{ tagValueTypeNames[tag.valueType] }}
@@ -152,7 +152,7 @@ function typeDetails (tag: Tag) {
 
 function tricksWith (tag: Tag) {
   const discipline = tag.disciplines[0]
-  return { name: 'tricks', query: { q: `#${tag.id}`, ...(discipline ? { discipline: disciplineToSlug(discipline) } : {}) } }
+  return { name: 'tricks', query: { q: `#${tag.slug}`, ...(discipline ? { discipline: disciplineToSlug(discipline) } : {}) } }
 }
 
 function otherLanguages (tag: Tag) {

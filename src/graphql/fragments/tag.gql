@@ -1,5 +1,6 @@
 fragment TagDetails on Tag {
   id
+  slug
   name
   names {
     lang

@@ -2,6 +2,7 @@ fragment TrickTags on Trick {
   tags {
     tag {
       id
+      slug
       valueType
     }
     number

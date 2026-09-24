@@ -24,27 +24,27 @@
             required
             maxlength="60"
             class="rounded"
-            @input="suggestId()"
+            @input="suggestSlug()"
           >
         </div>
 
         <div class="flex flex-col gap-1">
-          <label for="tag-id">ID</label>
+          <label for="tag-slug">Slug</label>
           <input
-            id="tag-id"
-            v-model="id"
+            id="tag-slug"
+            v-model="slug"
             type="text"
             required
             maxlength="40"
             pattern="[a-z0-9]+(-[a-z0-9]+)*"
             :readonly="tag !== null"
             :class="{ 'bg-sunken': tag !== null }"
-            aria-describedby="tag-id-hint"
+            aria-describedby="tag-slug-hint"
             class="rounded font-mono"
-            @input="idTouched = true"
+            @input="slugTouched = true"
           >
-          <p id="tag-id-hint" class="text-muted text-sm m-0">
-            What search queries use, <code>#{{ id || 'id' }}</code>. It cannot change later.
+          <p id="tag-slug-hint" class="text-muted text-sm m-0">
+            What search queries use, <code>#{{ slug || 'slug' }}</code>. Tags that share no discipline may share it. It cannot change later.
           </p>
         </div>
       </div>
@@ -242,8 +242,8 @@ const locked = computed(() => tag?.system === true)
 
 let nextKey = 0
 
-const id = ref(tag?.id ?? '')
-const idTouched = ref(tag !== null)
+const slug = ref(tag?.slug ?? '')
+const slugTouched = ref(tag !== null)
 const name = ref(tag?.name ?? '')
 const valueType = ref(tag?.valueType ?? TagValueType.Flag)
 const disciplines = ref<Discipline[]>([...tag?.disciplines ?? []])
@@ -257,8 +257,8 @@ const values = ref<ValueRow[]>(tag?.values.map(value => ({ key: nextKey++, id: v
 const error = ref<string | null>(null)
 const saving = ref(false)
 
-function suggestId () {
-  if (!idTouched.value) id.value = slugFromName(name.value)
+function suggestSlug () {
+  if (!slugTouched.value) slug.value = slugFromName(name.value)
 }
 
 function suggestValueId (row: ValueRow) {
@@ -294,7 +294,7 @@ async function save () {
       values: isEnum ? values.value.map(row => ({ id: row.id, name: row.name })) : null,
       required: valueType.value !== TagValueType.Flag && required.value
     }
-    await (tag ? updateTag({ tagId: tag.id, data }) : createTag({ tagId: id.value, data }))
+    await (tag ? updateTag({ tagId: tag.id, data }) : createTag({ slug: slug.value, data }))
     dialog.value?.close()
   } catch (err) {
     error.value = err instanceof Error ? err.message : 'Something went wrong, please try again'

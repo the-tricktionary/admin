@@ -1,6 +1,6 @@
 import { computed } from 'vue'
 import { useTagsQuery } from '../graphql/generated/graphql'
-import { tagInput, TRICK_TYPE_TAG } from '../helpers'
+import { tagInput, TRICK_TYPE_SLUG } from '../helpers'
 
 import type { Discipline } from '../graphql/generated/graphql'
 import type { TagRow } from '../helpers'
@@ -10,16 +10,22 @@ export default function useTags () {
   const tags = computed(() => result.value?.tags ?? [])
   const tagsById = computed(() => new Map(tags.value.map(tag => [tag.id, tag])))
 
-  /** The IDs of the trick type values, in order */
-  const trickTypes = computed(() => tagsById.value.get(TRICK_TYPE_TAG)?.values.map(value => value.id) ?? [])
-
-  function trickTypeLabel (trickType: string) {
-    return tagsById.value.get(TRICK_TYPE_TAG)?.values.find(value => value.id === trickType)?.name ?? trickType
-  }
-
   function appliesTo (tagId: string, discipline: Discipline) {
     const disciplines = tagsById.value.get(tagId)?.disciplines ?? []
     return disciplines.length === 0 || disciplines.includes(discipline)
+  }
+
+  function trickTypeTag (discipline: Discipline) {
+    return tags.value.find(tag => tag.slug === TRICK_TYPE_SLUG && appliesTo(tag.id, discipline))
+  }
+
+  /** The IDs of the discipline's trick type values, in order */
+  function trickTypes (discipline: Discipline) {
+    return trickTypeTag(discipline)?.values.map(value => value.id) ?? []
+  }
+
+  function trickTypeLabel (discipline: Discipline, trickType: string) {
+    return trickTypeTag(discipline)?.values.find(value => value.id === trickType)?.name ?? trickType
   }
 
   function requiredOn (tagId: string, discipline: Discipline) {

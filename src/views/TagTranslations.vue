@@ -39,8 +39,11 @@
 
       <ul v-else class="list-none m-0 p-0 divide-y divide-solid divide-line">
         <li v-for="card of cards" :key="card.tagId" class="py-4">
-          <p class="font-mono text-sm text-muted mb-1">
-            #{{ card.tagId }}
+          <p class="text-sm text-muted mb-1">
+            <span class="font-mono">#{{ card.slug }}</span>
+            <template v-if="card.disciplines.length">
+              &middot; {{ card.disciplines.map(discipline => disciplineNames[discipline]).join(', ') }}
+            </template>
           </p>
           <div v-for="row of card.rows" :key="row.key" class="grid sm:grid-cols-2 gap-x-4 items-center mb-2" :class="{ 'sm:pl-6': row.valueId != null }">
             <label :for="`tag-name-${row.key}`" lang="en">
@@ -93,7 +96,7 @@ import { computed, ref, watch } from 'vue'
 import BottomBar from '../components/BottomBar.vue'
 import TranslationTabs from '../components/TranslationTabs.vue'
 import { useSetTagLocalisationMutation, useTagsQuery } from '../graphql/generated/graphql'
-import { languageLabel } from '../helpers'
+import { disciplineNames, languageLabel } from '../helpers'
 import useTranslationLang from '../hooks/useTranslationLang'
 import useUnsavedChanges from '../hooks/useUnsavedChanges'
 
@@ -128,6 +131,8 @@ function nameIn (names: ReadonlyArray<{ lang: string, value: string }>, forLang:
 
 const allRows = computed(() => tags.value.map(tag => ({
   tagId: tag.id,
+  slug: tag.slug,
+  disciplines: tag.disciplines,
   rows: [
     { key: tag.id, tagId: tag.id, valueId: null, english: tag.name, stored: nameIn(tag.names, lang.value) },
     ...tag.values.map(value => ({

@@ -30,7 +30,8 @@ export const grantTypeNames: Record<GrantType, string> = {
   [GrantType.TagWrangler]: 'Tag wrangler'
 }
 
-export const TRICK_TYPE_TAG = 'trick-type'
+/** The slug of the built in tags holding the trick type, one per discipline */
+export const TRICK_TYPE_SLUG = 'trick-type'
 
 export const tagValueTypeNames: Record<TagValueType, string> = {
   [TagValueType.Flag]: 'Flag',
@@ -39,12 +40,12 @@ export const tagValueTypeNames: Record<TagValueType, string> = {
 }
 
 interface TaggedTrick {
-  tags: ReadonlyArray<{ tag: { id: string, valueType: TagValueType }, number?: number | null, values: ReadonlyArray<{ id: string }> }>
+  tags: ReadonlyArray<{ tag: { id: string, slug: string, valueType: TagValueType }, number?: number | null, values: ReadonlyArray<{ id: string }> }>
 }
 
 /** The ID of the trick type value */
 export function trickTypeOf (trick: TaggedTrick): string | null {
-  return trick.tags.find(trickTag => trickTag.tag.id === TRICK_TYPE_TAG)?.values[0]?.id ?? null
+  return trick.tags.find(trickTag => trickTag.tag.slug === TRICK_TYPE_SLUG)?.values[0]?.id ?? null
 }
 
 /** A tag on a trick, as a form holds it */

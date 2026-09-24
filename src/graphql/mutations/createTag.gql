@@ -1,5 +1,5 @@
-mutation CreateTag ($tagId: ID!, $data: TagInput!) {
-  createTag (tagId: $tagId, data: $data) {
+mutation CreateTag ($slug: String!, $data: TagInput!) {
+  createTag (slug: $slug, data: $data) {
     ...TagDetails
   }
 }

@@ -9,7 +9,7 @@
         <div class="flex-auto min-w-36">
           <span class="font-semibold">{{ tagsById.get(row.tagId)?.name ?? row.tagId }}</span>
           <span v-if="requiredOn(row.tagId, discipline)" class="text-muted text-sm"> (required)</span>
-          <span class="block font-mono text-sm text-muted">#{{ row.tagId }}</span>
+          <span class="block font-mono text-sm text-muted">#{{ tagsById.get(row.tagId)?.slug ?? row.tagId }}</span>
           <p v-if="!appliesTo(row.tagId, discipline)" class="text-ttred-900 text-sm m-0">
             Does not apply to {{ disciplineNames[discipline] }} tricks
           </p>
