@@ -33,12 +33,6 @@ export const grantTypeNames: Record<GrantType, string> = {
 /** The slug of the built in tags holding the trick type, one per discipline */
 export const TRICK_TYPE_SLUG = 'trick-type'
 
-export const tagValueTypeNames: Record<TagValueType, string> = {
-  [TagValueType.Flag]: 'Flag',
-  [TagValueType.Number]: 'Number',
-  [TagValueType.Enum]: 'Enum'
-}
-
 interface TaggedTrick {
   tags: ReadonlyArray<{ tag: { id: string, slug: string, valueType: TagValueType }, number?: number | null, values: ReadonlyArray<{ id: string }> }>
 }

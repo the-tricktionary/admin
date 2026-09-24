@@ -52,8 +52,8 @@
       <div class="flex flex-col gap-1">
         <label for="tag-type">Type</label>
         <select id="tag-type" v-model="valueType" :disabled="locked" class="rounded w-max">
-          <option v-for="(label, value) of tagValueTypeNames" :key="value" :value="value">
-            {{ label }}
+          <option v-for="type of Object.values(TagValueType)" :key="type" :value="type">
+            {{ type }}
           </option>
         </select>
         <p class="text-muted text-sm m-0">
@@ -204,7 +204,7 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, useId, useTemplateRef } from 'vue'
 import { TagValueType, useCreateTagMutation, useUpdateTagMutation } from '../graphql/generated/graphql'
-import { disciplineNames, parseNumber, slugFromName, tagValueTypeNames } from '../helpers'
+import { disciplineNames, parseNumber, slugFromName } from '../helpers'
 
 import IconArrowUp from '~icons/mdi/arrow-up'
 import IconArrowDown from '~icons/mdi/arrow-down'

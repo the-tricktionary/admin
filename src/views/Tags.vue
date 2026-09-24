@@ -57,7 +57,7 @@
               <span class="block font-mono text-sm text-muted">#{{ tag.slug }}</span>
             </td>
             <td class="py-2 pr-2">
-              {{ tagValueTypeNames[tag.valueType] }}
+              {{ tag.valueType }}
               <span v-if="typeDetails(tag)" class="block text-sm text-muted">{{ typeDetails(tag) }}</span>
             </td>
             <td class="py-2 pr-2">
@@ -118,7 +118,7 @@ import { useHead } from '@unhead/vue'
 import { computed, reactive, ref } from 'vue'
 import TagDialog from '../components/TagDialog.vue'
 import { TagValueType, useDeleteTagMutation, useTagsWithCountsQuery } from '../graphql/generated/graphql'
-import { disciplineNames, disciplineToSlug, tagValueTypeNames } from '../helpers'
+import { disciplineNames, disciplineToSlug } from '../helpers'
 
 import IconPlus from '~icons/mdi/plus'
 
