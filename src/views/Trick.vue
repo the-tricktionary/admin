@@ -27,10 +27,6 @@
             <dd>
               {{ disciplineNames[form.discipline] }}
             </dd>
-            <dt>Trick type</dt>
-            <dd>
-              {{ trickTypeLabel(form.trickType) }}
-            </dd>
             <dt>Tricktionary level</dt>
             <dd>
               {{ form.levels[TRICKTIONARY] || 'No level' }}
@@ -47,16 +43,6 @@
                 <select v-bind="field" v-model="form.discipline" class="w-full block rounded border-line">
                   <option v-for="(label, value) of disciplineNames" :key="value" :value="value">
                     {{ label }}
-                  </option>
-                </select>
-              </template>
-            </form-field>
-
-            <form-field id="trick-type" label="Trick type">
-              <template #default="field">
-                <select v-bind="field" v-model="form.trickType" class="w-full block rounded border-line">
-                  <option v-for="type of trickTypes" :key="type" :value="type">
-                    {{ trickTypeLabel(type) }}
                   </option>
                 </select>
               </template>
@@ -102,97 +88,7 @@
             </router-link>
           </p>
 
-          <ul v-if="form.tags.length" class="list-none m-0 p-0 flex flex-col gap-2">
-            <li
-              v-for="(row, index) of form.tags"
-              :key="row.tagId"
-              class="border border-solid border-line rounded p-2 flex flex-wrap gap-x-4 gap-y-2 items-center"
-            >
-              <div class="flex-auto min-w-36">
-                <span class="font-semibold">{{ tagsById.get(row.tagId)?.name ?? row.tagId }}</span>
-                <span class="block font-mono text-sm text-muted">#{{ row.tagId }}</span>
-                <p v-if="!appliesTo(row.tagId, form.discipline)" class="text-ttred-900 text-sm m-0">
-                  Does not apply to {{ disciplineNames[form.discipline] }} tricks
-                </p>
-              </div>
-
-              <template v-if="tagsById.get(row.tagId)?.valueType === TagValueType.Number">
-                <label :for="`tag-number-${row.tagId}`" class="sr-only">{{ tagsById.get(row.tagId)?.name }}</label>
-                <input
-                  :id="`tag-number-${row.tagId}`"
-                  v-model="row.number"
-                  type="number"
-                  required
-                  :min="tagsById.get(row.tagId)?.min ?? undefined"
-                  :max="tagsById.get(row.tagId)?.max ?? undefined"
-                  :step="tagsById.get(row.tagId)?.step ?? 'any'"
-                  :disabled="!canEditTricks"
-                  class="w-32 rounded border-line disabled:bg-sunken"
-                >
-              </template>
-
-              <template v-else-if="tagsById.get(row.tagId)?.valueType === TagValueType.Enum && tagsById.get(row.tagId)?.multiple">
-                <fieldset class="flex flex-wrap gap-x-4 border-0 p-0 m-0" :disabled="!canEditTricks">
-                  <legend class="sr-only">
-                    {{ tagsById.get(row.tagId)?.name }}
-                  </legend>
-                  <label v-for="value of tagsById.get(row.tagId)?.values ?? []" :key="value.id" class="flex items-center gap-1">
-                    <input v-model="row.values" type="checkbox" :value="value.id">
-                    {{ value.name }}
-                  </label>
-                </fieldset>
-              </template>
-
-              <template v-else-if="tagsById.get(row.tagId)?.valueType === TagValueType.Enum">
-                <label :for="`tag-value-${row.tagId}`" class="sr-only">{{ tagsById.get(row.tagId)?.name }}</label>
-                <select
-                  :id="`tag-value-${row.tagId}`"
-                  :value="row.values[0] ?? ''"
-                  required
-                  :disabled="!canEditTricks"
-                  class="w-max rounded border-line disabled:bg-sunken"
-                  @change="row.values = [($event.target as HTMLSelectElement).value]"
-                >
-                  <option value="" disabled>
-                    Pick a value
-                  </option>
-                  <option v-for="value of tagsById.get(row.tagId)?.values ?? []" :key="value.id" :value="value.id">
-                    {{ value.name }}
-                  </option>
-                </select>
-              </template>
-
-              <button
-                v-if="canEditTricks"
-                type="button"
-                class="btn w-max"
-                :aria-label="`Remove the ${tagsById.get(row.tagId)?.name ?? row.tagId} tag`"
-                @click="form.tags.splice(index, 1)"
-              >
-                Remove
-              </button>
-            </li>
-          </ul>
-          <p v-else class="text-muted">
-            No tags.
-          </p>
-
-          <div v-if="canEditTricks && addableTags.length" class="flex flex-wrap gap-2 items-end mt-2">
-            <div>
-              <label for="tag-to-add" class="block text-sm text-muted">Tag to add</label>
-              <select id="tag-to-add" v-model="tagToAdd" class="w-max block rounded border-line">
-                <option value="">
-                  Pick a tag
-                </option>
-                <option v-for="tag of addableTags" :key="tag.id" :value="tag.id">
-                  {{ tag.name }}
-                </option>
-              </select>
-            </div>
-            <button type="button" class="btn w-max" :disabled="tagToAdd === ''" @click="addTag()">
-              Add tag
-            </button>
-          </div>
+          <trick-tags-editor v-model="form.tags" :discipline="form.discipline" :disabled="!canEditTricks" />
         </section>
 
         <section class="mt-6">
@@ -411,25 +307,23 @@ import BottomBar from '../components/BottomBar.vue'
 import FormField from '../components/FormField.vue'
 import LocalisationFields from '../components/LocalisationFields.vue'
 import PrerequisiteTable from '../components/PrerequisiteTable.vue'
+import TrickTagsEditor from '../components/TrickTagsEditor.vue'
 import TrickVideos from '../components/TrickVideos.vue'
 import {
   Discipline,
-  TagValueType,
-  TrickType,
   useAddTrickPrerequisiteMutation,
   useRemoveTrickPrerequisiteMutation,
   useRulesetsQuery,
   useSetTrickLevelMutation,
   useSetTrickLevelVerificationMutation,
   useSetTrickLocalisationMutation,
-  useSetTrickTagsMutation,
   useTrickLocalisationQuery,
   useTrickQuery,
   useTrickOptionsQuery,
   useUpdateTrickDetailsMutation,
   VerificationLevel
 } from '../graphql/generated/graphql'
-import { disciplineNames, disciplineToSlug, languageLabel, localisationInput, parseNumber, toLocalisationValue, TRICK_TYPE_TAG, TRICKTIONARY, trickSorter, trickTypeOf } from '../helpers'
+import { disciplineNames, disciplineToSlug, languageLabel, localisationInput, tagRows, tagRowsKey, toLocalisationValue, TRICKTIONARY, trickSorter } from '../helpers'
 import useGrants, { verificationLevelRank } from '../hooks/useGrants'
 import useTags from '../hooks/useTags'
 import useUnsavedChanges from '../hooks/useUnsavedChanges'
@@ -439,22 +333,13 @@ import IconLoading from '~icons/mdi/loading'
 import IconChevronLeft from '~icons/mdi/chevron-left'
 import IconSave from '~icons/mdi/content-save-outline'
 
-import type { TrickLocalisationInput, TrickQuery, TrickTagInput, UpdateTrickDetailsInput } from '../graphql/generated/graphql'
-import type { LocalisationValue } from '../helpers'
+import type { TrickLocalisationInput, TrickQuery, UpdateTrickDetailsInput } from '../graphql/generated/graphql'
+import type { LocalisationValue, TagRow } from '../helpers'
 
 type LoadedTrick = NonNullable<TrickQuery['trick']>
 
-interface TagRow {
-  tagId: string
-  /** As the number input holds it, see `parseNumber` */
-  number: string | number
-  values: string[]
-}
-
 interface TrickForm {
   discipline: Discipline
-  trickType: TrickType
-  /** But the trick type, see `trickType` */
   tags: TagRow[]
   slug: string
   en: LocalisationValue
@@ -485,7 +370,7 @@ useHead({ title: computed(() => trick.value ? `Edit: ${trick.value.en?.name ?? t
 const { result: rulesetsResult } = useRulesetsQuery()
 const rulesets = computed(() => rulesetsResult.value?.rulesets ?? [])
 
-const { tagsById, trickTypes, trickTypeLabel, appliesTo } = useTags()
+const { tagInputs } = useTags()
 
 function toForm (loaded: LoadedTrick): TrickForm {
   const levels: Record<string, string> = { [TRICKTIONARY]: '' }
@@ -493,10 +378,7 @@ function toForm (loaded: LoadedTrick): TrickForm {
 
   return {
     discipline: loaded.discipline,
-    trickType: trickTypeOf(loaded) ?? TrickType.Basic,
-    tags: loaded.tags
-      .filter(trickTag => trickTag.tag.id !== TRICK_TYPE_TAG)
-      .map(trickTag => ({ tagId: trickTag.tag.id, number: trickTag.number ?? '', values: trickTag.values.map(value => value.id) })),
+    tags: tagRows(loaded),
     slug: loaded.slug,
     en: toLocalisationValue(loaded.en),
     prerequisites: loaded.prerequisites.map(other => other.id),
@@ -507,7 +389,6 @@ function toForm (loaded: LoadedTrick): TrickForm {
 
 const form = ref<TrickForm>({
   discipline: Discipline.SingleRope,
-  trickType: TrickType.Basic,
   tags: [],
   slug: '',
   en: toLocalisationValue(null),
@@ -624,9 +505,11 @@ const detailsInput = computed<UpdateTrickDetailsInput | null>(() => {
   if (!base) return null
 
   const data: UpdateTrickDetailsInput = {}
-  if (form.value.discipline !== base.discipline) data.discipline = form.value.discipline
-  if (form.value.trickType !== base.trickType) data.trickType = form.value.trickType
+  const moving = form.value.discipline !== base.discipline
+  if (moving) data.discipline = form.value.discipline
   if (form.value.slug !== base.slug) data.slug = form.value.slug
+  // the tags that don't apply to a new discipline come off with the move
+  if (moving || tagRowsKey(form.value.tags) !== tagRowsKey(base.tags)) data.tags = tagInputs(form.value.tags, form.value.discipline)
 
   return Object.keys(data).length ? data : null
 })
@@ -670,42 +553,6 @@ const prerequisiteChanges = computed(() => {
   return changes
 })
 
-const addableTags = computed(() => [...tagsById.value.values()]
-  .filter(tag => !tag.system && appliesTo(tag.id, form.value.discipline) && !form.value.tags.some(row => row.tagId === tag.id))
-)
-
-const tagToAdd = ref('')
-
-function addTag () {
-  if (tagToAdd.value === '') return
-  form.value.tags.push({ tagId: tagToAdd.value, number: '', values: [] })
-  tagToAdd.value = ''
-}
-
-function tagInput (row: TagRow): TrickTagInput {
-  switch (tagsById.value.get(row.tagId)?.valueType) {
-    case TagValueType.Number:
-      return { tagId: row.tagId, number: parseNumber(row.number) }
-    case TagValueType.Enum:
-      return { tagId: row.tagId, values: row.values }
-    default:
-      return { tagId: row.tagId }
-  }
-}
-
-function tagsKey (rows: TagRow[]) {
-  return JSON.stringify(rows
-    .map(row => [row.tagId, parseNumber(row.number), [...row.values].sort()])
-    .sort(([a], [b]) => String(a).localeCompare(String(b))))
-}
-
-/** Null while unchanged */
-const tagChanges = computed<TrickTagInput[] | null>(() => {
-  const base = pristine.value
-  if (!base || tagsKey(form.value.tags) === tagsKey(base.tags)) return null
-  return form.value.tags.map(tagInput)
-})
-
 const levelChanges = computed(() => {
   const base = pristine.value
   if (!base) return []
@@ -717,7 +564,6 @@ const levelChanges = computed(() => {
 
 const dirty = computed(() =>
   detailsInput.value != null ||
-  tagChanges.value != null ||
   localisationChanges.value.length > 0 ||
   prerequisiteChanges.value.length > 0 ||
   levelChanges.value.length > 0
@@ -736,7 +582,6 @@ const backToTricks = computed(() => trick.value
 )
 
 const { mutate: updateDetails } = useUpdateTrickDetailsMutation({ throws: 'always' })
-const { mutate: setTrickTags } = useSetTrickTagsMutation({ throws: 'always' })
 const { mutate: setLocalisation } = useSetTrickLocalisationMutation({ throws: 'always' })
 const { mutate: addPrerequisite } = useAddTrickPrerequisiteMutation({ throws: 'always' })
 const { mutate: removePrerequisite } = useRemoveTrickPrerequisiteMutation({ throws: 'always' })
@@ -763,14 +608,7 @@ async function save () {
 
   try {
     const details = detailsInput.value
-    const tags = tagChanges.value
-    // a trick can't move to a discipline its tags don't apply to, so those come off first
-    const from = pristine.value?.discipline
-    if (tags && details?.discipline != null && from != null) {
-      await setTrickTags({ trickId: id, tags: tags.filter(input => appliesTo(String(input.tagId), from)) })
-    }
     if (details) await updateDetails({ trickId: id, data: details })
-    if (tags) await setTrickTags({ trickId: id, tags })
 
     for (const change of localisationChanges.value) {
       await setLocalisation({ trickId: id, lang: change.lang, data: change.data })

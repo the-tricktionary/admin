@@ -11,7 +11,7 @@
       </h2>
 
       <p v-if="tag?.system" class="text-muted">
-        This tag is built in and holds the trick type, only its names can change.
+        This tag is built in and holds the trick type, only its values and names can change.
       </p>
 
       <div class="grid sm:grid-cols-2 gap-3">
@@ -75,6 +75,17 @@
           None picked means the tag applies to tricks of every discipline.
         </p>
       </fieldset>
+
+      <div v-if="valueType !== TagValueType.Flag">
+        <label class="flex items-center gap-2">
+          <input v-model="required" type="checkbox" :disabled="locked" aria-describedby="tag-required-hint">
+          Required
+        </label>
+        <p id="tag-required-hint" class="text-muted text-sm m-0">
+          A trick of the tag's disciplines can't be created or have its tags changed without it. Tricks that
+          don't have it yet are found with the tricks page's "Missing required tags" filter.
+        </p>
+      </div>
 
       <div v-if="valueType === TagValueType.Number" class="grid grid-cols-3 gap-3">
         <div class="flex flex-col gap-1">
@@ -159,7 +170,6 @@
               <icon-arrow-down aria-hidden="true" />
             </button>
             <button
-              v-if="!locked"
               type="button"
               class="btn w-max"
               :aria-label="`Remove ${row.name || 'the value'}`"
@@ -170,7 +180,7 @@
           </div>
         </div>
 
-        <button v-if="!locked" type="button" class="btn w-max" @click="addValue()">
+        <button type="button" class="btn w-max" @click="addValue()">
           Add value
         </button>
       </fieldset>
@@ -241,6 +251,7 @@ const min = ref<string | number>(tag?.min ?? '')
 const max = ref<string | number>(tag?.max ?? '')
 const step = ref<string | number>(tag?.step ?? '')
 const multiple = ref(tag?.multiple ?? false)
+const required = ref(tag?.required ?? false)
 const values = ref<ValueRow[]>(tag?.values.map(value => ({ key: nextKey++, id: value.id, name: value.name, saved: true, idTouched: true })) ?? [])
 
 const error = ref<string | null>(null)
@@ -280,7 +291,8 @@ async function save () {
       max: isNumber ? parseNumber(max.value) : null,
       step: isNumber ? parseNumber(step.value) : null,
       multiple: isEnum ? multiple.value : null,
-      values: isEnum ? values.value.map(row => ({ id: row.id, name: row.name })) : null
+      values: isEnum ? values.value.map(row => ({ id: row.id, name: row.name })) : null,
+      required: valueType.value !== TagValueType.Flag && required.value
     }
     await (tag ? updateTag({ tagId: tag.id, data }) : createTag({ tagId: id.value, data }))
     dialog.value?.close()

@@ -10,7 +10,8 @@
 
     <p class="text-muted">
       Trick editors put these tags on tricks, translators translate their names. A change that would
-      leave a tagged trick holding a value the tag no longer allows is refused.
+      leave a tagged trick holding a value the tag no longer allows is refused. A required tag has to be on
+      every trick of its disciplines.
     </p>
 
     <p v-if="loading && !tags.length">
@@ -49,6 +50,9 @@
               {{ tag.name }}
               <span v-if="tag.system" class="ml-1 rounded bg-ttyellow-500 text-black px-2 py-0.5 text-sm">
                 Built in
+              </span>
+              <span v-if="tag.required" class="ml-1 rounded border border-line px-2 py-0.5 text-sm">
+                Required
               </span>
               <span class="block font-mono text-sm text-muted">#{{ tag.id }}</span>
             </td>

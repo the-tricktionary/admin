@@ -1,7 +1,7 @@
 import { format, isValid, parseISO } from 'date-fns'
-import { Discipline, GrantType, TagValueType, TimingCueType, TrickType, VideoType } from './graphql/generated/graphql'
+import { Discipline, GrantType, TagValueType, TimingCueType, VideoType } from './graphql/generated/graphql'
 
-import type { AttributionInput, TrickLocalisationInput } from './graphql/generated/graphql'
+import type { AttributionInput, TrickLocalisationInput, TrickTagInput } from './graphql/generated/graphql'
 
 /** The Tricktionary's own ruleset, whose levels group the trick list */
 export const TRICKTIONARY = 'tricktionary'
@@ -30,7 +30,6 @@ export const grantTypeNames: Record<GrantType, string> = {
   [GrantType.TagWrangler]: 'Tag wrangler'
 }
 
-/** Set through the trick's details rather than with its other tags */
 export const TRICK_TYPE_TAG = 'trick-type'
 
 export const tagValueTypeNames: Record<TagValueType, string> = {
@@ -40,12 +39,54 @@ export const tagValueTypeNames: Record<TagValueType, string> = {
 }
 
 interface TaggedTrick {
-  tags: ReadonlyArray<{ tag: { id: string }, values: ReadonlyArray<{ id: string }> }>
+  tags: ReadonlyArray<{ tag: { id: string, valueType: TagValueType }, number?: number | null, values: ReadonlyArray<{ id: string }> }>
 }
 
-export function trickTypeOf (trick: TaggedTrick): TrickType | null {
-  const value = trick.tags.find(trickTag => trickTag.tag.id === TRICK_TYPE_TAG)?.values[0]?.id
-  return (Object.values(TrickType) as string[]).includes(value ?? '') ? value as TrickType : null
+/** The ID of the trick type value */
+export function trickTypeOf (trick: TaggedTrick): string | null {
+  return trick.tags.find(trickTag => trickTag.tag.id === TRICK_TYPE_TAG)?.values[0]?.id ?? null
+}
+
+/** A tag on a trick, as a form holds it */
+export interface TagRow {
+  tagId: string
+  valueType: TagValueType
+  /** As the number input holds it, see `parseNumber` */
+  number: string | number
+  values: string[]
+}
+
+export function tagRows (trick: TaggedTrick): TagRow[] {
+  return trick.tags.map(trickTag => ({
+    tagId: trickTag.tag.id,
+    valueType: trickTag.tag.valueType,
+    number: trickTag.number ?? '',
+    values: trickTag.values.map(value => value.id)
+  }))
+}
+
+function tagRowIsSet (row: TagRow) {
+  switch (row.valueType) {
+    case TagValueType.Number: return parseNumber(row.number) != null
+    case TagValueType.Enum: return row.values.length > 0
+    default: return true
+  }
+}
+
+/** What the rows hold, for comparing, a row without a value yet holds nothing */
+export function tagRowsKey (rows: TagRow[]) {
+  return JSON.stringify(rows
+    .filter(tagRowIsSet)
+    .map(row => [row.tagId, parseNumber(row.number), [...row.values].sort()])
+    .sort(([a], [b]) => String(a).localeCompare(String(b))))
+}
+
+export function tagInput (row: TagRow): TrickTagInput {
+  switch (row.valueType) {
+    case TagValueType.Number: return { tagId: row.tagId, number: parseNumber(row.number) }
+    case TagValueType.Enum: return { tagId: row.tagId, values: row.values }
+    default: return { tagId: row.tagId }
+  }
 }
 
 export const timingCueTypeNames: Record<TimingCueType, string> = {

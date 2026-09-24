@@ -65,6 +65,11 @@
         Without videos
       </label>
 
+      <label class="flex items-center gap-2 whitespace-nowrap">
+        <input v-model="missingRequiredTags" type="checkbox">
+        Missing required tags
+      </label>
+
       <button v-if="filter" type="button" class="btn w-max whitespace-nowrap py-1 text-sm" @click="clearFilters()">
         Clear filters
       </button>
@@ -162,7 +167,7 @@ import IconStairs from '~icons/mdi/stairs'
 import IconVideo from '~icons/mdi/video-outline'
 
 import type { Component } from 'vue'
-import type { Discipline, TrickFilter, TricksQuery, TrickType } from '../graphql/generated/graphql'
+import type { Discipline, TrickFilter, TricksQuery } from '../graphql/generated/graphql'
 
 const route = useRoute()
 const router = useRouter()
@@ -210,6 +215,11 @@ const withoutVideos = computed({
   set: without => { setQuery({ videos: without ? 'none' : undefined }) }
 })
 
+const missingRequiredTags = computed({
+  get: () => route.query.tags === 'missing',
+  set: missing => { setQuery({ tags: missing ? 'missing' : undefined }) }
+})
+
 const verifiedBelow: Record<string, VerificationLevel> = {
   judge: VerificationLevel.Judge,
   official: VerificationLevel.Official
@@ -222,11 +232,12 @@ const filter = computed<TrickFilter | null>(() => {
     parts.level = { rulesId: levelRulesId.value, verifiedBelow: verifiedBelow[levelBelow.value] ?? null }
   }
   if (withoutVideos.value) parts.withoutVideos = true
+  if (missingRequiredTags.value) parts.missingRequiredTags = true
   return Object.keys(parts).length === 0 ? null : parts
 })
 
 function clearFilters () {
-  setQuery({ lang: undefined, rulesId: undefined, level: undefined, videos: undefined })
+  setQuery({ lang: undefined, rulesId: undefined, level: undefined, videos: undefined, tags: undefined })
 }
 
 /** Which language the cards report translation status for, nothing when empty */
@@ -263,12 +274,12 @@ function levelRank (level: string) {
 const { trickTypes, trickTypeLabel } = useTags()
 
 /** Tricks without a trick type come last */
-function trickTypeRank (trickType: TrickType | '') {
+function trickTypeRank (trickType: string) {
   return trickType === '' ? Number.MAX_SAFE_INTEGER : trickTypes.value.indexOf(trickType)
 }
 
 const levelGroups = computed(() => {
-  const byLevel = new Map<string, Map<TrickType | '', TricksQuery['tricks']>>()
+  const byLevel = new Map<string, Map<string, TricksQuery['tricks']>>()
 
   for (const trick of [...tricks.value].sort(trickSorter)) {
     const level = trick.levels.find(trickLevel => trickLevel.rulesId === TRICKTIONARY)?.level ?? ''

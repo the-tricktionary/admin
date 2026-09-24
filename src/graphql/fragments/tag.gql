@@ -19,5 +19,6 @@ fragment TagDetails on Tag {
       value
     }
   }
+  required
   system
 }
