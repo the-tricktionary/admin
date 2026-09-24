@@ -1,9 +1,17 @@
 <template>
-  <nav-header />
-  <main>
-    <router-view />
-  </main>
-  <div id="bottom-bars" class="fixed bottom-0 right-0 left-0 flex flex-col" />
+  <div class="min-h-dvh flex flex-col">
+    <nav-header />
+    <main class="flex-grow">
+      <router-view />
+    </main>
+    <!--
+      Sticky rather than fixed: the bars stay at the bottom of the screen but
+      follow the page, so however tall they grow, e.g. the tricks list's
+      filters wrapping on a phone, they end below its last row instead of
+      covering it
+    -->
+    <div id="bottom-bars" class="sticky bottom-0 flex flex-col" />
+  </div>
 </template>
 
 <script setup lang="ts">

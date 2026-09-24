@@ -47,14 +47,19 @@
         <tbody>
           <tr v-for="tag in tags" :key="tag.id" class="border-b border-line align-top">
             <td class="py-2 pr-2">
-              {{ tag.name }}
-              <span v-if="tag.system" class="ml-1 rounded bg-ttyellow-500 text-black px-2 py-0.5 text-sm">
-                Built in
-              </span>
-              <span v-if="tag.required" class="ml-1 rounded border border-line px-2 py-0.5 text-sm">
-                Required
-              </span>
-              <span class="block font-mono text-sm text-muted">#{{ tag.slug }}</span>
+              <!-- a phone squeezes the column as narrow as its content lets it, so none of it may break inside -->
+              <div class="flex flex-wrap items-center gap-1">
+                <span class="whitespace-nowrap mr-1">{{ tag.name }}</span>
+                <span v-if="tag.system || tag.required" class="flex gap-1 whitespace-nowrap text-sm">
+                  <span v-if="tag.system" class="rounded bg-ttyellow-500 text-black px-2 py-0.5">
+                    Built in
+                  </span>
+                  <span v-if="tag.required" class="rounded border border-line px-2 py-0.5">
+                    Required
+                  </span>
+                </span>
+              </div>
+              <span class="block whitespace-nowrap font-mono text-sm text-muted">#{{ tag.slug }}</span>
             </td>
             <td class="py-2 pr-2">
               {{ tag.valueType }}

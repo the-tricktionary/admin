@@ -28,9 +28,6 @@
               Other languages
             </th>
             <th scope="col" class="py-2 pr-2">
-              Primary
-            </th>
-            <th scope="col" class="py-2 pr-2">
               Actions
             </th>
           </tr>
@@ -41,15 +38,15 @@
               {{ ruleset.id }}
             </td>
             <td class="py-2 pr-2">
-              {{ ruleset.name }}
+              <div class="flex flex-wrap items-center gap-1">
+                <span class="mr-1">{{ ruleset.name }}</span>
+                <span v-if="ruleset.isPrimary" class="whitespace-nowrap rounded bg-ttyellow-500 text-black px-2 py-0.5 text-sm">
+                  Primary
+                </span>
+              </div>
             </td>
             <td class="py-2 pr-2">
               {{ otherNamesCount(ruleset) }}
-            </td>
-            <td class="py-2 pr-2">
-              <span v-if="ruleset.isPrimary" class="rounded bg-ttyellow-500 text-black px-2 py-0.5 text-sm">
-                Primary
-              </span>
             </td>
             <td class="py-2 pr-2">
               <div class="flex gap-2">
@@ -86,6 +83,8 @@ import { useHead } from '@unhead/vue'
 import { computed, ref } from 'vue'
 import RulesetDialog from '../components/RulesetDialog.vue'
 import { useRulesetsWithNamesQuery, useSetPrimaryRulesetMutation } from '../graphql/generated/graphql'
+
+import IconPlus from '~icons/mdi/plus'
 
 import type { RulesetsWithNamesQuery } from '../graphql/generated/graphql'
 
