@@ -3,7 +3,7 @@ query Tricks ($discipline: Discipline, $searchQuery: String, $filter: TrickFilte
     id
     slug
     discipline
-    trickType
+    ...TrickTags
     en: localisation {
       id
       name

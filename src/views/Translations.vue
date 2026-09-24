@@ -1,6 +1,7 @@
 <template>
   <div class="container mx-auto pt-4 px-2 pb-24">
     <h1>Translations</h1>
+    <translation-tabs />
 
     <p v-if="!langs.length" class="mt-4">
       There is no language for you to translate yet.
@@ -161,13 +162,13 @@
 
 <script setup lang="ts">
 import { useHead } from '@unhead/vue'
-import { useEventListener } from '@vueuse/core'
 import { computed, onMounted, ref, watch } from 'vue'
-import { onBeforeRouteLeave } from 'vue-router'
 import BottomBar from '../components/BottomBar.vue'
+import TranslationTabs from '../components/TranslationTabs.vue'
 import { useSetUiMessagesMutation, useUiMessageEntriesQuery } from '../graphql/generated/graphql'
 import { formatDate, languageLabel, languageName } from '../helpers'
 import useTranslationLang from '../hooks/useTranslationLang'
+import useUnsavedChanges from '../hooks/useUnsavedChanges'
 
 import IconLoading from '~icons/mdi/loading'
 import IconSave from '~icons/mdi/content-save-outline'
@@ -260,6 +261,7 @@ const changes = computed<UiMessageInput[]>(() => Object.entries(draft.value)
 )
 
 const dirty = computed(() => changes.value.length > 0)
+const { confirmDiscard } = useUnsavedChanges(dirty, 'This translation')
 
 const entriesQuery = useUiMessageEntriesQuery(
   () => ({ lang: lang.value }),
@@ -401,20 +403,13 @@ async function remove (key: string) {
 
 function pickLang (event: Event) {
   const select = event.target as HTMLSelectElement
-  if (dirty.value && !window.confirm('This translation has changes that have not been saved yet. Switch language anyway?')) {
+  if (!confirmDiscard('Switch language')) {
     // the select is bound one way, so nothing else would put the old language back
     select.value = lang.value
     return
   }
   lang.value = select.value
 }
-
-onBeforeRouteLeave(() => !dirty.value || window.confirm('This translation has changes that have not been saved yet. Leave the page anyway?'))
-
-useEventListener(window, 'beforeunload', (event: BeforeUnloadEvent) => {
-  if (!dirty.value) return
-  event.preventDefault()
-})
 
 useHead({ title: 'Translations' })
 </script>

@@ -65,6 +65,11 @@
         Without videos
       </label>
 
+      <label class="flex items-center gap-2 whitespace-nowrap">
+        <input v-model="missingRequiredTags" type="checkbox">
+        Missing required tags
+      </label>
+
       <button v-if="filter" type="button" class="btn w-max whitespace-nowrap py-1 text-sm" @click="clearFilters()">
         Clear filters
       </button>
@@ -109,7 +114,7 @@
 
         <template v-for="typeGroup of levelGroup.types" :key="typeGroup.trickType">
           <h3 class="text-center text-xl mt-4 mb-2">
-            {{ typeGroup.trickType }}
+            {{ typeGroup.label }}
           </h3>
           <div class="grid md:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-5 gap-4">
             <router-link
@@ -142,15 +147,16 @@
 
 <script setup lang="ts">
 import { useHead } from '@unhead/vue'
-import { computed, ref } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { refDebounced } from '@vueuse/core'
-import { useRoute, useRouter } from 'vue-router'
+import { useRouteQuery } from '@vueuse/router'
 import BottomBar from '../components/BottomBar.vue'
 import DisciplineSelector from '../components/DisciplineSelector.vue'
 import { useRulesetsQuery, useTricksQuery, VerificationLevel, VideoHost } from '../graphql/generated/graphql'
-import { disciplineToSlug, languageLabel, queryDiscipline, TRICKTIONARY, trickSorter, trickVideoTypes, videoTypeNames } from '../helpers'
+import { disciplineToSlug, languageLabel, queryDiscipline, TRICKTIONARY, trickSorter, trickTypeOf, trickVideoTypes, videoTypeNames } from '../helpers'
 import useGrants, { verificationLevelRank } from '../hooks/useGrants'
 import useLanguages from '../hooks/useLanguages'
+import useTags from '../hooks/useTags'
 import useTranslationLang from '../hooks/useTranslationLang'
 
 import IconLoading from '~icons/mdi/loading'
@@ -161,53 +167,29 @@ import IconStairs from '~icons/mdi/stairs'
 import IconVideo from '~icons/mdi/video-outline'
 
 import type { Component } from 'vue'
-import type { Discipline, TrickFilter, TricksQuery, TrickType } from '../graphql/generated/graphql'
+import type { Discipline, TrickFilter, TricksQuery } from '../graphql/generated/graphql'
 
-const route = useRoute()
-const router = useRouter()
 const { canEditTricks } = useGrants()
 const { translatableLangs } = useLanguages()
 
 const rulesetsQuery = useRulesetsQuery()
 const rulesets = computed(() => rulesetsQuery.result.value?.rulesets ?? [])
 
-/** Kept in the URL so the list survives a reload and can be linked to */
-const discipline = computed<Discipline>({
-  get: () => queryDiscipline(route.query.discipline),
-  set: value => {
-    void router.replace({ query: { ...route.query, discipline: disciplineToSlug(value) } })
-  }
+/** Kept in the URL so the list survives a reload and can be linked to, a filter that is off leaves no trace */
+const discipline = useRouteQuery<string | undefined, Discipline>('discipline', undefined, {
+  transform: { get: queryDiscipline, set: disciplineToSlug }
+})
+const missingLang = useRouteQuery<string>('lang', '')
+const levelRulesId = useRouteQuery<string>('rulesId', '')
+const levelBelow = useRouteQuery<string>('level', '')
+const withoutVideos = useRouteQuery<string | undefined, boolean>('videos', undefined, {
+  transform: { get: value => value === 'none', set: without => without ? 'none' : undefined }
+})
+const missingRequiredTags = useRouteQuery<string | undefined, boolean>('tags', undefined, {
+  transform: { get: value => value === 'missing', set: missing => missing ? 'missing' : undefined }
 })
 
-function queryValue (key: string) {
-  const value = route.query[key]
-  return typeof value === 'string' ? value : ''
-}
-
-/** Undefined drops the parameter, so a filter that is off leaves no trace in the URL */
-function setQuery (values: Record<string, string | undefined>) {
-  void router.replace({ query: { ...route.query, ...values } })
-}
-
-const missingLang = computed({
-  get: () => queryValue('lang'),
-  set: lang => { setQuery({ lang: lang === '' ? undefined : lang }) }
-})
-
-const levelRulesId = computed({
-  get: () => queryValue('rulesId'),
-  set: rulesId => { setQuery(rulesId === '' ? { rulesId: undefined, level: undefined } : { rulesId }) }
-})
-
-const levelBelow = computed({
-  get: () => queryValue('level'),
-  set: level => { setQuery({ level: level === '' ? undefined : level }) }
-})
-
-const withoutVideos = computed({
-  get: () => route.query.videos === 'none',
-  set: without => { setQuery({ videos: without ? 'none' : undefined }) }
-})
+watch(levelRulesId, rulesId => { if (rulesId === '') levelBelow.value = '' })
 
 const verifiedBelow: Record<string, VerificationLevel> = {
   judge: VerificationLevel.Judge,
@@ -221,22 +203,29 @@ const filter = computed<TrickFilter | null>(() => {
     parts.level = { rulesId: levelRulesId.value, verifiedBelow: verifiedBelow[levelBelow.value] ?? null }
   }
   if (withoutVideos.value) parts.withoutVideos = true
+  if (missingRequiredTags.value) parts.missingRequiredTags = true
   return Object.keys(parts).length === 0 ? null : parts
 })
 
 function clearFilters () {
-  setQuery({ lang: undefined, rulesId: undefined, level: undefined, videos: undefined })
+  missingLang.value = ''
+  levelRulesId.value = ''
+  levelBelow.value = ''
+  withoutVideos.value = false
+  missingRequiredTags.value = false
 }
 
 /** Which language the cards report translation status for, nothing when empty */
 const { lang: statusLang } = useTranslationLang()
 
-const search = ref('')
+/** Kept in the URL like the filters, once typing pauses */
+const query = useRouteQuery<string>('q', '')
+const search = ref(query.value)
 const debouncedSearch = refDebounced(search, 1000)
-const searchQuery = computed(() => {
-  const query = debouncedSearch.value.trim()
-  return query === '' ? null : query
-})
+watch(debouncedSearch, value => { query.value = value.trim() === '' ? '' : value })
+// going back and forward
+watch(query, value => { if (value !== debouncedSearch.value) search.value = value })
+const searchQuery = computed(() => query.value.trim() === '' ? null : query.value.trim())
 
 const tricksQuery = useTricksQuery(() => ({
   discipline: discipline.value,
@@ -255,8 +244,15 @@ function levelRank (level: string) {
   return level === '' || Number.isNaN(rank) ? Number.MAX_SAFE_INTEGER : rank
 }
 
+const { trickTypes, trickTypeLabel } = useTags()
+
+/** Tricks without a trick type come last */
+function trickTypeRank (trickType: string) {
+  return trickType === '' ? Number.MAX_SAFE_INTEGER : trickTypes(discipline.value).indexOf(trickType)
+}
+
 const levelGroups = computed(() => {
-  const byLevel = new Map<string, Map<TrickType, TricksQuery['tricks']>>()
+  const byLevel = new Map<string, Map<string, TricksQuery['tricks']>>()
 
   for (const trick of [...tricks.value].sort(trickSorter)) {
     const level = trick.levels.find(trickLevel => trickLevel.rulesId === TRICKTIONARY)?.level ?? ''
@@ -265,9 +261,10 @@ const levelGroups = computed(() => {
       byType = new Map()
       byLevel.set(level, byType)
     }
-    const group = byType.get(trick.trickType) ?? []
+    const trickType = trickTypeOf(trick) ?? ''
+    const group = byType.get(trickType) ?? []
     group.push(trick)
-    byType.set(trick.trickType, group)
+    byType.set(trickType, group)
   }
 
   return [...byLevel]
@@ -276,8 +273,8 @@ const levelGroups = computed(() => {
       level,
       label: level === '' ? 'No level' : `Level ${level}`,
       types: [...byType]
-        .sort(([a], [b]) => a.localeCompare(b))
-        .map(([trickType, typeTricks]) => ({ trickType, tricks: typeTricks }))
+        .sort(([a], [b]) => trickTypeRank(a) - trickTypeRank(b))
+        .map(([trickType, typeTricks]) => ({ trickType, label: trickType === '' ? 'No trick type' : trickTypeLabel(discipline.value, trickType), tricks: typeTricks }))
     }))
 })
 

@@ -14,15 +14,10 @@
           </template>
         </form-field>
 
-        <form-field id="trick-type" label="Trick type">
-          <template #default="field">
-            <select v-bind="field" v-model="trickType" class="w-full block rounded border-line">
-              <option v-for="type of trickTypes" :key="type" :value="type">
-                {{ type }}
-              </option>
-            </select>
-          </template>
-        </form-field>
+        <h2 class="mb-2">
+          Tags
+        </h2>
+        <trick-tags-editor v-model="tags" :discipline="discipline" class="mb-4" />
 
         <h2 class="mb-2">
           English
@@ -59,14 +54,19 @@ import { computed, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import FormField from '../components/FormField.vue'
 import LocalisationFields from '../components/LocalisationFields.vue'
-import { TrickType, useCreateTrickMutation } from '../graphql/generated/graphql'
-import { disciplineNames, localisationInput, queryDiscipline, slugFromName, toLocalisationValue, trickTypes } from '../helpers'
+import TrickTagsEditor from '../components/TrickTagsEditor.vue'
+import { useCreateTrickMutation } from '../graphql/generated/graphql'
+import { disciplineNames, localisationInput, queryDiscipline, slugFromName, toLocalisationValue } from '../helpers'
+import useTags from '../hooks/useTags'
+
+import type { TagRow } from '../helpers'
 
 const route = useRoute()
 const router = useRouter()
+const { tagInputs } = useTags()
 
 const discipline = ref(queryDiscipline(route.query.discipline))
-const trickType = ref(TrickType.Basic)
+const tags = ref<TagRow[]>([])
 const localisation = ref(toLocalisationValue(null))
 const slug = ref('')
 const slugEdited = ref(false)
@@ -89,9 +89,9 @@ async function createTrick () {
   const result = await mutate({
     data: {
       discipline: discipline.value,
-      trickType: trickType.value,
       slug: slug.value,
-      localisation: localisationInput(localisation.value)
+      localisation: localisationInput(localisation.value),
+      tags: tagInputs(tags.value, discipline.value)
     }
   })
 

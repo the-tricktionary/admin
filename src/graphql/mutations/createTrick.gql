@@ -3,7 +3,7 @@ mutation CreateTrick ($data: CreateTrickInput!) {
     id
     slug
     discipline
-    trickType
+    ...TrickTags
     en: localisation {
       id
       name

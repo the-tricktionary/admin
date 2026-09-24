@@ -1,7 +1,7 @@
 import { format, isValid, parseISO } from 'date-fns'
-import { Discipline, GrantType, TimingCueType, TrickType, VideoType } from './graphql/generated/graphql'
+import { Discipline, GrantType, TagValueType, TimingCueType, VideoType } from './graphql/generated/graphql'
 
-import type { AttributionInput, TrickLocalisationInput } from './graphql/generated/graphql'
+import type { AttributionInput, TrickLocalisationInput, TrickTagInput } from './graphql/generated/graphql'
 
 /** The Tricktionary's own ruleset, whose levels group the trick list */
 export const TRICKTIONARY = 'tricktionary'
@@ -21,15 +21,67 @@ export const videoTypeNames: Record<VideoType, string> = {
 /** The types that show the trick itself rather than explain it, in the order the public site's player prefers them */
 export const trickVideoTypes = [VideoType.FullSpeed, VideoType.SlowMo]
 
-/** Every trick type, in alphabetical order, for the pickers that offer them */
-export const trickTypes = Object.values(TrickType).sort((a, b) => a.localeCompare(b))
-
 export const grantTypeNames: Record<GrantType, string> = {
   [GrantType.SuperAdmin]: 'Super admin',
   [GrantType.TrickEditor]: 'Trick editor',
   [GrantType.Translator]: 'Translator',
   [GrantType.LevelEditor]: 'Level editor',
-  [GrantType.SpeedEditor]: 'Speed editor'
+  [GrantType.SpeedEditor]: 'Speed editor',
+  [GrantType.TagWrangler]: 'Tag wrangler'
+}
+
+/** The slug of the built in tags holding the trick type, one per discipline */
+export const TRICK_TYPE_SLUG = 'trick-type'
+
+interface TaggedTrick {
+  tags: ReadonlyArray<{ tag: { id: string, slug: string, valueType: TagValueType }, number?: number | null, values: ReadonlyArray<{ id: string }> }>
+}
+
+/** The ID of the trick type value */
+export function trickTypeOf (trick: TaggedTrick): string | null {
+  return trick.tags.find(trickTag => trickTag.tag.slug === TRICK_TYPE_SLUG)?.values[0]?.id ?? null
+}
+
+/** A tag on a trick, as a form holds it */
+export interface TagRow {
+  tagId: string
+  valueType: TagValueType
+  /** As the number input holds it, see `parseNumber` */
+  number: string | number
+  values: string[]
+}
+
+export function tagRows (trick: TaggedTrick): TagRow[] {
+  return trick.tags.map(trickTag => ({
+    tagId: trickTag.tag.id,
+    valueType: trickTag.tag.valueType,
+    number: trickTag.number ?? '',
+    values: trickTag.values.map(value => value.id)
+  }))
+}
+
+function tagRowIsSet (row: TagRow) {
+  switch (row.valueType) {
+    case TagValueType.Number: return parseNumber(row.number) != null
+    case TagValueType.Enum: return row.values.length > 0
+    default: return true
+  }
+}
+
+/** What the rows hold, for comparing, a row without a value yet holds nothing */
+export function tagRowsKey (rows: TagRow[]) {
+  return JSON.stringify(rows
+    .filter(tagRowIsSet)
+    .map(row => [row.tagId, parseNumber(row.number), [...row.values].sort()])
+    .sort(([a], [b]) => String(a).localeCompare(String(b))))
+}
+
+export function tagInput (row: TagRow): TrickTagInput {
+  switch (row.valueType) {
+    case TagValueType.Number: return { tagId: row.tagId, number: parseNumber(row.number) }
+    case TagValueType.Enum: return { tagId: row.tagId, values: row.values }
+    default: return { tagId: row.tagId }
+  }
 }
 
 export const timingCueTypeNames: Record<TimingCueType, string> = {
@@ -53,10 +105,13 @@ export function formatOffset (milliseconds: number) {
   return `${minutes}:${String(seconds).padStart(2, '0')}.${String(rest).padStart(3, '0')}`
 }
 
-/** A seconds field as a number, null when it holds nothing a number can be read from */
-export function parseSeconds (input: string) {
-  const seconds = Number.parseFloat(input)
-  return Number.isNaN(seconds) ? null : seconds
+/**
+ * A number field's value, null when it holds nothing a number can be read
+ * from. `v-model` hands a number input's value over as a number once it parses.
+ */
+export function parseNumber (input: string | number) {
+  const number = Number.parseFloat(String(input))
+  return Number.isNaN(number) ? null : number
 }
 
 const dateFormat = new Intl.DateTimeFormat(undefined, { dateStyle: 'medium' })

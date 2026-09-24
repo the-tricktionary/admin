@@ -24,6 +24,10 @@ const cache = new InMemoryCache({
       merge (existing, incoming, { mergeObjects }) {
         return mergeObjects(existing, incoming)
       }
+    },
+    // value ids are only unique within their tag
+    TagValue: {
+      keyFields: false
     }
   }
 })

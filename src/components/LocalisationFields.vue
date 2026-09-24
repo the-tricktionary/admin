@@ -35,7 +35,7 @@
           v-bind="field"
           v-model="model.name"
           type="text"
-          required
+          :required="nameRequired"
           class="w-full block rounded focus:border-b-ttred-900 border-line"
         >
       </template>
@@ -94,7 +94,7 @@ import type { LocalisationValue } from '../helpers'
 // against its own pristine copy
 const model = defineModel<LocalisationValue>({ required: true })
 
-const { lang, readonly, idPrefix, column = 1 } = defineProps<{
+const { lang, readonly, idPrefix, column = 1, optional } = defineProps<{
   /** Set on the blocks so browsers spell check and hyphenate in the right language */
   lang: string
   readonly?: boolean
@@ -102,7 +102,13 @@ const { lang, readonly, idPrefix, column = 1 } = defineProps<{
   idPrefix: string
   /** The blocks are separate roots so two columns of a grid share rows and their fields line up */
   column?: 1 | 2
+  /** The localisation may stay blank, it needs a name once another field is filled */
+  optional?: boolean
 }>()
 
 const columnClass = computed(() => column === 2 ? 'lg:col-start-2' : 'lg:col-start-1')
+
+const nameRequired = computed(() => !optional ||
+  model.value.description.trim() !== '' ||
+  model.value.alternativeNames.some(alternative => alternative.trim() !== ''))
 </script>

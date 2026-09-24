@@ -3,6 +3,6 @@ mutation UpdateTrickDetails ($trickId: ID!, $data: UpdateTrickDetailsInput!) {
     id
     slug
     discipline
-    trickType
+    ...TrickTags
   }
 }

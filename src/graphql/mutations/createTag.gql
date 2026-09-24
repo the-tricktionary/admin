@@ -1,0 +1,5 @@
+mutation CreateTag ($slug: String!, $data: TagInput!) {
+  createTag (slug: $slug, data: $data) {
+    ...TagDetails
+  }
+}

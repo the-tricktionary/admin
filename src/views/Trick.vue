@@ -27,10 +27,6 @@
             <dd>
               {{ disciplineNames[form.discipline] }}
             </dd>
-            <dt>Trick type</dt>
-            <dd>
-              {{ form.trickType }}
-            </dd>
             <dt>Tricktionary level</dt>
             <dd>
               {{ form.levels[TRICKTIONARY] || 'No level' }}
@@ -47,16 +43,6 @@
                 <select v-bind="field" v-model="form.discipline" class="w-full block rounded border-line">
                   <option v-for="(label, value) of disciplineNames" :key="value" :value="value">
                     {{ label }}
-                  </option>
-                </select>
-              </template>
-            </form-field>
-
-            <form-field id="trick-type" label="Trick type">
-              <template #default="field">
-                <select v-bind="field" v-model="form.trickType" class="w-full block rounded border-line">
-                  <option v-for="type of trickTypes" :key="type" :value="type">
-                    {{ type }}
                   </option>
                 </select>
               </template>
@@ -88,6 +74,21 @@
               </template>
             </form-field>
           </div>
+        </section>
+
+        <section class="mt-6">
+          <h2 class="mb-2">
+            Tags
+          </h2>
+
+          <p v-if="canManageTags" class="text-muted text-sm">
+            Tags are created and changed on the
+            <router-link :to="{ name: 'tags' }">
+              tags page
+            </router-link>
+          </p>
+
+          <trick-tags-editor v-model="form.tags" :discipline="form.discipline" :disabled="!canEditTricks" />
         </section>
 
         <section class="mt-6">
@@ -153,7 +154,14 @@
                 </select>
               </div>
 
-              <localisation-fields v-if="translations[lang]" v-model="translations[lang]" :id-prefix="lang" :lang="lang" :column="2" />
+              <localisation-fields
+                v-if="translations[lang]"
+                v-model="translations[lang]"
+                :id-prefix="lang"
+                :lang="lang"
+                :column="2"
+                :optional="pristineTranslations[lang]?.name === ''"
+              />
               <p v-else role="status" class="lg:col-start-2 lg:row-start-2">
                 Loading the {{ lang }} translation...
               </p>
@@ -300,17 +308,16 @@
 <script setup lang="ts">
 import { ApolloError } from '@apollo/client/core'
 import { useHead } from '@unhead/vue'
-import { useEventListener } from '@vueuse/core'
 import { computed, ref, watch } from 'vue'
-import { onBeforeRouteLeave, useRoute } from 'vue-router'
+import { useRoute } from 'vue-router'
 import BottomBar from '../components/BottomBar.vue'
 import FormField from '../components/FormField.vue'
 import LocalisationFields from '../components/LocalisationFields.vue'
 import PrerequisiteTable from '../components/PrerequisiteTable.vue'
+import TrickTagsEditor from '../components/TrickTagsEditor.vue'
 import TrickVideos from '../components/TrickVideos.vue'
 import {
   Discipline,
-  TrickType,
   useAddTrickPrerequisiteMutation,
   useRemoveTrickPrerequisiteMutation,
   useRulesetsQuery,
@@ -323,8 +330,10 @@ import {
   useUpdateTrickDetailsMutation,
   VerificationLevel
 } from '../graphql/generated/graphql'
-import { disciplineNames, disciplineToSlug, languageLabel, localisationInput, toLocalisationValue, TRICKTIONARY, trickSorter, trickTypes } from '../helpers'
+import { disciplineNames, disciplineToSlug, languageLabel, localisationInput, tagRows, tagRowsKey, toLocalisationValue, TRICKTIONARY, trickSorter } from '../helpers'
 import useGrants, { verificationLevelRank } from '../hooks/useGrants'
+import useTags from '../hooks/useTags'
+import useUnsavedChanges from '../hooks/useUnsavedChanges'
 import useTranslationLang from '../hooks/useTranslationLang'
 
 import IconLoading from '~icons/mdi/loading'
@@ -332,13 +341,13 @@ import IconChevronLeft from '~icons/mdi/chevron-left'
 import IconSave from '~icons/mdi/content-save-outline'
 
 import type { TrickLocalisationInput, TrickQuery, UpdateTrickDetailsInput } from '../graphql/generated/graphql'
-import type { LocalisationValue } from '../helpers'
+import type { LocalisationValue, TagRow } from '../helpers'
 
 type LoadedTrick = NonNullable<TrickQuery['trick']>
 
 interface TrickForm {
   discipline: Discipline
-  trickType: TrickType
+  tags: TagRow[]
   slug: string
   en: LocalisationValue
   prerequisites: string[]
@@ -353,7 +362,7 @@ const tricktionaryLevels = ['1', '2', '3', '4', '5']
 const verificationNames = ['Not verified', 'Judge', 'Official']
 
 const route = useRoute()
-const { canEditTricks, canEditLevels, levelEditorRank } = useGrants()
+const { canEditTricks, canEditLevels, canManageTags, levelEditorRank } = useGrants()
 const { editableLangs: translationLangs, editLang: lang } = useTranslationLang()
 
 const trickId = computed(() => String(route.params.id))
@@ -368,13 +377,15 @@ useHead({ title: computed(() => trick.value ? `Edit: ${trick.value.en?.name ?? t
 const { result: rulesetsResult } = useRulesetsQuery()
 const rulesets = computed(() => rulesetsResult.value?.rulesets ?? [])
 
+const { tagInputs } = useTags()
+
 function toForm (loaded: LoadedTrick): TrickForm {
   const levels: Record<string, string> = { [TRICKTIONARY]: '' }
   for (const level of loaded.levels) levels[level.rulesId] = level.level
 
   return {
     discipline: loaded.discipline,
-    trickType: loaded.trickType,
+    tags: tagRows(loaded),
     slug: loaded.slug,
     en: toLocalisationValue(loaded.en),
     prerequisites: loaded.prerequisites.map(other => other.id),
@@ -385,7 +396,7 @@ function toForm (loaded: LoadedTrick): TrickForm {
 
 const form = ref<TrickForm>({
   discipline: Discipline.SingleRope,
-  trickType: TrickType.Basic,
+  tags: [],
   slug: '',
   en: toLocalisationValue(null),
   prerequisites: [],
@@ -501,9 +512,11 @@ const detailsInput = computed<UpdateTrickDetailsInput | null>(() => {
   if (!base) return null
 
   const data: UpdateTrickDetailsInput = {}
-  if (form.value.discipline !== base.discipline) data.discipline = form.value.discipline
-  if (form.value.trickType !== base.trickType) data.trickType = form.value.trickType
+  const moving = form.value.discipline !== base.discipline
+  if (moving) data.discipline = form.value.discipline
   if (form.value.slug !== base.slug) data.slug = form.value.slug
+  // the tags that don't apply to a new discipline come off with the move
+  if (moving || tagRowsKey(form.value.tags) !== tagRowsKey(base.tags)) data.tags = tagInputs(form.value.tags, form.value.discipline)
 
   return Object.keys(data).length ? data : null
 })
@@ -659,10 +672,5 @@ async function verify (rulesId: string, verificationLevel: VerificationLevel | n
   }
 }
 
-onBeforeRouteLeave(() => !dirty.value || window.confirm('This trick has changes that have not been saved yet. Leave the page anyway?'))
-
-useEventListener(window, 'beforeunload', (event: BeforeUnloadEvent) => {
-  if (!dirty.value) return
-  event.preventDefault()
-})
+useUnsavedChanges(dirty, 'This trick')
 </script>

@@ -69,7 +69,7 @@ interface NavLink {
 }
 
 const { firebaseUser: user } = useAuth()
-const { isSuperAdmin, canEditTricks, canEditEventDefinitions, canTranslate } = useGrants()
+const { isSuperAdmin, canEditTricks, canEditEventDefinitions, canManageTags, canTranslate } = useGrants()
 const router = useRouter()
 
 const links = computed(() => ([
@@ -80,6 +80,7 @@ const links = computed(() => ([
   { to: '/languages', label: 'Languages', show: isSuperAdmin.value },
   { to: '/notices', label: 'Notices', show: isSuperAdmin.value },
   { to: '/event-definitions', label: 'Speed events', show: canEditEventDefinitions.value },
+  { to: '/tags', label: 'Tags', show: canManageTags.value },
   { to: '/translations', label: 'Translations', show: canTranslate.value },
   { to: '/settings', label: 'Settings', show: !!user.value }
 ] satisfies NavLink[]).filter(link => link.show))
