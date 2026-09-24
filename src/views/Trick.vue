@@ -154,7 +154,14 @@
                 </select>
               </div>
 
-              <localisation-fields v-if="translations[lang]" v-model="translations[lang]" :id-prefix="lang" :lang="lang" :column="2" />
+              <localisation-fields
+                v-if="translations[lang]"
+                v-model="translations[lang]"
+                :id-prefix="lang"
+                :lang="lang"
+                :column="2"
+                :optional="pristineTranslations[lang]?.name === ''"
+              />
               <p v-else role="status" class="lg:col-start-2 lg:row-start-2">
                 Loading the {{ lang }} translation...
               </p>

@@ -206,7 +206,8 @@ export default defineConfig({
             outline-offset: 2px;
           }
 
-          form:invalid .btn {
+          /* Still clickable, so the browser can point at the invalid field */
+          form:invalid .btn[type="submit"] {
             cursor: default;
             background-color: var(--tt-elevated);
             color: var(--tt-muted);

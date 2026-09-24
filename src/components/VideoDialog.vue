@@ -81,7 +81,7 @@
                 class="sr-only"
                 @change="file = ($event.target as HTMLInputElement).files?.[0] ?? null"
               >
-              <label :for="field.id" class="file-picker">Choose a video file</label>
+              <label :for="field.id" class="btn w-max file-picker">Choose a video file</label>
               <span :class="file ? '' : 'text-muted'">{{ file?.name ?? 'No file chosen' }}</span>
             </div>
           </template>
@@ -242,11 +242,6 @@ onMounted(() => {
 </script>
 
 <style scoped>
-/* not the btn class itself, an empty required file input makes the form invalid and form:invalid greys those out */
-.file-picker {
-  @apply btn w-max;
-}
-
 /* the sr-only input is what takes focus, so its label has to show the ring */
 input:focus-visible + .file-picker {
   @apply outline-2 outline-solid outline-ttred-900 outline-offset-2;

@@ -12,7 +12,7 @@
       </p>
 
       <div class="flex flex-wrap gap-2 items-center">
-        <label class="file-picker" :for="fileInputId">Replace audio</label>
+        <label class="btn w-max file-picker" :for="fileInputId">Replace audio</label>
         <button type="button" class="btn w-max" @click="removeAudio()">
           Remove audio
         </button>
@@ -24,7 +24,7 @@
         No audio. The cues below split the event on their own, upload the
         official audio to let athletes count along to it as well.
       </p>
-      <label class="file-picker w-max" :for="fileInputId">Upload audio</label>
+      <label class="btn w-max file-picker" :for="fileInputId">Upload audio</label>
     </template>
 
     <div v-if="cues.length" class="relative overflow-x-auto">
@@ -499,11 +499,6 @@ onBeforeUnmount(releasePending)
 </script>
 
 <style scoped>
-/* not the btn class itself, an empty file input would otherwise grey it out via form:invalid */
-.file-picker {
-  @apply btn w-max;
-}
-
 /* the sr-only input is what takes focus, so its labels have to show the ring */
 input:focus-visible ~ .file-picker,
 input:focus-visible + .file-picker {
