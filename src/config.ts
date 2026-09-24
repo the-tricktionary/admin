@@ -1,16 +1,11 @@
 import * as Sentry from '@sentry/vue'
 import { initializeApp } from 'firebase/app'
 
+import type { FirebaseOptions } from 'firebase/app'
 import type { Router } from 'vue-router'
 
-const firebaseConfig = {
-  apiKey: "AIzaSyDpxeEGAi9KSSR3vuCq27GwUYiYXSGiNR8",
-  authDomain: "the-tricktionary.com",
-  projectId: "project-5641153190345267944",
-  messagingSenderId: "1048157266079",
-  appId: "1:1048157266079:web:7e27b88b92262698ae02aa",
-  measurementId: "G-G29EYN86T1"
-}
+if (!import.meta.env.VITE_FIREBASE_CONFIG) throw new Error('VITE_FIREBASE_CONFIG is not set, see the README')
+const firebaseConfig = JSON.parse(import.meta.env.VITE_FIREBASE_CONFIG) as FirebaseOptions
 
 initializeApp(firebaseConfig)
 

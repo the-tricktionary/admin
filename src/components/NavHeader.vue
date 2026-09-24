@@ -79,6 +79,7 @@ const links = computed(() => ([
   { to: '/rulesets', label: 'Rulesets', show: isSuperAdmin.value },
   { to: '/languages', label: 'Languages', show: isSuperAdmin.value },
   { to: '/notices', label: 'Notices', show: isSuperAdmin.value },
+  { to: '/api-clients', label: 'API clients', show: isSuperAdmin.value },
   { to: '/event-definitions', label: 'Speed events', show: canEditEventDefinitions.value },
   { to: '/tags', label: 'Tags', show: canManageTags.value },
   { to: '/translations', label: 'Translations', show: canTranslate.value },
