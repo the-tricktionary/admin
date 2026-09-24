@@ -41,10 +41,14 @@
               <input
                 type="checkbox"
                 :checked="language.enabled"
-                :disabled="saving === language.id"
+                :disabled="saving === language.id || isLocked(language)"
                 :aria-label="`Offer ${languageLabel(language.id)} on the public site`"
+                :aria-describedby="isLocked(language) ? 'english-locked' : undefined"
                 @change="toggle(language, $event)"
               >
+              <p v-if="isLocked(language)" id="english-locked" class="text-muted text-sm m-0">
+                Everything falls back to English, so it stays on
+              </p>
               <p v-if="errors.get(language.id)" role="alert" class="text-ttred-900 text-sm">
                 {{ errors.get(language.id) }}
               </p>
@@ -79,6 +83,10 @@ const saving = ref<string | null>(null)
 const errors = ref(new Map<string, string>())
 
 const { mutate: setLanguageEnabled } = useSetLanguageEnabledMutation()
+
+function isLocked (language: Language) {
+  return language.id === 'en' && language.enabled
+}
 
 async function toggle (language: Language, event: Event) {
   const checkbox = event.target as HTMLInputElement
