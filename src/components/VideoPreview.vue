@@ -7,6 +7,7 @@
     loop
     playsinline
     accent-color="#fe3500"
+    playbackrates="0.5 0.75 1"
     :title="title"
   />
 </template>
