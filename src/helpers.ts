@@ -1,5 +1,5 @@
 import { format, isValid, parseISO } from 'date-fns'
-import { Discipline, GrantType, Scope, TagValueType, TimingCueType, TrickSubmissionKind, VideoHost, VideoType } from './graphql/generated/graphql'
+import { Discipline, GrantType, Scope, TagValueType, TimingCueType, TrickSubmissionKind, VideoType } from './graphql/generated/graphql'
 
 import type { AttributionInput, TrickLocalisationInput, TrickTagInput } from './graphql/generated/graphql'
 
@@ -14,16 +14,7 @@ export const disciplineNames: Record<Discipline, string> = {
 
 export const videoTypeNames: Record<VideoType, string> = {
   [VideoType.FullSpeed]: 'Full speed',
-  [VideoType.SlowMo]: 'Slow motion',
-  [VideoType.Explainer]: 'Explainer'
-}
-
-/** The types that show the trick rather than explain it */
-const trickVideoTypes = [VideoType.FullSpeed, VideoType.SlowMo]
-
-/** Whether the public site plays the video */
-export function isTrickVideo (video: { host: VideoHost, type: VideoType }) {
-  return video.host === VideoHost.Mux && trickVideoTypes.includes(video.type)
+  [VideoType.SlowMo]: 'Slow motion'
 }
 
 /** A video input's slow motion start, which only a slow motion video has */
