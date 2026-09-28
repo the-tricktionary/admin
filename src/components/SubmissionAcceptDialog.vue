@@ -78,13 +78,13 @@
 
           <template v-if="submitted">
             <h3 class="mb-2 font-semibold lg:col-start-2 lg:row-start-1">
-              As submitted in {{ languageName(submission.lang) }}
+              As submitted in {{ languageName(lang) }}
             </h3>
             <localisation-fields
               :model-value="submitted"
               readonly
               id-prefix="accept-submitted"
-              :lang="submission.lang"
+              :lang="lang"
               :column="2"
             />
           </template>
@@ -129,16 +129,20 @@ const dialog = useTemplateRef('dialog')
 const titleId = useId()
 const { tagInputs } = useTags()
 
+/** A `Trick` submission always has its text, only a video submission goes without */
+const lang = submission.lang ?? 'en'
+const text = { ...submission, name: submission.name ?? '' }
+
 const discipline = ref(submission.discipline)
 const tags = ref<TagRow[]>([])
 const videoType = ref(VideoType.FullSpeed)
 const slowMoStart = ref(submission.video?.slowMoStart?.toString() ?? '')
-const localisation = ref(toLocalisationValue(submission.lang === 'en' ? submission : null))
-const slug = ref(slugFromName(submission.name))
+const localisation = ref(toLocalisationValue(lang === 'en' ? text : null))
+const slug = ref(slugFromName(text.name))
 const slugEdited = ref(false)
 
 /** The submitter's own text, shown beside the English fields when it isn't English itself */
-const submitted = submission.lang === 'en' ? null : toLocalisationValue(submission)
+const submitted = lang === 'en' ? null : toLocalisationValue(text)
 
 watch(() => localisation.value.name, name => {
   if (slugEdited.value) return

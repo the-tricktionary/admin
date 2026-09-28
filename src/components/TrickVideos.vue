@@ -45,7 +45,7 @@
             </tr>
           </thead>
           <tbody>
-            <tr v-for="video of videos" :key="video.videoId" class="border-b border-solid border-line">
+            <tr v-for="(video, index) of videos" :key="video.videoId" class="border-b border-solid border-line">
               <td class="py-2 pr-2">
                 {{ hostNames[video.host] }}
               </td>
@@ -74,6 +74,26 @@
               </td>
               <td class="py-2">
                 <div class="flex flex-wrap gap-2">
+                  <template v-if="editable">
+                    <button
+                      type="button"
+                      class="btn w-max"
+                      :disabled="moving != null || index === 0"
+                      :aria-label="`Move ${videoTypeNames[video.type]} video ${video.videoId} up`"
+                      @click="move(video.videoId, index - 1)"
+                    >
+                      <icon-arrow-up aria-hidden="true" />
+                    </button>
+                    <button
+                      type="button"
+                      class="btn w-max"
+                      :disabled="moving != null || index === videos.length - 1"
+                      :aria-label="`Move ${videoTypeNames[video.type]} video ${video.videoId} down`"
+                      @click="move(video.videoId, index + 1)"
+                    >
+                      <icon-arrow-down aria-hidden="true" />
+                    </button>
+                  </template>
                   <button
                     type="button"
                     class="btn w-max"
@@ -105,8 +125,12 @@
         </table>
       </div>
 
-      <p v-if="removeError" role="alert" class="text-ttred-900 mt-3">
-        {{ removeError }}
+      <p v-if="videos.length" class="text-muted text-sm mt-2 mb-0">
+        The public site steps through the full speed and slow motion Mux videos in this order, starting with the first.
+      </p>
+
+      <p v-if="actionError" role="alert" class="text-ttred-900 mt-3">
+        {{ actionError }}
       </p>
 
       <template v-if="pendingUploads.length">
@@ -180,9 +204,11 @@ import { computed, ref, watch } from 'vue'
 import VideoPreview from './VideoPreview.vue'
 import VideoAttributionDialog from './VideoAttributionDialog.vue'
 import VideoDialog from './VideoDialog.vue'
-import { useRemoveTrickVideoMutation, VideoHost, VideoUploadStatus } from '../graphql/generated/graphql'
+import { useMoveTrickVideoMutation, useRemoveTrickVideoMutation, VideoHost, VideoUploadStatus } from '../graphql/generated/graphql'
 import { trickVideoTypes, videoTypeNames } from '../helpers'
 
+import IconArrowDown from '~icons/mdi/arrow-down'
+import IconArrowUp from '~icons/mdi/arrow-up'
 import IconPencil from '~icons/mdi/pencil-outline'
 
 import type { TrickQuery } from '../graphql/generated/graphql'
@@ -215,13 +241,12 @@ const preview = ref<string | null>(null)
 const dialogOpen = ref(false)
 const crediting = ref<TrickVideo | null>(null)
 const removing = ref<string | null>(null)
-const removeError = ref<string | null>(null)
+const moving = ref<string | null>(null)
+const actionError = ref<string | null>(null)
 
-/** The public site's preference first, then whatever there is to preview */
+/** The video the public site shows first, then whatever there is to preview */
 const fallback = computed(() =>
-  trickVideoTypes
-    .map(type => videos.find(video => video.host === VideoHost.Mux && video.type === type))
-    .find(video => video != null) ??
+  videos.find(video => video.host === VideoHost.Mux && trickVideoTypes.includes(video.type)) ??
   videos.find(video => video.host === VideoHost.Mux) ??
   videos[0] ?? null
 )
@@ -238,20 +263,34 @@ watch(waitingOnMux, waiting => {
 }, { immediate: true })
 
 const { mutate: removeVideo } = useRemoveTrickVideoMutation({ throws: 'always' })
+const { mutate: moveVideo } = useMoveTrickVideoMutation({ throws: 'always' })
 
 async function remove (videoId: string) {
   if (!window.confirm('Remove this video from the trick?')) return
 
   removing.value = videoId
-  removeError.value = null
+  actionError.value = null
 
   try {
     await removeVideo({ trickId, videoId })
     if (preview.value === videoId) preview.value = null
   } catch (err) {
-    removeError.value = err instanceof Error ? err.message : 'The video could not be removed, please try again'
+    actionError.value = err instanceof Error ? err.message : 'The video could not be removed, please try again'
   } finally {
     removing.value = null
+  }
+}
+
+async function move (videoId: string, index: number) {
+  moving.value = videoId
+  actionError.value = null
+
+  try {
+    await moveVideo({ trickId, videoId, index })
+  } catch (err) {
+    actionError.value = err instanceof Error ? err.message : 'The video could not be moved, please try again'
+  } finally {
+    moving.value = null
   }
 }
 </script>

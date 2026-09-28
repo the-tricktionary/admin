@@ -1,5 +1,6 @@
 fragment TrickSubmissionRow on TrickSubmission {
   id
+  kind
   submitter {
     id
     name
@@ -24,6 +25,11 @@ fragment TrickSubmissionRow on TrickSubmission {
   reviewNote
   trick {
     id
+    slug
+    en: localisation {
+      id
+      name
+    }
   }
   createdAt
 }

@@ -16,9 +16,11 @@
     </div>
 
     <p class="text-muted mb-4">
-      The tricks people have offered through the public site. Accepting one
-      creates the trick and credits the submitter on its video and its
-      localisation, rejecting one deletes the video they uploaded.
+      The tricks, and videos of existing tricks, that people have offered
+      through the public site. Accepting a trick creates it and credits the
+      submitter on its video and its localisation, accepting a video adds it
+      after the trick's other videos, credited to the submitter. Rejecting
+      either deletes the video they uploaded.
     </p>
 
     <p v-if="loading && !submissions.length">
@@ -36,6 +38,9 @@
             </th>
             <th scope="col" class="py-2 pr-2">
               Credited to
+            </th>
+            <th scope="col" class="py-2 pr-2">
+              Kind
             </th>
             <th scope="col" class="py-2 pr-2">
               Discipline
@@ -70,20 +75,23 @@
                 {{ submission.attributionName }}
               </td>
               <td class="py-2 pr-2">
+                {{ kindNames[submission.kind] }}
+              </td>
+              <td class="py-2 pr-2">
                 {{ disciplineNames[submission.discipline] }}
               </td>
               <td class="py-2 pr-2">
                 <router-link
                   v-if="submission.trick"
                   :to="{ name: 'trick', params: { id: submission.trick.id } }"
-                  :lang="submission.lang"
+                  :lang="submission.lang ?? 'en'"
                 >
-                  {{ submission.name }}
+                  {{ submission.kind === TrickSubmissionKind.Video ? submission.trick.en?.name ?? submission.trick.slug : submission.name }}
                 </router-link>
-                <span v-else :lang="submission.lang">{{ submission.name }}</span>
+                <span v-else :lang="submission.lang ?? undefined">{{ submission.name }}</span>
               </td>
               <td class="py-2 pr-2">
-                {{ languageLabel(submission.lang) }}
+                {{ submission.lang ? languageLabel(submission.lang) : '–' }}
               </td>
               <td class="py-2 pr-2">
                 {{ formatDate(submission.createdAt) }}
@@ -104,7 +112,7 @@
                     type="button"
                     class="btn w-max"
                     :aria-pressed="preview === submission.id"
-                    :aria-label="`Preview the video of ${submission.name}`"
+                    :aria-label="`Preview ${previewLabel(submission)}`"
                     @click="preview = preview === submission.id ? null : submission.id"
                   >
                     Preview
@@ -115,7 +123,7 @@
                       class="btn w-max"
                       :disabled="!submission.video"
                       :aria-describedby="submission.video ? undefined : `submission-waiting-${submission.id}`"
-                      :aria-label="`Accept ${submission.name}`"
+                      :aria-label="`Accept ${submissionLabel(submission)}`"
                       @click="accepting = submission"
                     >
                       Accept
@@ -123,7 +131,7 @@
                     <button
                       type="button"
                       class="btn w-max"
-                      :aria-label="`Reject ${submission.name}`"
+                      :aria-label="`Reject ${submissionLabel(submission)}`"
                       @click="rejecting = submission"
                     >
                       Reject
@@ -143,15 +151,15 @@
               </td>
             </tr>
             <tr v-if="preview === submission.id" class="border-b border-solid border-line">
-              <td colspan="9" class="py-2">
+              <td colspan="10" class="py-2">
                 <div v-if="submission.video" class="w-full max-w-160 aspect-video bg-placeholder isolate">
-                  <video-preview :playback-id="submission.video.videoId" :title="submission.name" />
+                  <video-preview :playback-id="submission.video.videoId" :title="submissionLabel(submission)" />
                 </div>
               </td>
             </tr>
           </template>
           <tr v-if="!submissions.length">
-            <td colspan="9" class="py-2 text-muted">
+            <td colspan="10" class="py-2 text-muted">
               No submissions to show.
             </td>
           </tr>
@@ -159,7 +167,12 @@
       </table>
     </div>
 
-    <submission-accept-dialog v-if="accepting" :submission="accepting" @close="accepting = null" />
+    <video-submission-accept-dialog
+      v-if="accepting?.kind === TrickSubmissionKind.Video"
+      :submission="accepting"
+      @close="accepting = null"
+    />
+    <submission-accept-dialog v-else-if="accepting" :submission="accepting" @close="accepting = null" />
     <submission-reject-dialog v-if="rejecting" :submission="rejecting" @close="rejecting = null" />
   </div>
 </template>
@@ -171,12 +184,18 @@ import { useRoute, useRouter } from 'vue-router'
 import VideoPreview from '../components/VideoPreview.vue'
 import SubmissionAcceptDialog from '../components/SubmissionAcceptDialog.vue'
 import SubmissionRejectDialog from '../components/SubmissionRejectDialog.vue'
-import { TrickSubmissionStatus, useTrickSubmissionsQuery, VideoUploadStatus } from '../graphql/generated/graphql'
-import { disciplineNames, formatDate, languageLabel, userLabel } from '../helpers'
+import VideoSubmissionAcceptDialog from '../components/VideoSubmissionAcceptDialog.vue'
+import { TrickSubmissionKind, TrickSubmissionStatus, useTrickSubmissionsQuery, VideoUploadStatus } from '../graphql/generated/graphql'
+import { disciplineNames, formatDate, languageLabel, submissionLabel, userLabel } from '../helpers'
 
 import type { TrickSubmissionRowFragment } from '../graphql/generated/graphql'
 
 const statuses = Object.values(TrickSubmissionStatus)
+
+const kindNames: Record<TrickSubmissionKind, string> = {
+  [TrickSubmissionKind.Trick]: 'Trick',
+  [TrickSubmissionKind.Video]: 'Video'
+}
 
 /** Upload statuses no video will ever come out of */
 const failedStatuses: VideoUploadStatus[] = [VideoUploadStatus.Errored, VideoUploadStatus.Cancelled]
@@ -216,6 +235,11 @@ const rejecting = ref<TrickSubmissionRowFragment | null>(null)
 function videoState (submission: TrickSubmissionRowFragment) {
   if (submission.status === TrickSubmissionStatus.Rejected) return 'Deleted'
   return submission.video ? 'Ready' : submission.upload.status
+}
+
+/** The video of a new trick, or a video submission, which is named after its video already */
+function previewLabel (submission: TrickSubmissionRowFragment) {
+  return submission.kind === TrickSubmissionKind.Video ? submissionLabel(submission) : `the video of ${submissionLabel(submission)}`
 }
 
 function waitingNote (submission: TrickSubmissionRowFragment) {

@@ -1,5 +1,5 @@
 import { format, isValid, parseISO } from 'date-fns'
-import { Discipline, GrantType, Scope, TagValueType, TimingCueType, VideoType } from './graphql/generated/graphql'
+import { Discipline, GrantType, Scope, TagValueType, TimingCueType, TrickSubmissionKind, VideoType } from './graphql/generated/graphql'
 
 import type { AttributionInput, TrickLocalisationInput, TrickTagInput } from './graphql/generated/graphql'
 
@@ -18,7 +18,7 @@ export const videoTypeNames: Record<VideoType, string> = {
   [VideoType.Explainer]: 'Explainer'
 }
 
-/** The types that show the trick itself rather than explain it, in the order the public site's player prefers them */
+/** The types that show the trick itself rather than explain it, the ones the public site's player steps through */
 export const trickVideoTypes = [VideoType.FullSpeed, VideoType.SlowMo]
 
 export const grantTypeNames: Record<GrantType, string> = {
@@ -185,6 +185,18 @@ interface NamedUser {
 /** What to call a user: the name their profile shows, else their username, email or id */
 export function userLabel (user: NamedUser) {
   return user.name ?? user.username ?? user.email ?? user.id
+}
+
+interface NamedSubmission {
+  kind: TrickSubmissionKind
+  name?: string | null
+  trick?: { slug: string, en?: { name: string } | null } | null
+}
+
+/** What to call a submission: the trick's name, or for a video the trick it is for */
+export function submissionLabel (submission: NamedSubmission) {
+  if (submission.kind !== TrickSubmissionKind.Video) return submission.name ?? ''
+  return `Video of ${submission.trick?.en?.name ?? submission.trick?.slug ?? 'a trick'}`
 }
 
 export interface LocalisationValue {
