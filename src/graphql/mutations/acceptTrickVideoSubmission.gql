@@ -1,0 +1,18 @@
+mutation AcceptTrickVideoSubmission ($submissionId: ID!, $data: AcceptTrickVideoSubmissionInput!) {
+  acceptTrickVideoSubmission (submissionId: $submissionId, data: $data) {
+    id
+    status
+    trick {
+      id
+      videos {
+        host
+        videoId
+        type
+        slowMoStart
+        attribution {
+          name
+        }
+      }
+    }
+  }
+}

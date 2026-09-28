@@ -8,7 +8,7 @@
   >
     <form class="p-4" @submit.prevent="reject()">
       <h2 :id="titleId" class="mb-3">
-        Reject “{{ submission.name }}”
+        Reject “{{ submissionLabel(submission) }}”
       </h2>
 
       <p class="text-muted mb-3">
@@ -49,6 +49,7 @@
 import { onMounted, ref, useId, useTemplateRef } from 'vue'
 import FormField from './FormField.vue'
 import { useRejectTrickSubmissionMutation } from '../graphql/generated/graphql'
+import { submissionLabel } from '../helpers'
 
 import type { TrickSubmissionRowFragment } from '../graphql/generated/graphql'
 

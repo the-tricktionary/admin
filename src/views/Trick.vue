@@ -14,7 +14,7 @@
     </p>
 
     <template v-else>
-      <h1>{{ trick.en?.name ?? trick.slug }}</h1>
+      <h1>{{ trickName(trick) }}</h1>
 
       <form id="trick-editor" @submit.prevent="save()">
         <section class="mt-6">
@@ -268,7 +268,7 @@
           :videos="trick.videos"
           :pending-uploads="trick.pendingVideoUploads"
           :editable="canEditTricks"
-          :title="trick.en?.name ?? trick.slug"
+          :title="trickName(trick)"
           @refresh="trickQuery.refetch()"
         />
       </section>
@@ -330,7 +330,7 @@ import {
   useUpdateTrickDetailsMutation,
   VerificationLevel
 } from '../graphql/generated/graphql'
-import { disciplineNames, disciplineToSlug, languageLabel, localisationInput, tagRows, tagRowsKey, toLocalisationValue, TRICKTIONARY, trickSorter } from '../helpers'
+import { disciplineNames, disciplineToSlug, languageLabel, localisationInput, tagRows, tagRowsKey, toLocalisationValue, TRICKTIONARY, trickName, trickSorter } from '../helpers'
 import useGrants, { verificationLevelRank } from '../hooks/useGrants'
 import useTags from '../hooks/useTags'
 import useUnsavedChanges from '../hooks/useUnsavedChanges'
@@ -372,7 +372,7 @@ const trick = computed(() => trickQuery.result.value?.trick ?? null)
 const loading = trickQuery.loading
 const error = trickQuery.error
 
-useHead({ title: computed(() => trick.value ? `Edit: ${trick.value.en?.name ?? trick.value.slug}` : 'Edit trick') })
+useHead({ title: computed(() => trick.value ? `Edit: ${trickName(trick.value)}` : 'Edit trick') })
 
 const { result: rulesetsResult } = useRulesetsQuery()
 const rulesets = computed(() => rulesetsResult.value?.rulesets ?? [])
@@ -452,7 +452,7 @@ const candidates = computed(() => optionsQuery.result.value?.tricks ?? [])
 const trickNames = computed(() => {
   const names = new Map<string, string>()
   for (const other of [...candidates.value, ...trick.value?.prerequisites ?? [], ...trick.value?.prerequisiteFor ?? []]) {
-    names.set(other.id, other.en?.name ?? other.slug)
+    names.set(other.id, trickName(other))
   }
   return names
 })
@@ -468,7 +468,7 @@ function optionsFor (linked: string[]) {
   return candidates.value
     .filter(other => other.id !== trickId.value && !linked.includes(other.id))
     .sort(trickSorter)
-    .map(other => ({ id: other.id, name: other.en?.name ?? other.slug, level: other.ttLevels[0]?.level ?? null }))
+    .map(other => ({ id: other.id, name: trickName(other), level: other.ttLevels[0]?.level ?? null }))
 }
 
 const previousRows = computed(() => rowsFor(form.value.prerequisites))

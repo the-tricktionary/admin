@@ -23,32 +23,7 @@
             </template>
           </form-field>
 
-          <form-field id="accept-video-type" label="Video type">
-            <template #default="field">
-              <select v-bind="field" v-model="videoType" class="w-full block rounded border-line">
-                <option v-for="(label, value) of videoTypeNames" :key="value" :value="value">
-                  {{ label }}
-                </option>
-              </select>
-            </template>
-          </form-field>
-
-          <form-field
-            v-if="videoType === VideoType.SlowMo"
-            id="accept-slow-mo-start"
-            label="Slow motion start (seconds)"
-          >
-            <template #default="field">
-              <input
-                v-bind="field"
-                v-model="slowMoStart"
-                type="number"
-                min="0"
-                step="0.1"
-                class="w-full block rounded focus:border-b-ttred-900 border-line"
-              >
-            </template>
-          </form-field>
+          <video-type-fields v-model:type="videoType" v-model:slow-mo-start="slowMoStart" id-prefix="accept-video" />
 
           <form-field id="accept-slug" label="Slug" :error="slugError">
             <template #default="field">
@@ -78,13 +53,13 @@
 
           <template v-if="submitted">
             <h3 class="mb-2 font-semibold lg:col-start-2 lg:row-start-1">
-              As submitted in {{ languageName(submission.lang) }}
+              As submitted in {{ languageName(lang) }}
             </h3>
             <localisation-fields
               :model-value="submitted"
               readonly
               id-prefix="accept-submitted"
-              :lang="submission.lang"
+              :lang="lang"
               :column="2"
             />
           </template>
@@ -112,8 +87,9 @@ import { computed, onMounted, ref, useId, useTemplateRef, watch } from 'vue'
 import FormField from './FormField.vue'
 import LocalisationFields from './LocalisationFields.vue'
 import TrickTagsEditor from './TrickTagsEditor.vue'
+import VideoTypeFields from './VideoTypeFields.vue'
 import { useAcceptTrickSubmissionMutation, VideoType } from '../graphql/generated/graphql'
-import { disciplineNames, languageName, localisationInput, parseNumber, slugFromName, toLocalisationValue, videoTypeNames } from '../helpers'
+import { disciplineNames, languageName, localisationInput, slowMoStartInput, slugFromName, toLocalisationValue } from '../helpers'
 import useTags from '../hooks/useTags'
 
 import type { TrickSubmissionRowFragment } from '../graphql/generated/graphql'
@@ -129,16 +105,20 @@ const dialog = useTemplateRef('dialog')
 const titleId = useId()
 const { tagInputs } = useTags()
 
+/** Only video submissions lack these */
+const lang = submission.lang ?? 'en'
+const text = { ...submission, name: submission.name ?? '' }
+
 const discipline = ref(submission.discipline)
 const tags = ref<TagRow[]>([])
 const videoType = ref(VideoType.FullSpeed)
-const slowMoStart = ref(submission.video?.slowMoStart?.toString() ?? '')
-const localisation = ref(toLocalisationValue(submission.lang === 'en' ? submission : null))
-const slug = ref(slugFromName(submission.name))
+const slowMoStart = ref<string | number>(submission.video?.slowMoStart ?? '')
+const localisation = ref(toLocalisationValue(lang === 'en' ? text : null))
+const slug = ref(slugFromName(text.name))
 const slugEdited = ref(false)
 
 /** The submitter's own text, shown beside the English fields when it isn't English itself */
-const submitted = submission.lang === 'en' ? null : toLocalisationValue(submission)
+const submitted = lang === 'en' ? null : toLocalisationValue(text)
 
 watch(() => localisation.value.name, name => {
   if (slugEdited.value) return
@@ -154,8 +134,6 @@ const slugTaken = computed(() => error.value?.graphQLErrors.some(err => err.exte
 const slugError = computed(() => slugTaken.value ? 'A trick with this slug already exists in this discipline' : null)
 const submitError = computed(() => slugTaken.value ? null : error.value?.message ?? null)
 
-const slowMoStartValue = computed(() => videoType.value === VideoType.SlowMo ? parseNumber(slowMoStart.value) : null)
-
 async function accept () {
   const result = await mutate({
     submissionId: submission.id,
@@ -165,7 +143,7 @@ async function accept () {
       tags: tagInputs(tags.value, discipline.value),
       localisation: localisationInput(localisation.value),
       videoType: videoType.value,
-      slowMoStart: slowMoStartValue.value
+      slowMoStart: slowMoStartInput(videoType.value, slowMoStart.value)
     }
   })
 

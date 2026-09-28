@@ -62,7 +62,7 @@
 
       <label class="flex items-center gap-2 whitespace-nowrap">
         <input v-model="withoutVideos" type="checkbox">
-        Without videos
+        Without a Mux video
       </label>
 
       <label class="flex items-center gap-2 whitespace-nowrap">
@@ -123,7 +123,7 @@
               class="flex flex-col rounded border border-line p-2 hover:bg-elevated"
               :to="{ name: 'trick', params: { id: trick.id } }"
             >
-              <span class="font-semibold">{{ trick.en?.name ?? trick.slug }}</span>
+              <span class="font-semibold">{{ trickName(trick) }}</span>
               <span class="text-muted text-sm">{{ trick.slug }}</span>
               <ul class="list-none m-0 p-0 flex flex-wrap gap-1 mt-2" aria-label="Status">
                 <li
@@ -153,7 +153,7 @@ import { useRouteQuery } from '@vueuse/router'
 import BottomBar from '../components/BottomBar.vue'
 import DisciplineSelector from '../components/DisciplineSelector.vue'
 import { useRulesetsQuery, useTricksQuery, VerificationLevel, VideoHost } from '../graphql/generated/graphql'
-import { disciplineToSlug, languageLabel, queryDiscipline, TRICKTIONARY, trickSorter, trickTypeOf, trickVideoTypes, videoTypeNames } from '../helpers'
+import { disciplineToSlug, languageLabel, queryDiscipline, TRICKTIONARY, trickName, trickSorter, trickTypeOf, videoTypeNames } from '../helpers'
 import useGrants, { verificationLevelRank } from '../hooks/useGrants'
 import useLanguages from '../hooks/useLanguages'
 import useTags from '../hooks/useTags'
@@ -328,11 +328,11 @@ function levelStatus (trick: Trick): TrickStatus | undefined {
 
 function videoStatus (trick: Trick): TrickStatus {
   const title = 'Videos'
-  const trickVideo = trick.videos.find(video => video.host === VideoHost.Mux && trickVideoTypes.includes(video.type))
-  if (trickVideo) {
-    return { kind: 'video', state: 'done', label: videoTypeNames[trickVideo.type], title, icon: IconVideo }
+  const muxVideo = trick.videos.find(video => video.host === VideoHost.Mux)
+  if (muxVideo) {
+    return { kind: 'video', state: 'done', label: videoTypeNames[muxVideo.type], title, icon: IconVideo }
   }
-  if (trick.videos.length > 0) return { kind: 'video', state: 'partial', label: 'No Mux trick video', title, icon: IconVideo }
+  if (trick.videos.length > 0) return { kind: 'video', state: 'partial', label: 'No Mux video', title, icon: IconVideo }
   return { kind: 'video', state: 'missing', label: 'No video', title, icon: IconVideo }
 }
 

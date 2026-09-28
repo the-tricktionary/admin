@@ -1,0 +1,14 @@
+mutation MoveTrickVideo ($trickId: ID!, $videoId: String!, $index: Int!) {
+  moveTrickVideo (trickId: $trickId, videoId: $videoId, index: $index) {
+    id
+    videos {
+      host
+      videoId
+      type
+      slowMoStart
+      attribution {
+        name
+      }
+    }
+  }
+}

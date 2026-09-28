@@ -1,5 +1,5 @@
 import { format, isValid, parseISO } from 'date-fns'
-import { Discipline, GrantType, Scope, TagValueType, TimingCueType, VideoType } from './graphql/generated/graphql'
+import { Discipline, GrantType, Scope, TagValueType, TimingCueType, TrickSubmissionKind, VideoType } from './graphql/generated/graphql'
 
 import type { AttributionInput, TrickLocalisationInput, TrickTagInput } from './graphql/generated/graphql'
 
@@ -14,12 +14,17 @@ export const disciplineNames: Record<Discipline, string> = {
 
 export const videoTypeNames: Record<VideoType, string> = {
   [VideoType.FullSpeed]: 'Full speed',
-  [VideoType.SlowMo]: 'Slow motion',
-  [VideoType.Explainer]: 'Explainer'
+  [VideoType.SlowMo]: 'Slow motion'
 }
 
-/** The types that show the trick itself rather than explain it, in the order the public site's player prefers them */
-export const trickVideoTypes = [VideoType.FullSpeed, VideoType.SlowMo]
+/** A video input's slow motion start, which only a slow motion video has */
+export function slowMoStartInput (type: VideoType, slowMoStart: string | number) {
+  return type === VideoType.SlowMo ? parseNumber(slowMoStart) : null
+}
+
+export function trickName (trick: { slug: string, en?: { name: string } | null }) {
+  return trick.en?.name ?? trick.slug
+}
 
 export const grantTypeNames: Record<GrantType, string> = {
   [GrantType.SuperAdmin]: 'Super admin',
@@ -187,6 +192,18 @@ export function userLabel (user: NamedUser) {
   return user.name ?? user.username ?? user.email ?? user.id
 }
 
+interface NamedSubmission {
+  kind: TrickSubmissionKind
+  name?: string | null
+  trick?: Parameters<typeof trickName>[0] | null
+}
+
+/** A new trick's name, or for a video the name of its trick */
+export function submissionLabel (submission: NamedSubmission) {
+  if (submission.kind !== TrickSubmissionKind.Video) return submission.name ?? ''
+  return `Video of ${submission.trick ? trickName(submission.trick) : 'a trick'}`
+}
+
 export interface LocalisationValue {
   name: string
   alternativeNames: string[]
@@ -223,7 +240,7 @@ interface SortableTrick {
 }
 
 export function trickSorter (a: SortableTrick, b: SortableTrick) {
-  return (a.en?.name ?? a.slug).localeCompare(b.en?.name ?? b.slug)
+  return trickName(a).localeCompare(trickName(b))
 }
 
 const YOUTUBE_ID = /^[\w-]{11}$/
