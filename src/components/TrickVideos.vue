@@ -21,7 +21,7 @@
 
     <div>
       <div class="relative overflow-x-auto">
-        <table class="w-full border-collapse text-left">
+        <table ref="table" class="w-full border-collapse text-left">
           <thead>
             <tr class="border-b border-solid border-line">
               <th scope="col" class="py-2 pr-2">
@@ -79,8 +79,9 @@
                       type="button"
                       class="btn w-max"
                       :disabled="moving != null || index === 0"
+                      :data-move="`${video.videoId}:up`"
                       :aria-label="`Move ${videoTypeNames[video.type]} video ${video.videoId} up`"
-                      @click="move(video.videoId, index - 1)"
+                      @click="move(video.videoId, index - 1, 'up')"
                     >
                       <icon-arrow-up aria-hidden="true" />
                     </button>
@@ -88,8 +89,9 @@
                       type="button"
                       class="btn w-max"
                       :disabled="moving != null || index === videos.length - 1"
+                      :data-move="`${video.videoId}:down`"
                       :aria-label="`Move ${videoTypeNames[video.type]} video ${video.videoId} down`"
-                      @click="move(video.videoId, index + 1)"
+                      @click="move(video.videoId, index + 1, 'down')"
                     >
                       <icon-arrow-down aria-hidden="true" />
                     </button>
@@ -200,7 +202,7 @@
 
 <script setup lang="ts">
 import { useIntervalFn } from '@vueuse/core'
-import { computed, ref, watch } from 'vue'
+import { computed, nextTick, ref, useTemplateRef, watch } from 'vue'
 import VideoPreview from './VideoPreview.vue'
 import VideoAttributionDialog from './VideoAttributionDialog.vue'
 import VideoDialog from './VideoDialog.vue'
@@ -237,6 +239,7 @@ const emit = defineEmits<{
   refresh: []
 }>()
 
+const table = useTemplateRef('table')
 const preview = ref<string | null>(null)
 const dialogOpen = ref(false)
 const crediting = ref<TrickVideo | null>(null)
@@ -281,7 +284,7 @@ async function remove (videoId: string) {
   }
 }
 
-async function move (videoId: string, index: number) {
+async function move (videoId: string, index: number, direction: 'up' | 'down') {
   moving.value = videoId
   actionError.value = null
 
@@ -292,5 +295,11 @@ async function move (videoId: string, index: number) {
   } finally {
     moving.value = null
   }
+
+  // the focus follows the row, onto its other button once this one is disabled at an end
+  await nextTick()
+  const button = (to: string) => table.value?.querySelector<HTMLButtonElement>(`[data-move="${CSS.escape(`${videoId}:${to}`)}"]`)
+  const same = button(direction)
+  ;(same?.disabled === false ? same : button(direction === 'up' ? 'down' : 'up'))?.focus()
 }
 </script>
