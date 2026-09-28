@@ -17,32 +17,7 @@
       </p>
 
       <fieldset :disabled="loading" class="border-none p-0 m-0">
-        <form-field id="accept-video-type" label="Video type">
-          <template #default="field">
-            <select v-bind="field" v-model="videoType" class="w-full block rounded border-line">
-              <option v-for="(label, value) of videoTypeNames" :key="value" :value="value">
-                {{ label }}
-              </option>
-            </select>
-          </template>
-        </form-field>
-
-        <form-field
-          v-if="videoType === VideoType.SlowMo"
-          id="accept-slow-mo-start"
-          label="Slow motion start (seconds)"
-        >
-          <template #default="field">
-            <input
-              v-bind="field"
-              v-model="slowMoStart"
-              type="number"
-              min="0"
-              step="0.1"
-              class="w-full block rounded focus:border-b-ttred-900 border-line"
-            >
-          </template>
-        </form-field>
+        <video-type-fields v-model:type="type" v-model:slow-mo-start="slowMoStart" id-prefix="accept-video" />
       </fieldset>
 
       <p v-if="error" role="alert" class="text-ttred-900 mb-3">
@@ -62,10 +37,10 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref, useId, useTemplateRef } from 'vue'
-import FormField from './FormField.vue'
+import { onMounted, ref, useId, useTemplateRef } from 'vue'
+import VideoTypeFields from './VideoTypeFields.vue'
 import { useAcceptTrickVideoSubmissionMutation, VideoType } from '../graphql/generated/graphql'
-import { parseNumber, submissionLabel, videoTypeNames } from '../helpers'
+import { slowMoStartInput, submissionLabel } from '../helpers'
 
 import type { TrickSubmissionRowFragment } from '../graphql/generated/graphql'
 
@@ -78,22 +53,20 @@ const emit = defineEmits<{
 const dialog = useTemplateRef('dialog')
 const titleId = useId()
 
-const videoType = ref(VideoType.FullSpeed)
-const slowMoStart = ref('')
+const type = ref(VideoType.FullSpeed)
+const slowMoStart = ref<string | number>('')
 
 const { mutate, loading, error } = useAcceptTrickVideoSubmissionMutation({
   refetchQueries: ['TrickSubmissions'],
   throws: 'never'
 })
 
-const slowMoStartValue = computed(() => videoType.value === VideoType.SlowMo ? parseNumber(slowMoStart.value) : null)
-
 async function accept () {
   const result = await mutate({
     submissionId: submission.id,
     data: {
-      videoType: videoType.value,
-      slowMoStart: slowMoStartValue.value
+      type: type.value,
+      slowMoStart: slowMoStartInput(type.value, slowMoStart.value)
     }
   })
 

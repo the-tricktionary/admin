@@ -25,32 +25,7 @@
           </template>
         </form-field>
 
-        <form-field id="video-type" label="Type">
-          <template #default="field">
-            <select v-bind="field" v-model="type" class="w-full block rounded border-line">
-              <option v-for="(label, value) of videoTypeNames" :key="value" :value="value">
-                {{ label }}
-              </option>
-            </select>
-          </template>
-        </form-field>
-
-        <form-field
-          v-if="type === VideoType.SlowMo"
-          id="video-slow-mo-start"
-          label="Slow motion start (seconds)"
-        >
-          <template #default="field">
-            <input
-              v-bind="field"
-              v-model="slowMoStart"
-              type="number"
-              min="0"
-              step="0.1"
-              class="w-full block rounded focus:border-b-ttred-900 border-line"
-            >
-          </template>
-        </form-field>
+        <video-type-fields v-model:type="type" v-model:slow-mo-start="slowMoStart" id-prefix="video" />
 
         <form-field
           v-if="source === 'youtube'"
@@ -128,8 +103,9 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, useId, useTemplateRef } from 'vue'
 import FormField from './FormField.vue'
+import VideoTypeFields from './VideoTypeFields.vue'
 import { useAddTrickVideoMutation, useCreateTrickVideoUploadMutation, VideoType } from '../graphql/generated/graphql'
-import { attributionInput, parseNumber, parseYouTubeId, videoTypeNames } from '../helpers'
+import { attributionInput, parseYouTubeId, slowMoStartInput } from '../helpers'
 
 const { trickId } = defineProps<{ trickId: string }>()
 
@@ -144,7 +120,7 @@ const titleId = useId()
 
 const source = ref<'mux' | 'youtube'>('mux')
 const type = ref<VideoType>(VideoType.FullSpeed)
-const slowMoStart = ref('')
+const slowMoStart = ref<string | number>('')
 const youTubeInput = ref('')
 const file = ref<File | null>(null)
 const attributionName = ref('')
@@ -159,8 +135,6 @@ const busy = computed(() => saving.value || uploading.value)
 
 const { mutate: addVideo } = useAddTrickVideoMutation({ throws: 'always' })
 const { mutate: createUpload } = useCreateTrickVideoUploadMutation({ throws: 'always' })
-
-const slowMoStartValue = computed(() => type.value === VideoType.SlowMo ? parseNumber(slowMoStart.value) : null)
 
 /** Mux hands out a URL that takes the file as the body of a single PUT */
 async function put (url: string, video: File) {
@@ -188,7 +162,7 @@ async function addYouTubeVideo () {
 
   saving.value = true
   try {
-    await addVideo({ trickId, data: { videoId, type: type.value, slowMoStart: slowMoStartValue.value, attribution: attributionInput(attributionName.value) } })
+    await addVideo({ trickId, data: { videoId, type: type.value, slowMoStart: slowMoStartInput(type.value, slowMoStart.value), attribution: attributionInput(attributionName.value) } })
     dialog.value?.close()
   } catch (err) {
     error.value = errorMessage(err)
@@ -206,7 +180,7 @@ async function uploadToMux () {
 
   saving.value = true
   try {
-    const created = await createUpload({ trickId, data: { type: type.value, slowMoStart: slowMoStartValue.value, attribution: attributionInput(attributionName.value) } })
+    const created = await createUpload({ trickId, data: { type: type.value, slowMoStart: slowMoStartInput(type.value, slowMoStart.value), attribution: attributionInput(attributionName.value) } })
     const url = created?.data?.createTrickVideoUpload.url
     if (url == null) throw new Error('The upload could not be started, please try again')
     // the API knows about the upload from here on, whether or not the file makes it

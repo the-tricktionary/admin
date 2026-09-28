@@ -126,7 +126,7 @@
       </div>
 
       <p v-if="videos.length" class="text-muted text-sm mt-2 mb-0">
-        The public site steps through the full speed and slow motion Mux videos in this order, starting with the first.
+        The public site plays the full speed and slow motion Mux videos in this order.
       </p>
 
       <p v-if="actionError" role="alert" class="text-ttred-900 mt-3">
@@ -205,7 +205,7 @@ import VideoPreview from './VideoPreview.vue'
 import VideoAttributionDialog from './VideoAttributionDialog.vue'
 import VideoDialog from './VideoDialog.vue'
 import { useMoveTrickVideoMutation, useRemoveTrickVideoMutation, VideoHost, VideoUploadStatus } from '../graphql/generated/graphql'
-import { trickVideoTypes, videoTypeNames } from '../helpers'
+import { isTrickVideo, videoTypeNames } from '../helpers'
 
 import IconArrowDown from '~icons/mdi/arrow-down'
 import IconArrowUp from '~icons/mdi/arrow-up'
@@ -246,7 +246,7 @@ const actionError = ref<string | null>(null)
 
 /** The video the public site shows first, then whatever there is to preview */
 const fallback = computed(() =>
-  videos.find(video => video.host === VideoHost.Mux && trickVideoTypes.includes(video.type)) ??
+  videos.find(isTrickVideo) ??
   videos.find(video => video.host === VideoHost.Mux) ??
   videos[0] ?? null
 )

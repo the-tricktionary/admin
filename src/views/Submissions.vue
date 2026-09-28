@@ -86,7 +86,7 @@
                   :to="{ name: 'trick', params: { id: submission.trick.id } }"
                   :lang="submission.lang ?? 'en'"
                 >
-                  {{ submission.kind === TrickSubmissionKind.Video ? submission.trick.en?.name ?? submission.trick.slug : submission.name }}
+                  {{ submission.kind === TrickSubmissionKind.Video ? trickName(submission.trick) : submission.name }}
                 </router-link>
                 <span v-else :lang="submission.lang ?? undefined">{{ submission.name }}</span>
               </td>
@@ -112,7 +112,7 @@
                     type="button"
                     class="btn w-max"
                     :aria-pressed="preview === submission.id"
-                    :aria-label="`Preview ${previewLabel(submission)}`"
+                    :aria-label="`Preview ${submissionLabel(submission)}`"
                     @click="preview = preview === submission.id ? null : submission.id"
                   >
                     Preview
@@ -186,7 +186,7 @@ import SubmissionAcceptDialog from '../components/SubmissionAcceptDialog.vue'
 import SubmissionRejectDialog from '../components/SubmissionRejectDialog.vue'
 import VideoSubmissionAcceptDialog from '../components/VideoSubmissionAcceptDialog.vue'
 import { TrickSubmissionKind, TrickSubmissionStatus, useTrickSubmissionsQuery, VideoUploadStatus } from '../graphql/generated/graphql'
-import { disciplineNames, formatDate, languageLabel, submissionLabel, userLabel } from '../helpers'
+import { disciplineNames, formatDate, languageLabel, submissionLabel, trickName, userLabel } from '../helpers'
 
 import type { TrickSubmissionRowFragment } from '../graphql/generated/graphql'
 
@@ -235,11 +235,6 @@ const rejecting = ref<TrickSubmissionRowFragment | null>(null)
 function videoState (submission: TrickSubmissionRowFragment) {
   if (submission.status === TrickSubmissionStatus.Rejected) return 'Deleted'
   return submission.video ? 'Ready' : submission.upload.status
-}
-
-/** The video of a new trick, or a video submission, which is named after its video already */
-function previewLabel (submission: TrickSubmissionRowFragment) {
-  return submission.kind === TrickSubmissionKind.Video ? submissionLabel(submission) : `the video of ${submissionLabel(submission)}`
 }
 
 function waitingNote (submission: TrickSubmissionRowFragment) {

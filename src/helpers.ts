@@ -1,5 +1,5 @@
 import { format, isValid, parseISO } from 'date-fns'
-import { Discipline, GrantType, Scope, TagValueType, TimingCueType, TrickSubmissionKind, VideoType } from './graphql/generated/graphql'
+import { Discipline, GrantType, Scope, TagValueType, TimingCueType, TrickSubmissionKind, VideoHost, VideoType } from './graphql/generated/graphql'
 
 import type { AttributionInput, TrickLocalisationInput, TrickTagInput } from './graphql/generated/graphql'
 
@@ -18,8 +18,22 @@ export const videoTypeNames: Record<VideoType, string> = {
   [VideoType.Explainer]: 'Explainer'
 }
 
-/** The types that show the trick itself rather than explain it, the ones the public site's player steps through */
-export const trickVideoTypes = [VideoType.FullSpeed, VideoType.SlowMo]
+/** The types that show the trick rather than explain it */
+const trickVideoTypes = [VideoType.FullSpeed, VideoType.SlowMo]
+
+/** Whether the public site plays the video */
+export function isTrickVideo (video: { host: VideoHost, type: VideoType }) {
+  return video.host === VideoHost.Mux && trickVideoTypes.includes(video.type)
+}
+
+/** A video input's slow motion start, which only a slow motion video has */
+export function slowMoStartInput (type: VideoType, slowMoStart: string | number) {
+  return type === VideoType.SlowMo ? parseNumber(slowMoStart) : null
+}
+
+export function trickName (trick: { slug: string, en?: { name: string } | null }) {
+  return trick.en?.name ?? trick.slug
+}
 
 export const grantTypeNames: Record<GrantType, string> = {
   [GrantType.SuperAdmin]: 'Super admin',
@@ -190,13 +204,13 @@ export function userLabel (user: NamedUser) {
 interface NamedSubmission {
   kind: TrickSubmissionKind
   name?: string | null
-  trick?: { slug: string, en?: { name: string } | null } | null
+  trick?: Parameters<typeof trickName>[0] | null
 }
 
-/** What to call a submission: the trick's name, or for a video the trick it is for */
+/** A new trick's name, or for a video the name of its trick */
 export function submissionLabel (submission: NamedSubmission) {
   if (submission.kind !== TrickSubmissionKind.Video) return submission.name ?? ''
-  return `Video of ${submission.trick?.en?.name ?? submission.trick?.slug ?? 'a trick'}`
+  return `Video of ${submission.trick ? trickName(submission.trick) : 'a trick'}`
 }
 
 export interface LocalisationValue {
@@ -235,7 +249,7 @@ interface SortableTrick {
 }
 
 export function trickSorter (a: SortableTrick, b: SortableTrick) {
-  return (a.en?.name ?? a.slug).localeCompare(b.en?.name ?? b.slug)
+  return trickName(a).localeCompare(trickName(b))
 }
 
 const YOUTUBE_ID = /^[\w-]{11}$/
